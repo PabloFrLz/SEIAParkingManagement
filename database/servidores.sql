@@ -1,0 +1,13 @@
+insert into Servidor values ('12345678901', 'João Silva', 'deficiente');
+insert into Servidor values ('98765432100', 'Maria Oliveira', 'SEJU');
+insert into Servidor values ('11122233344', 'Carlos Pereira', 'SEIA');
+insert into Servidor values ('55566677788', 'Ana Souza', 'SESP');
+insert into Servidor values ('99988877766', 'Fernanda Lima', 'COHAPAR');
+insert into Servidor values ('54984469465', 'Andre Luis Costa Batistela', 'SEIA');
+insert into Servidor values ('34789489356', 'Fernanda Larocca Colaco Vaz', 'SEIA');
+insert into Servidor values ('12382478956', 'Bateny Monteiro Sanca', 'SEIA');
+insert into Servidor values ('98765432144', 'Gustavo Henrique Sampaio', 'SEIA');
+insert into Servidor values ('28796522245', 'Josemar Eziquiel', 'SEIA');
+insert into Servidor values ('88693465425', 'Tatiana Dias da Cunha', 'SEIA');
+insert into Servidor values ('58975234588', 'Marcia Magneski Akel', 'SEIA'); 
+insert into Servidor values ('76344631589', 'Thiago Rodrigo da Silva', 'SEIA');

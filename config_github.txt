@@ -1,0 +1,36 @@
+Token PAT GitHub (SEIA PC): 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
+Token PAT GitHub (Meu PC): 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
+
+
+# Remova caso tenha errado as configs
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+
+# Configure com credenciais (use %21 no lugar do ! )
+git config --global http.proxy http://pablo.resi:secinova5452%21@10.15.54.7:8080
+git config --global https.proxy http://pablo.resi:secinova5452%21@10.15.54.7:8080
+
+#___________________( subir github 1ª vez)____________________
+
+git init
+git add .
+git commit -m "Primeiro commit"
+git remote add origin https://github.com/seuusuario/seurepositorio.git
+git branch -M main
+git push -u origin main
+
+
+#___________________( subir github )____________________
+
+git add .                  # ou git add nome_do_arquivo.py (mais seguro)
+git commit -m "Mensagem explicando o que mudou"
+git push
+
+
+
+
+#___________________( baixar github )____________________
+
+git clone https://github.com/PabloFrLz/SEIAParkingManagement.git
+
+
