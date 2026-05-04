@@ -336,11 +336,12 @@ class Sidebar(QWidget, QObject):
 
             elif (self.check[2] is None):
                 texto = "Selecione o carro:"
-                consulta = "select * from carro where autarquia='{}' and placa not in (select placa from registro)".format(self.form1.getResult()) # seleciona todos os veiculos que são do orgão público e que nao estão no registro. 
+                #consulta = "select * from carro where autarquia='{}' and placa not in (select placa from registro)".format(self.form1.getResult()) # seleciona todos os veiculos que são do orgão público e que nao estão no registro. 
+                consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.form1.getResult()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA')"
                 self.categoria = 2
                 self.form3 = self.geraFormulario(consulta, texto)
-                self.coord_last_widget.append(self.form3.getCoordX) # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
-                self.coord_last_widget.append(self.form3.getCoordY)
+                self.coord_last_widget.append(self.form3.getCoordX()) # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
+                self.coord_last_widget.append(self.form3.getCoordY())
                 self.check[2] = True
                 self.form2.setDisabled(True)
             
@@ -430,11 +431,13 @@ class Sidebar(QWidget, QObject):
             placa = dados[0][1]
             cpf_cnpj = dados[0][2]
             tipo = "ENTRADA"
+            sql = f"UPDATE registro SET data_entrada = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND cpf_cnpj = '{cpf_cnpj}' AND data_entrada IS NULL AND tipo = 'SAIDA'"
         else:
             #obtem os dados apartir dos formularios de saida
             servidor = self.form2.getResult() 
             carro = self.form3.getResult()
             tipo = "SAIDA"
+            sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_saida, tipo) VALUES (%s, %s, %s, NOW(), %s)"
             #tratamento dos dados
             cpf_cnpj, nome_servidor = servidor.split(" - ")
             placa, modelo = carro.split(" - ")
@@ -453,9 +456,12 @@ class Sidebar(QWidget, QObject):
         try:
             cursor = self.conn.cursor()
             #data e hora serão calculados automaticamente pelo banco de dados MySQL com a clausula NOW()
-            sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_hora, tipo) VALUES (%s, %s, %s, NOW(), %s)"
-            cursor.execute(sql, (placa, cpf_cnpj, num_vaga, tipo))
-            self.conn.commit()
+            if tipo == "SAIDA":
+                cursor.execute(sql, (placa, cpf_cnpj, num_vaga, tipo))
+            else:
+                cursor.execute(sql)
+            
+            self.conn.commit() # commit - pra persistir no banco
             print(f"\n{self.VERDE}================================{self.RESET}")
             print(f"{self.VERDE}Dados inseridos no Registro com sucesso!{self.RESET}")
             print(f"{self.VERDE}================================{self.RESET}\n")
@@ -541,7 +547,9 @@ class Sidebar(QWidget, QObject):
         button.clicked.connect(lambda: action()) # chama o metodo para inserção na tabela registro do banco de dados
         proxyBtn = QGraphicsProxyWidget()
         proxyBtn.setWidget(button)
-        proxyBtn.setPos(self.coord_last_widget[0] + self.pos_button_x, self.coord_last_widget[1] + self.pos_button_y)
+        x = self.coord_last_widget[0] + self.pos_button_x
+        y = self.coord_last_widget[1] + self.pos_button_y
+        proxyBtn.setPos(x, y)
         self.scene.addItem(proxyBtn)
         if self.pos_button_x == 0:
             self.pos_button_x = 140 # coloca o prox. button do lado direito do button anterior
@@ -644,9 +652,10 @@ class Sidebar(QWidget, QObject):
             self.lista_registro.insertRow(linha) # insere uma nova linha
             self.lista_registro.setItem(linha, 0, QTableWidgetItem(tupla[1])) # coluna Placa
             self.lista_registro.setItem(linha, 1, QTableWidgetItem(str(tupla[4]))) # coluna Data/Hora
-            self.lista_registro.setItem(linha, 2, QTableWidgetItem(tupla[5])) # coluna Tipo
+            self.lista_registro.setItem(linha, 2, QTableWidgetItem(tupla[6])) # coluna Tipo
             self.lista_registro.setItem(linha, 3, QTableWidgetItem(tupla[2])) # coluna CPF/CNPJ
             linha += 1
+
 
         self.lista_registro.resizeColumnsToContents()        # Ajusta cada coluna ao conteúdo
         self.lista_registro.horizontalHeader().setStretchLastSection(True)

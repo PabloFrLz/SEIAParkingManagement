@@ -1,40 +1,26 @@
 /*
-*  project car management v 1.0.0.01
-*  software gerenciador de estacionamento institucional
+*  Project Parking Management v 1.0.0.01
+*  Software de Controle de Estacionamento Institucional
 *
 */
 
- * problemas atuais:
-	-configurar o banco postgreSQL;
-	-conigurar ações dos Buttons;
-	-definir tela de reserva de carros;
-	-integrar tela com banco de dados;
-	-continuar implementando a função geraFormulario()
-	-evitar que consulta=None (ver linha 211) e resovler outros problemas;
-	-corrigir o tamanho da logomarca da sidebar;
-	-inserir um botão pra tratar os dados a serem inseridos na tabela Registro;
-	-corrigir problema onde o primeiro elemeto da QComboBox nao é selecionado;
-	-fazer com que os dados persistam na base de dados da aplicação;
-	-corrigir botão cancelar e transição entre informações;
-	-linha 353 Sidebar.py - corrigir o fato que os formularios de registro se sobrepõe as informações da vaga.
-	-corrigir problema do connect()
-	-corrigir problema do QTableWidget() onde a consulta SQL deve retornar apenas as entradas com mesmo nº de vaga
-	-corrigir problemas no button ENTRADA
-	-corrigir problema da tabela de historicos nao atualizar em circunstancias especificas (posicionar metodo updateHistoricoRegistro() no local adequado)
-	-bloquear os carros/vagas quando estiver preechendo os formularios.
-	-modificado para calcular hora automaticamente via clausula NOW() do MySQL 
-	
- * problemas futuros:
-	-corrigir o problema onde ao nao haver carros disponiveis no terceiro formulario, fica travado aguardando inserção de um carro;
-	-corrigir a redefinição de press_button_status;
+ * PREPARANDO O AMBIENTE:
+	• winget install Python.Python.3.13
+	• pip install pyside6
+	• pip install pyqtdarktheme
+	• pip install pymysql
+	• pip install cryptography
 
- * BUGs identificados entre versoes do Windows 10/11:
-	- No Windows 11 o objeto QComboBox() não desliza a janela pra seleção dos itens;
-		[CORREÇÃO]:	Atualizar as dependências com "pip install --upgrade PySide6 pyqtdarktheme"
-
-	- No Windows 11 o QMessageBox() é gerado de forma incorreta e reduz a area visivel da interface ao fundo;
-		[CORREÇÃO]: Passar a instacia da janela principal definida em SEIAParkingManagament.py para QMessageBox(self.main_window, ...).
-
- * Próximas etapas:
+ * CONFIGURANDO O BANCO:
+	NOTA: instalar o mysql server 8.0 e setar as variaveis de ambiente se for necessário.
+	• Modificar as variaveis globais USER e PASSWORD do arquivo SEIAParkingManagement.py com as credenciais do seu banco de dados;
+ 	• Entrar no banco via cmd e executar o codigo:
+		source C:(caminho_para_projeto)\SEIAParkingManagement\database\seia_parking.sql
+		source C:(caminho_para_projeto)\SEIAParkingManagement\database\autarquia.sql
+		source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
+		source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql
+	 
+ 
+ * CONFIGURAÇÕES FINAIS:
 	-executar "pip install --upgrade PySide6 pyqtdarktheme"
-	-atualizar a tabela Registro pra que implemente UNIQUE KEY novamente.
+	

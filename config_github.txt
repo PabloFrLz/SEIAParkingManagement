@@ -1,5 +1,4 @@
-Token PAT GitHub (SEIA PC): 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
-Token PAT GitHub (Meu PC): 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
+Token PAT GitHub (usado em qualquer PC): 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
 
 
 # Remova caso tenha errado as configs

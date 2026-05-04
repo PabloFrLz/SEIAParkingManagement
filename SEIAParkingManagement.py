@@ -39,6 +39,10 @@ import pymysql
 
 ver = "v1.0.0.01" # versão do software
 
+#variaveis de autenticação do banco de dados
+USER = 'root'
+PASSWORD = '5452'
+
 global WIDTH, HEIGHT, K, J
 WIDTH = 1190
 HEIGHT = 840
@@ -546,8 +550,8 @@ class SEIAParkingManagement(QGraphicsView):
         # Configurações de conexão com o banco de dados MySQL
         self.conn = pymysql.connect(
             host='localhost',
-            user='root',
-            password='5452',
+            user=USER,
+            password=PASSWORD,
             database='seia_parking'
         )
 
@@ -564,13 +568,13 @@ class SEIAParkingManagement(QGraphicsView):
         for vaga in self.vagas:
             for tupla in registro:
                 if vaga.getVagaID() == tupla[3]: #identifica se esta inserido no registro
-                    if tupla[5] == "ENTRADA":
+                    if tupla[6] == "ENTRADA":
                         vaga.setStatus(0) # disponivel
                         vaga.active_monocromatico() # volta a cor original da imagem caso tenha aplicado monocromatico
-                    elif tupla[5] == "SAIDA":
+                    elif tupla[6] == "SAIDA":
                         vaga.setStatus(1) # ocupado
                         vaga.active_monocromatico() #aplica efeito monocromatico
-                    elif tupla[5] == "RESERVA":
+                    elif tupla[6] == "RESERVA":
                         vaga.setStatus(2) # reserva
                     
                     vaga.ligar_led() # liga o led pra refletir o estado atual davaga
@@ -581,10 +585,8 @@ class SEIAParkingManagement(QGraphicsView):
         msg.setWindowTitle(titulo)
         msg.setText(texto)
         msg.setIcon(QMessageBox.Icon.Warning)     # ou Information, Critical...
-        
         # Força não usar diálogo nativo (deve ser antes do exec/show)
         msg.setOption(QMessageBox.Option.DontUseNativeDialog, True)
-        
         msg.exec()   
 
     def alternar_view(self):

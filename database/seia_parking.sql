@@ -34,14 +34,16 @@ create table if not exists Registro(
     placa CHAR(8) not null,
     cpf_cnpj CHAR(14) not null,
     num_vaga INT not null,
-    data_hora DATETIME not null,
+    data_saida DATETIME,
+    data_entrada DATETIME,
     tipo CHAR(10) not null,
     foreign key (placa) references Carro(placa) on delete cascade,
     foreign key (cpf_cnpj) references Servidor(cpf_cnpj) on delete cascade,
-    foreign key (num_vaga) references Vaga(num_vaga) on delete cascade,
-    UNIQUE KEY uk_controle (num_vaga, placa, data_hora)
+    foreign key (num_vaga) references Vaga(num_vaga) on delete cascade
 );
 
 source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\database\autarquia.sql
 source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\database\vagas.sql
 source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\database\carros.sql
+
+--SELECT * FROM carro c WHERE c.autarquia = 'seia' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA');
