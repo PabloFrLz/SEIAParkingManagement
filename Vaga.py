@@ -57,6 +57,8 @@ class Vaga(QGraphicsPixmapItem, QObject):
             self.pixmap_original = QPixmap("imagens/pickup.png")
         elif tipo_carro == 4:
             self.pixmap_original = QPixmap("imagens/pmpr-car.png")
+        elif tipo_carro == 5:
+            self.pixmap_original = QPixmap("imagens/deficiente.png")
 
         # Redimensiona a imagem e demais ajustes
         self.pixmap_original = self.pixmap_original.scaled(LARGURA, ALTURA, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -179,11 +181,6 @@ class Vaga(QGraphicsPixmapItem, QObject):
         return self.status_name # retorna o status em string já formatado HTML
 
 
-    def getVagaID(self):
-        return self.id
-    
-    def setStatus(self, newVal):
-        self.status = newVal
         
     #===========================================
     # BANCO DE DADOS
@@ -224,3 +221,16 @@ class Vaga(QGraphicsPixmapItem, QObject):
                 image.setPixelColor(x, y, color)
 
         return QPixmap.fromImage(image)
+    
+    def getVagaID(self):
+        return self.id
+    
+    def setStatus(self, newVal):
+        self.status = newVal
+
+    def getX(self):
+        return self.x()
+    
+    def getY(self):
+        return self.y()
+    

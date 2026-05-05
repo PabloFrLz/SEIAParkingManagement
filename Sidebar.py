@@ -1,11 +1,16 @@
 from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QPropertyAnimation, Signal
 from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator
+from PySide6.QtGui import QBrush, QColor, QPixmap, QRegularExpressionValidator
 from pymysql import Error
 from shiboken6 import isValid
 
 import Formulario
 
+BRUSH_ENTRADA = QBrush(QColor(0, 122, 204))        # azul médio
+BRUSH_ENTRADA_ALPHA = QBrush(QColor(0, 122, 204, 40))
+
+BRUSH_SAIDA = QBrush(QColor(255, 140, 0))          # laranja
+BRUSH_SAIDA_ALPHA = QBrush(QColor(255, 140, 0, 40))
 
 class Sidebar(QWidget, QObject):
 
@@ -125,7 +130,7 @@ class Sidebar(QWidget, QObject):
         # tabela de registro da sidebar
         #======================================
         self.lista_registro = QTableWidget()
-        self.lista_registro.setColumnCount(4)
+        self.lista_registro.setColumnCount(5)
         
         
         #======================================
@@ -188,6 +193,27 @@ class Sidebar(QWidget, QObject):
         self.btn_cadastro.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_cadastro)
         self.btn_cadastro.clicked.connect(self.acaoButtonCadastro)
+        self.btn_cadastro.setStyleSheet(
+            """QPushButton {
+                color: #ffffff;
+                background-color: transparent;
+                border: 1px solid rgba(40, 107, 0, 80);
+                padding: 12px 20px;
+                text-align: left;
+                font-size: 14px;
+                border-radius: 6px;
+                margin: 4px 8px;
+            }
+            
+            QPushButton:hover {
+                background-color: rgba(0, 255, 155, 80); 
+            }
+            
+            QPushButton:pressed, QPushButton:checked {
+                background-color: rgba(0, 255, 0, 160);
+                color: white;
+            }"""
+        )
 
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
@@ -647,14 +673,24 @@ class Sidebar(QWidget, QObject):
         entradas_tabela = cursor.fetchall()
 
         linha = 0
-        self.lista_registro.setHorizontalHeaderLabels(["Placa", "Data/Hora", "Tipo", "CPF/CNPJ"])
+        self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤶)", "Data/Hora(⤷)", "CPF/CNPJ"])
         for tupla in entradas_tabela:
+            tipo = QTableWidgetItem(tupla[6])
+            if tupla[6] == "SAIDA":
+                tipo.setForeground(BRUSH_SAIDA)
+                tipo.setBackground(BRUSH_SAIDA_ALPHA)
+            else:
+                tipo.setForeground(BRUSH_ENTRADA)
+                tipo.setBackground(BRUSH_ENTRADA_ALPHA)
+            
             self.lista_registro.insertRow(linha) # insere uma nova linha
             self.lista_registro.setItem(linha, 0, QTableWidgetItem(tupla[1])) # coluna Placa
-            self.lista_registro.setItem(linha, 1, QTableWidgetItem(str(tupla[4]))) # coluna Data/Hora
-            self.lista_registro.setItem(linha, 2, QTableWidgetItem(tupla[6])) # coluna Tipo
-            self.lista_registro.setItem(linha, 3, QTableWidgetItem(tupla[2])) # coluna CPF/CNPJ
+            self.lista_registro.setItem(linha, 1, tipo) # coluna Tipo
+            self.lista_registro.setItem(linha, 2, QTableWidgetItem(str(tupla[4]))) # coluna Data/Hora (Saída)
+            self.lista_registro.setItem(linha, 3, QTableWidgetItem(str(tupla[5]))) # coluna Data/Hora (Entrada)
+            self.lista_registro.setItem(linha, 4, QTableWidgetItem(tupla[2])) # coluna CPF/CNPJ
             linha += 1
+
 
 
         self.lista_registro.resizeColumnsToContents()        # Ajusta cada coluna ao conteúdo

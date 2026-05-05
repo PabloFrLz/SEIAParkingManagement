@@ -24,10 +24,12 @@
 """
 
 
+import threading
+
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
+    QApplication, QCheckBox, QGraphicsItem, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QLabel, QMessageBox, QPushButton, QVBoxLayout
+    QGraphicsProxyWidget, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QPointF
@@ -37,7 +39,7 @@ import Sidebar as sb
 import qdarktheme
 import pymysql
 
-ver = "v1.0.0.01" # versão do software
+ver = "v1.0.0.02" # versão do software
 
 #variaveis de autenticação do banco de dados
 USER = 'root'
@@ -51,6 +53,25 @@ J = 530 ##variavel de ajuste para expansão da propriedade na VERTICAL
 D = 30 #variavel de deslocamento dos carros na horizontal
 
 POS_X_SIDEBAR = 1550 #posição horizontal da sidebar (ajustável)
+
+LARGURA_CIRCLE = 40
+ALTURA_CIRCLE = 40
+
+# Verde
+PEN_VERDE = QPen(QColor("#00ff00"), 2)
+BRUSH_VERDE = QBrush(QColor(0, 255, 0, 40))
+
+# Rosa
+PEN_ROSA = QPen(QColor("#ff69b4"), 2)
+BRUSH_ROSA = QBrush(QColor(255, 105, 180, 40))
+
+# Roxo
+PEN_ROXO = QPen(QColor("#10006d"), 2)
+BRUSH_ROXO = QBrush(QColor(0, 0, 255, 40))
+
+# Azul
+PEN_AZUL = QPen(QColor("#0062BE"), 2)
+BRUSH_AZUL = QBrush(QColor(56, 109, 255, 40))
 
 class SEIAParkingManagement(QGraphicsView):
     def __init__(self):
@@ -297,9 +318,9 @@ class SEIAParkingManagement(QGraphicsView):
         self.vagas.append(vg.Vaga(11, 4, 520+D, 1100, 135))
         self.vagas.append(vg.Vaga(12, 4, 560+D, 1100, 135))
         #Especial p/ deficiente
-        self.vagas.append(vg.Vaga(13, 2, 600+D, 1100, 135))
-        self.vagas.append(vg.Vaga(14, 2, 640+D, 1100, 135))
-        self.vagas.append(vg.Vaga(15, 2, 680+D, 1100, 135))
+        self.vagas.append(vg.Vaga(13, 5, 600+D, 1100, 135))
+        self.vagas.append(vg.Vaga(14, 5, 640+D, 1100, 135))
+        self.vagas.append(vg.Vaga(15, 5, 680+D, 1100, 135))
         #SESP
         self.vagas.append(vg.Vaga(33, 4, 280+D, 1290, 225))
         self.vagas.append(vg.Vaga(34, 4, 320+D, 1290, 225))
@@ -332,7 +353,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.vagas.append(vg.Vaga(28, 1, 1260+D, 1095, 135))
         self.vagas.append(vg.Vaga(29, 1, 1300+D, 1095, 135))
         # Especial p/ deficiente
-        self.vagas.append(vg.Vaga(142, 2, 780+D, 1285, 225))
+        self.vagas.append(vg.Vaga(142, 5, 780+D, 1285, 225))
         #SEIA
         self.vagas.append(vg.Vaga(143, 1, 820+D, 1285, 225))
         self.vagas.append(vg.Vaga(44, 1, 860+D, 1285, 225))
@@ -417,10 +438,10 @@ class SEIAParkingManagement(QGraphicsView):
         self.vagas.append(vg.Vaga(98, 2, 480+D, 70, 45)) 
         self.vagas.append(vg.Vaga(97, 2, 520+D, 70, 45))
         #SESP
-        self.vagas.append(vg.Vaga(196, 4, 560+D, 70, 45)) #vaga reservada SESP - inconsistencia com disposição das self.vagas no projeto do estacionamento
-        self.vagas.append(vg.Vaga(197, 4, 600+D, 70, 45)) #vaga reservada SESP - inconsistencia com disposição das self.vagas no projeto do estacionamento
-        self.vagas.append(vg.Vaga(198, 4, 640+D, 70, 45)) #vaga reservada SESP - inconsistencia com disposição das self.vagas no projeto do estacionamento
-        self.vagas.append(vg.Vaga(199, 4, 680+D, 70, 45)) #vaga reservada SESP - inconsistencia com disposição das self.vagas no projeto do estacionamento
+        self.vagas.append(vg.Vaga(196, 2, 560+D, 70, 45)) 
+        self.vagas.append(vg.Vaga(197, 2, 600+D, 70, 45)) 
+        self.vagas.append(vg.Vaga(198, 4, 640+D, 70, 45)) 
+        self.vagas.append(vg.Vaga(199, 4, 680+D, 70, 45)) 
 
 
         #_______________________
@@ -455,7 +476,12 @@ class SEIAParkingManagement(QGraphicsView):
         self.vagas.append(vg.Vaga(136, 3, 0+D, 1130, 315))
         self.vagas.append(vg.Vaga(137, 3, 0+D, 1170, 315))
         self.vagas.append(vg.Vaga(138, 3, 0+D, 1210, 315))
-        
+
+        #==============================================================================================
+        # Criando a lista de circulos com o numero das vagas - view 2
+        #==============================================================================================
+
+        self.circulos = []    
         
         #==============================================================================================
         # Inicializando o banco de dados MySQL
@@ -470,18 +496,31 @@ class SEIAParkingManagement(QGraphicsView):
 
 
         #==============================================================================================
-        # Inserindo self.vagas e inserindo 'ouvintes'
+        # Inserindo as vagas com imagens e circulos e inserindo 'ouvintes' pra atualizar informações 
         #==============================================================================================
         for vaga in self.vagas:
             vaga.habilitar_sidebar.connect(sidebar.atualizar_info) # conecta o sinal da vaga para atualizar a sidebar automaticamente quando o valor da variavel habilitar_sidebar for alterado
-            self.scene.addItem(vaga) # insere a vaga no cenário
+            if vaga.tipo_carro == 1: # SEIA
+                circle = self.insertCircle(vaga.getVagaID(), vaga.getX(), vaga.getY(), PEN_VERDE, BRUSH_VERDE) # gerando os circulos com o numero das vagas
+            elif vaga.tipo_carro == 2: # SEJU
+                circle = self.insertCircle(vaga.getVagaID(), vaga.getX(), vaga.getY(), PEN_ROSA, BRUSH_ROSA)
+            elif vaga.tipo_carro == 3: # COHAPAR
+                circle = self.insertCircle(vaga.getVagaID(), vaga.getX(), vaga.getY(), PEN_ROXO, BRUSH_ROXO)
+            elif vaga.tipo_carro == 4: # SESP
+                circle = self.insertCircle(vaga.getVagaID(), vaga.getX(), vaga.getY(), PEN_AZUL, BRUSH_AZUL)
+            else:
+                circle = self.insertCircle(vaga.getVagaID(), vaga.getX(), vaga.getY(), self.pen_bloco, self.brush_vaga)
+
+            self.circulos.append(circle) # inserindo na lista pra fácil manipulação posterior
+            self.scene.addItem(vaga) # insere a vaga (imagem) no cenário
+            #circle.setWindowOpacity(0.01)
 
         
         self.updateStatusVagas() # atualizando o status das vagas conforme dados do Registro do Banco de Dados
         sidebar.signal_insert.connect(self.updateStatusVagas) 
 
         #==============================================================================================
-        # Inserindo toggle switch pra alternar entre formas geometricas e imagens
+        # Inserindo toggle switch pra alternar entre formas geometricas e imagens (views)
         #==============================================================================================
 
         # Toggle Switch customizado via stylesheet
@@ -516,6 +555,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.scene.addItem(proxy_toggle)
         
         self.toggle.toggled.connect(self.alternar_view)
+
         
         #==============================================================================================
         # Copyright
@@ -535,6 +575,7 @@ class SEIAParkingManagement(QGraphicsView):
         proxy.setPos(POS_X_SIDEBAR, 0)
         self.scene.addItem(proxy) # insere a sidebar no cenário
         self.scale(0.85, 0.85)
+        self.delayApresentacao(10.0) # alterna a view de blocos geometricos para edificio com o delay especificado de 10 segundos
 
         # Ajusta a visão inicial
         #self.fitInView(bg, Qt.KeepAspectRatio)
@@ -589,8 +630,9 @@ class SEIAParkingManagement(QGraphicsView):
         msg.setOption(QMessageBox.Option.DontUseNativeDialog, True)
         msg.exec()   
 
-    def alternar_view(self):
+    def alternar_view(self): # alterna entre view 1 (objetos geometricos) e view 2 (imagens 3D)
         if self.turnRound:
+            #esconde os objetos geometricos
             self.bloco1.hide()
             self.bloco2.hide()
             self.bloco3.hide()
@@ -598,12 +640,20 @@ class SEIAParkingManagement(QGraphicsView):
             self.bloco5.hide()
             self.recepcao.hide()
             self.torre.hide()
+            for circle in self.circulos:
+                circle[0].hide()
+                circle[1].hide()
             #aparece suavemente
             self.fade_in(self.bg3)
+            for vaga in self.vagas:
+                vaga.show()
+
         else:
-            # desaparece suavemente 
+            # Imagem desaparece suavemente
             self.fade_out(self.bg3)
-            
+            for vaga in self.vagas:
+                vaga.hide()
+            # mostra os objetos geometricos
             self.bloco1.show()
             self.bloco2.show()
             self.bloco3.show()
@@ -611,6 +661,9 @@ class SEIAParkingManagement(QGraphicsView):
             self.bloco5.show()
             self.recepcao.show()
             self.torre.show()
+            for circle in self.circulos:
+                circle[0].show()
+                circle[1].show()
         
         self.turnRound = not self.turnRound
     
@@ -648,7 +701,33 @@ class SEIAParkingManagement(QGraphicsView):
         # Opcional: esconder de verdade no final
         self.anim.finished.connect(lambda: item.setOpacity(1.0))
 
-    
+    def delayApresentacao(self, sec):
+        # Cria um timer
+        timer = threading.Timer(sec, self.alternar_view())
+        timer.start()
+
+    def insertCircle(self, numero, x, y, paint1, paint2):
+        # Circulo
+        circulo = QGraphicsEllipseItem(x, y, LARGURA_CIRCLE, ALTURA_CIRCLE)
+        circulo.setPen(paint1)
+        circulo.setBrush(paint2)
+        self.scene.addItem(circulo) # insere no cenário
+
+        # Texto
+        texto = QGraphicsTextItem(str(numero))
+        texto.setDefaultTextColor(Qt.GlobalColor.white)
+        texto.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+        if(numero >= 100): # centralizar corretamente numero com 3 digitos
+            x_relativo = x + 3
+        elif(numero <= 9):
+            x_relativo = x + 13
+        else:
+            x_relativo = x + 8
+        texto.setPos(x_relativo, y + 8)   # ajuste manual do posicionamento
+        self.scene.addItem(texto) # insere no cenário
+
+        return circulo, texto
+
 
 
 '''app.setStyleSheet("""
