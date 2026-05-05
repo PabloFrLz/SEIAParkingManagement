@@ -519,6 +519,8 @@ class SEIAParkingManagement(QGraphicsView):
         self.updateStatusVagas() # atualizando o status das vagas conforme dados do Registro do Banco de Dados
         sidebar.signal_insert.connect(self.updateStatusVagas) 
 
+        self.generateLegenda() # gerando as legendas
+
         #==============================================================================================
         # Inserindo toggle switch pra alternar entre formas geometricas e imagens (views)
         #==============================================================================================
@@ -643,6 +645,9 @@ class SEIAParkingManagement(QGraphicsView):
             for circle in self.circulos:
                 circle[0].hide()
                 circle[1].hide()
+            for legenda in self.legendas:
+                legenda[0].hide()
+                legenda[1].hide()
             #aparece suavemente
             self.fade_in(self.bg3)
             for vaga in self.vagas:
@@ -664,6 +669,10 @@ class SEIAParkingManagement(QGraphicsView):
             for circle in self.circulos:
                 circle[0].show()
                 circle[1].show()
+            for legenda in self.legendas:
+                legenda[0].show()
+                legenda[1].show()
+            
         
         self.turnRound = not self.turnRound
     
@@ -727,6 +736,33 @@ class SEIAParkingManagement(QGraphicsView):
         self.scene.addItem(texto) # insere no cenário
 
         return circulo, texto
+    
+    def generateLegenda(self): # gera a legenda das cores pra se orientar melhor
+        #self.legendas = QVBoxLayout() # conteiner lateral pra agrupar um em baixo do outro
+        self.legendas = []
+        orgaos = ["Secretaria da Inovação e Inteligência Artificial (SEIA)", 
+                  "Secretaria de Estado de Justiça e Cidadania (SEJU)", 
+                  "Companhia de Habitação do Paraná (COHAPAR)", 
+                  "Secretaria de Estado de Segurança Pública (SESP)"]
+        pen = [PEN_VERDE, PEN_ROSA, PEN_ROXO, PEN_AZUL]
+        brush = [BRUSH_VERDE, BRUSH_ROSA, BRUSH_ROXO, BRUSH_AZUL]
+        x = 160
+        y = 590
+        desl_y = 0
+
+        for i in range(4):
+            item = QGraphicsRectItem(x, y + desl_y, 15, 10)
+            item.setPen(pen[i])
+            item.setBrush(brush[i]) 
+            item_text = QGraphicsTextItem(orgaos[i]) # texto do nome do bloco
+            item_text.setPos(x + 20, y + desl_y-6)
+            item_text.setFont(QFont("Arial", 10)) # define a fonte do texto
+            item_text.setDefaultTextColor(QColor("white"))
+            self.scene.addItem(item) 
+            self.scene.addItem(item_text) 
+            desl_y += 20
+
+            self.legendas.append([item, item_text]) # insere as legendas como tuplas (QUADRADO + TEXTO DESCRITIVO)
 
 
 
