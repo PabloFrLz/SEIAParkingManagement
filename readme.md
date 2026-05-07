@@ -1,5 +1,5 @@
 
-# Project Parking Management v 1.0.0.02
+# SEIA Parking Management v1.0.0.02
 **Software de Controle de Estacionamento Institucional**  
 Desenvolvido pela Diretoria de Inovação (DIN), vinculado à Secretaria da Inovação em Inteligência Artificial (SEIA)
 
