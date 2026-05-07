@@ -59,7 +59,6 @@ class Sidebar(QWidget, QObject):
         self.titulo = None
         self.sentinel = None
         self.ctrl_forms = True 
-        self.action = False
         self.coord_last_widget = []
         self.garbage_collector = []
         #self.conteiner = QVBoxLayout() # conteiner para agrupar elementos de outras paginas da sidebar que nao a de informações
@@ -276,10 +275,8 @@ class Sidebar(QWidget, QObject):
         self.animation.setDuration(1200)
 
     def controlActions(self, info):
-        if not self.action:
-            self.atualizar_info(info)
-        else:
-            self.cancel()
+        self.cancel() # destroi formularios do button de saida ou cadastro caso esteja em andamento - isso permite interagir com outras vagas na interface
+        self.atualizar_info(info)
     
     def atualizar_info(self, info): 
         #atualizando a cor do campo "Status da vaga"
@@ -329,8 +326,7 @@ class Sidebar(QWidget, QObject):
 
         #historico de reservas no formato de lista (exemplo)
     
-    def acaoButtonSaida(self):
-        self.action = True # variavel de controle que será usada para determinar quando uma ação de registro de saida ou cadastro estiver em andamento.
+    def acaoButtonSaida(self): 
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
             self.titulo = self.insertHeader("REGISTRAR HORÁRIO")#gera logo no topo e titulo da seção 
@@ -349,7 +345,6 @@ class Sidebar(QWidget, QObject):
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga ainda está DISPONÍVEL.")
 
     def acaoButtonCadastro(self):
-        self.action = True # variavel de controle que será usada para determinar quando uma ação de registro de saida ou cadastro estiver em andamento.
         self.transitToFormulario() # animação que empurra pro lado direito as infos
         self.titulo = self.insertHeader("CADASTRAR SERVIDOR")#gera logo no topo e titulo da seção 
         self.ctrl_forms = False # habilita formularios de cadastro de servidor;
@@ -637,7 +632,6 @@ class Sidebar(QWidget, QObject):
     def reset(self):
         self.eixo_y_form = 150
         self.check = [None, None, None, None] # habilitando os forms
-        self.action = False
         # destruir os self.forms
 
 
