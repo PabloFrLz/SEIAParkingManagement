@@ -4,9 +4,8 @@ from PySide6.QtGui import QBrush, QColor, QPixmap, QRegularExpressionValidator
 from pymysql import Error
 from shiboken6 import isValid
 from pypdf import PdfReader, PdfWriter
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-import io, os
+import os
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -59,9 +58,8 @@ class Sidebar(QWidget, QObject):
         self.titulo = None
         self.sentinel = None
         self.ctrl_forms = True 
-        self.coord_last_widget = []
+        self.coord_last_widget = [None, None]
         self.garbage_collector = []
-        #self.conteiner = QVBoxLayout() # conteiner para agrupar elementos de outras paginas da sidebar que nao a de informações
 
         #======================================
         # Formularios
@@ -329,7 +327,7 @@ class Sidebar(QWidget, QObject):
     def acaoButtonSaida(self): 
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
-            self.titulo = self.insertHeader("REGISTRAR HORÁRIO")#gera logo no topo e titulo da seção 
+            self.titulo = self.insertHeader("REGISTRAR SAÍDA")#gera logo no topo e titulo da seção 
             self.ctrl_forms = True # habilita formularios de registro de ENTRADA/SAIDA 
             self.controlForms() # gerando o 1º form
         else:
@@ -377,8 +375,6 @@ class Sidebar(QWidget, QObject):
         return form
     
     def controlForms(self):
-
-
         if self.ctrl_forms: # REGISTRO
             if (self.check[0] is None): 
                 texto = "Selecione a autarquia:"
@@ -403,12 +399,11 @@ class Sidebar(QWidget, QObject):
 
             elif (self.check[2] is None):
                 texto = "Selecione o carro:"
-                #consulta = "select * from carro where autarquia='{}' and placa not in (select placa from registro)".format(self.form1.getResult()) # seleciona todos os veiculos que são do orgão público e que nao estão no registro. 
                 consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.form1.getResult()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA')"
                 self.categoria = 2
                 self.form3 = self.geraFormulario(consulta, texto)
-                self.coord_last_widget.append(self.form3.getCoordX()) # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
-                self.coord_last_widget.append(self.form3.getCoordY())
+                self.coord_last_widget[0] = self.form3.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
+                self.coord_last_widget[1] = self.form3.getCoordY() + 20
                 self.check[2] = True
                 self.form2.setDisabled(True)
             
@@ -470,8 +465,8 @@ class Sidebar(QWidget, QObject):
                 self.garbage_collector.append(btn_confirmar)
                 self.garbage_collector.append(layout)
                 #necessario pra posicionar os botoes
-                self.coord_last_widget.append(container.x()) 
-                self.coord_last_widget.append(container.y()+20)
+                self.coord_last_widget[0] = container.x()
+                self.coord_last_widget[1] = container.y() + 20
 
             
             elif(self.check[3] is None):
@@ -539,8 +534,6 @@ class Sidebar(QWidget, QObject):
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
 
         except Error as e:
-            #text_screen = QLabel("<font color='red'> O Registro não foi salvo! Verifique o console para mais informações.</font>")
-            #self.insertOnGUI(text_screen, 440)
             print(f"\n{self.VERMELHO}*******************************{self.RESET}")
             print(f"{self.VERMELHO}Ocorreu um erro! {self.RESET}")
             print(f"{self.VERMELHO}*******************************{self.RESET}\n")
@@ -621,18 +614,14 @@ class Sidebar(QWidget, QObject):
         if self.pos_button_x == 0:
             self.pos_button_x = 140 # coloca o prox. button do lado direito do button anterior
         else:
-            self.pos_button_x = 0
-            #self.pos_button_y += 90 # coloca o prox. button abaixo dos dois buttons já gerados
+            self.pos_button_x = 0        
         
-        
-
         button.setStyleSheet(self.button_style_3)
         return button
         
     def reset(self):
         self.eixo_y_form = 150
         self.check = [None, None, None, None] # habilitando os forms
-        # destruir os self.forms
 
 
     def cancel(self, param1=None):
@@ -735,7 +724,6 @@ class Sidebar(QWidget, QObject):
 
         # ETAPA 2: Gerando o documento PDF com os dados
         doc = SimpleDocTemplate("conteudo.pdf")
-        styles = getSampleStyleSheet()
         count = 0
         linhas = []
         linhas.append(["Placa", "Data/Hora(SAÍDA)", "Data/Hora(ENTRADA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado"]) # define as colunas da tabela

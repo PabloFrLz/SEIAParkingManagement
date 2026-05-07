@@ -43,7 +43,6 @@ class Vaga(QGraphicsPixmapItem, QObject):
         self.nome = " - "
         self.autarquia = autarquia
         #registros
-        #self.id_registro = 0
         self.data_hora = " - "
         self.tipo = " - "
 
@@ -68,7 +67,6 @@ class Vaga(QGraphicsPixmapItem, QObject):
         self.setPos(x, y) # Posiciona o carro
         
         #cria uma versão monocromática (tonz de cinza) para a imagem do veículo
-        #self.pixmap_gray = QPixmap.fromImage(self.pixmap_original.toImage().convertToFormat(QImage.Format_Grayscale8)) 
         self.pixmap_gray = self.pixmap_to_grayscale_keep_alpha(self.pixmap_original)
 
         #insere sombra no carro - mesma sombra que será usada posteriormente para efeitos de luz (LED pulsante)
@@ -143,7 +141,7 @@ class Vaga(QGraphicsPixmapItem, QObject):
             if self.status == 0:
                 self.ativar_animacao(withLoop=False) # ativa um destaque de sombra ao passar o mouse
             self.checkStatus() # verifica o status da vaga e atualiza a cor correspondente 
-            #self.animation.finished.connect(self.desativar_animacao)
+
         
     # Evento especial ao sair com o mouse da vaga
     def hoverLeaveEvent(self, event):
@@ -159,7 +157,6 @@ class Vaga(QGraphicsPixmapItem, QObject):
         if self.shadow:
             self.shadow.setColor(self.color) # atualiza a cor da sombra para o LED pulsante
 
-        #self.animation.start() # inicia a animação de LED pulsante
         self.ativar_animacao(withLoop=True) # ativa a animação de LED pulsante em loop infinito
     
     def checkStatus(self):

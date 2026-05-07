@@ -1,7 +1,5 @@
 from PySide6.QtWidgets import QLabel, QComboBox, QWidget, QVBoxLayout
 
-import Sidebar
-
 
 class Formulario(QWidget):
 

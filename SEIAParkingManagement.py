@@ -582,12 +582,12 @@ class SEIAParkingManagement(QGraphicsView):
         # Ajusta a visão inicial
         #self.fitInView(bg, Qt.KeepAspectRatio)
     
-    """
+    
     def wheelEvent(self, event):
         # Zoom com roda do mouse
         factor = 1.15 if event.angleDelta().y() > 0 else 0.85
         self.scale(factor, factor)
-    """
+    
 
     def initDatabaseMySQL(self):
         # Configurações de conexão com o banco de dados MySQL
@@ -765,16 +765,6 @@ class SEIAParkingManagement(QGraphicsView):
             self.legendas.append([item, item_text]) # insere as legendas como tuplas (QUADRADO + TEXTO DESCRITIVO)
 
 
-
-'''app.setStyleSheet("""
-    QToolTip {
-        background-color: #404033;
-        color: black;
-        border: 1px solid black;
-        padding: 4px;
-        font-size: 12px;
-    }
-""")'''
 app = QApplication(sys.argv)
 app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
 viewer = SEIAParkingManagement()
@@ -783,12 +773,4 @@ viewer.resize(WIDTH+K, HEIGHT)
 viewer.show()
 sys.exit(app.exec())
 
-
-'''
-app = QtWidgets.QApplication(sys.argv)
-window = QtWidgets.QMainWindow()
-apply_stylesheet(app, theme='dark_teal.xml') # aplica o thema exemplo do qt-material
-window.resize(WIDTH+k, HEIGHT) # define o tamanho da janela
-window.show() # mostra a janela
-app.exec()'''
 
