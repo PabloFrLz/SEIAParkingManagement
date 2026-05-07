@@ -22,18 +22,18 @@ pip install reportlab
 	• Modificar as variaveis globais USER e PASSWORD do arquivo SEIAParkingManagement.py 
 	  com as credenciais do seu banco de dados;
  	• Entrar no banco via cmd e executar os códigos:
-		```bash
-		source C:(caminho_para_projeto)\SEIAParkingManagement\database\seia_parking.sql
-		source C:(caminho_para_projeto)\SEIAParkingManagement\database\autarquia.sql
-		source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
-		source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql
-		```
+```bash
+source C:(caminho_para_projeto)\SEIAParkingManagement\database\seia_parking.sql
+source C:(caminho_para_projeto)\SEIAParkingManagement\database\autarquia.sql
+source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
+source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql
+```
 	 
  
  ## CONFIGURAÇÕES FINAIS:
-	```bash
-	pip install --upgrade PySide6 pyqtdarktheme"
-	```
+```bash
+pip install --upgrade PySide6 pyqtdarktheme"
+```
 
 
 ## Interface da Aplicação
