@@ -3,6 +3,14 @@ from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QL
 from PySide6.QtGui import QBrush, QColor, QPixmap, QRegularExpressionValidator
 from pymysql import Error
 from shiboken6 import isValid
+from pypdf import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+import io, os
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import mm
 
 import Formulario
 
@@ -50,7 +58,8 @@ class Sidebar(QWidget, QObject):
         self.turnRound = True
         self.titulo = None
         self.sentinel = None
-        self.ctrl_forms = True
+        self.ctrl_forms = True 
+        self.action = False
         self.coord_last_widget = []
         self.garbage_collector = []
         #self.conteiner = QVBoxLayout() # conteiner para agrupar elementos de outras paginas da sidebar que nao a de informações
@@ -73,7 +82,7 @@ class Sidebar(QWidget, QObject):
         form.setSpacing(16)
         form.setLabelAlignment(Qt.AlignRight)
 
-        field_style = """
+        self.button_style = """
             QLineEdit, QComboBox {
                 background-color: #000000;     /* fundo que destoa */
                 color: #ffffff;
@@ -87,6 +96,50 @@ class Sidebar(QWidget, QObject):
                 border: 1px solid #ffaa00;     /* destaque laranja quando focado */
                 background-color: #2e2e2e;     /* fundo mais escuro quando focado */
             }
+            QPushButton {
+                color: #ffffff;
+                background-color: transparent;
+                border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
+                padding: 12px 20px;
+                text-align: left;
+                font-size: 14px;
+                border-radius: 6px;
+                margin: 4px 8px;
+            }
+            
+            QPushButton:hover {
+                background-color: rgba(255, 165, 0, 80);   /* laranja suave */
+            }
+            
+            QPushButton:pressed, QPushButton:checked {
+                background-color: rgba(255, 140, 0, 160);
+                color: white;
+            }  
+        """
+
+        self.button_style_2 = """
+            QPushButton {
+                color: #ffffff;
+                background-color: transparent;
+                border: 1px solid rgba(40, 107, 0, 80);
+                padding: 12px 20px;
+                text-align: left;
+                font-size: 14px;
+                border-radius: 6px;
+                margin: 4px 8px;
+            }
+            
+            QPushButton:hover {
+                background-color: rgba(0, 255, 155, 80); 
+            }
+            
+            QPushButton:pressed, QPushButton:checked {
+                background-color: rgba(0, 255, 0, 160);
+                color: white;
+            }
+        """
+
+        self.button_style_3 = """
             QPushButton {
                 color: #ffffff;
                 background-color: transparent;
@@ -145,7 +198,7 @@ class Sidebar(QWidget, QObject):
         form.addRow("Registro:", None)
         form.addRow(self.lista_registro)
 
-        self.setStyleSheet(field_style)
+        self.setStyleSheet(self.button_style)
 
         #======================================
         # Sidebar
@@ -193,27 +246,13 @@ class Sidebar(QWidget, QObject):
         self.btn_cadastro.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_cadastro)
         self.btn_cadastro.clicked.connect(self.acaoButtonCadastro)
-        self.btn_cadastro.setStyleSheet(
-            """QPushButton {
-                color: #ffffff;
-                background-color: transparent;
-                border: 1px solid rgba(40, 107, 0, 80);
-                padding: 12px 20px;
-                text-align: left;
-                font-size: 14px;
-                border-radius: 6px;
-                margin: 4px 8px;
-            }
-            
-            QPushButton:hover {
-                background-color: rgba(0, 255, 155, 80); 
-            }
-            
-            QPushButton:pressed, QPushButton:checked {
-                background-color: rgba(0, 255, 0, 160);
-                color: white;
-            }"""
-        )
+        self.btn_cadastro.setStyleSheet(self.button_style_2)
+
+        self.btn_relatorio= QPushButton("                 RELATÓRIO")
+        self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
+        self.sidebar_layout.addWidget(self.btn_relatorio)
+        self.btn_relatorio.clicked.connect(self.acaoButtonRelatorio)
+        self.btn_relatorio.setStyleSheet(self.button_style_2)
 
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
@@ -235,8 +274,13 @@ class Sidebar(QWidget, QObject):
         self.largura = WIDTH
         self.animation = QPropertyAnimation(self.sidebar, b"pos")
         self.animation.setDuration(1200)
-    
 
+    def controlActions(self, info):
+        if not self.action:
+            self.atualizar_info(info)
+        else:
+            self.cancel()
+    
     def atualizar_info(self, info): 
         #atualizando a cor do campo "Status da vaga"
         if info.status == 0: # disponivel
@@ -286,6 +330,7 @@ class Sidebar(QWidget, QObject):
         #historico de reservas no formato de lista (exemplo)
     
     def acaoButtonSaida(self):
+        self.action = True # variavel de controle que será usada para determinar quando uma ação de registro de saida ou cadastro estiver em andamento.
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
             self.titulo = self.insertHeader("REGISTRAR HORÁRIO")#gera logo no topo e titulo da seção 
@@ -304,6 +349,7 @@ class Sidebar(QWidget, QObject):
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga ainda está DISPONÍVEL.")
 
     def acaoButtonCadastro(self):
+        self.action = True # variavel de controle que será usada para determinar quando uma ação de registro de saida ou cadastro estiver em andamento.
         self.transitToFormulario() # animação que empurra pro lado direito as infos
         self.titulo = self.insertHeader("CADASTRAR SERVIDOR")#gera logo no topo e titulo da seção 
         self.ctrl_forms = False # habilita formularios de cadastro de servidor;
@@ -583,34 +629,15 @@ class Sidebar(QWidget, QObject):
             self.pos_button_x = 0
             #self.pos_button_y += 90 # coloca o prox. button abaixo dos dois buttons já gerados
         
-        style_f = """
-            QPushButton {
-                color: #ffffff;
-                background-color: transparent;
-                border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
-                padding: 12px 20px;
-                text-align: left;
-                font-size: 14px;
-                border-radius: 6px;
-                margin: 4px 8px;
-            }
-            
-            QPushButton:hover {
-                background-color: rgba(255, 165, 0, 80);   /* laranja suave */
-            }
-            
-            QPushButton:pressed, QPushButton:checked {
-                background-color: rgba(255, 140, 0, 160);
-                color: white;
-            }  
-        """
+        
 
-        button.setStyleSheet(style_f)
+        button.setStyleSheet(self.button_style_3)
         return button
         
     def reset(self):
         self.eixo_y_form = 150
         self.check = [None, None, None, None] # habilitando os forms
+        self.action = False
         # destruir os self.forms
 
 
@@ -667,10 +694,20 @@ class Sidebar(QWidget, QObject):
         cursor.execute(f"select * from registro where num_vaga='{num_vaga}' order by id desc limit 1")
         return cursor.fetchall() # retorna uma unica tupla e nao uma lista de tuplas
 
-    def updateHistoricoRegistro(self, num_vaga):
+    def getRegistroByVaga(self, num_vaga):
         cursor = self.conn.cursor()
         cursor.execute(f"select * from registro where num_vaga='{num_vaga}'")
         entradas_tabela = cursor.fetchall()
+        return entradas_tabela
+    
+    def getServidorByCPF(self, cpf_cnpj):
+        cursor = self.conn.cursor()
+        cursor.execute(f"select * from servidor where cpf_cnpj='{cpf_cnpj}'")
+        servidor = cursor.fetchall()
+        return servidor
+
+    def updateHistoricoRegistro(self, num_vaga):
+        entradas_tabela = self.getRegistroByVaga(num_vaga)
 
         linha = 0
         self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤶)", "Data/Hora(⤷)", "CPF/CNPJ"])
@@ -696,4 +733,69 @@ class Sidebar(QWidget, QObject):
         self.lista_registro.resizeColumnsToContents()        # Ajusta cada coluna ao conteúdo
         self.lista_registro.horizontalHeader().setStretchLastSection(True)
 
-    
+    def acaoButtonRelatorio(self):
+        relatorio_pdf = "relatorio.pdf" #nome do arquivo a ser gerado
+        
+        # ETAPA 1: Consulta
+        entradas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
+
+        # ETAPA 2: Gerando o documento PDF com os dados
+        doc = SimpleDocTemplate("conteudo.pdf")
+        styles = getSampleStyleSheet()
+        count = 0
+        linhas = []
+        linhas.append(["Placa", "Data/Hora(SAÍDA)", "Data/Hora(ENTRADA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado"]) # define as colunas da tabela
+        for tupla in entradas_tabela:
+            servidor = self.getServidorByCPF(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
+            #print(f"______________________________\n\n{servidor}\n{tupla[2]}\n\n____________________________")
+            tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1], servidor[0][2]]
+            linhas.append(tupla_formatada) # insere uma linha no pdf
+            #linhas.append(Spacer(1, 10))
+            count+=1 # contador de linhas 
+
+        tabela = Table(linhas) # cria a tabela
+        tabela.setStyle(TableStyle([
+            # fundo cabeçalho
+            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+            # cor do texto cabeçalho
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            # alinhamento
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            # fonte cabeçalho
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            # tamanho fonte
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            # padding cabeçalho
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+            # cor linhas internas
+            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ]))
+
+        
+        elemento = []
+        elemento.append(Paragraph(f"<font size='16'>Nº da vaga: {self.num_vaga.displayText()}</font>"))
+        elemento.append(Spacer(1, 10 * mm))
+        elemento.append(tabela)
+
+        doc.build(elemento) # cria o pdf com os dados do registro
+        
+        # ETAPA 3: juntando PDF
+        capa_pdf = PdfReader("capa.pdf")
+        conteudo_pdf = PdfReader("conteudo.pdf")
+        writer = PdfWriter()
+
+        for page in capa_pdf.pages: # primeira página = capa
+            writer.add_page(page)
+
+        for page in conteudo_pdf.pages: # páginas geradas dinamicamente
+            writer.add_page(page)
+
+        with open(relatorio_pdf, "wb") as f: # salvar resultado
+            writer.write(f)
+
+        os.remove("conteudo.pdf") # deleta do diretorio o documento temporario "conteudo.pdf" 
+        QMessageBox.information(self.main_window, "Sucesso", f"Relatório gerado com sucesso!\nConsulte o arquivo '{relatorio_pdf}'.")
+
+
+
+

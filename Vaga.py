@@ -22,7 +22,7 @@ laranja = QColor(255, 168, 0, 160) # laranja
 class Vaga(QGraphicsPixmapItem, QObject):
     habilitar_sidebar = Signal(object) # sinal para habilitar a sidebar e enviar as informações da vaga clicada (id, tipo_carro, status) para a sidebar exibir as informações correspondentes
 
-    def __init__(self, id, tipo_carro, x, y, rotate):
+    def __init__(self, id, tipo_carro, autarquia, x, y, rotate):
         QObject.__init__(self)
         super().__init__()
 
@@ -41,7 +41,7 @@ class Vaga(QGraphicsPixmapItem, QObject):
         # servidores 
         self.cpf_cnpj = " - "
         self.nome = " - "
-        self.autarquia = " - "
+        self.autarquia = autarquia
         #registros
         #self.id_registro = 0
         self.data_hora = " - "
@@ -104,10 +104,6 @@ class Vaga(QGraphicsPixmapItem, QObject):
     #===========================================
     def mousePressEvent(self, event):
         self.press_button_status = True #indica que o botão foi pressionado, para que o metodo "hoverLeaveEvent" não seja acionado automaticamente
-        #print("Vaga clicada: ID = ", self.id, "Tipo de Carro = ", self.tipo_carro, "Status = ", self.status)
-        # Debug - APAGAR - teste de LEDs 
-        #self.status = random.randint(0, 2) # Gera um status aleatório (0, 1 ou 2)
-        #self.ligar_led()
         self.checkStatus()
         self.habilitar_sidebar.emit(self) # emite o sinal para habilitar a sidebar e enviar as informações da vaga clicada (id, tipo_carro, status) para a sidebar exibir as informações correspondentes
         
@@ -139,7 +135,7 @@ class Vaga(QGraphicsPixmapItem, QObject):
         self.setToolTip(f"""
             <b>Vaga {self.id}</b><br>
             Status: {self.checkStatus()}<br>
-            Tipo: {self.tipo_carro}
+            Propriedade: {self.autarquia}
         """)
 
         if not self.press_button_status: #se o botão nao for pressionado -> execute
