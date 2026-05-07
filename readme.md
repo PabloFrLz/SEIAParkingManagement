@@ -1,12 +1,12 @@
 
-#  Project Parking Management v 1.0.0.02
-#  Software de Controle de Estacionamento Institucional
-#  Desenvolvido pela Diretoria de Inovação (DIN), vinculado a Secretaria da Inovação em Inteligência Artificial (SEIA)
+##  Project Parking Management v 1.0.0.02
+##  Software de Controle de Estacionamento Institucional
+##  Desenvolvido pela Diretoria de Inovação (DIN), vinculado a Secretaria da Inovação em Inteligência Artificial (SEIA)
 
 
-# PREPARANDO O AMBIENTE:
+## PREPARANDO O AMBIENTE:
 
- ## DEPENDÊNCIAS NECESSÁRIAS:
+ ### DEPENDÊNCIAS NECESSÁRIAS:
 	• ```winget install Python.Python.3.13```
 	• ```pip install pyside6```
 	• ```pip install pyqtdarktheme```
@@ -15,7 +15,7 @@
 	• ```pip install pypdf```
 	• ```pip install reportlab```
 
- ## CONFIGURANDO O BANCO:
+ ### CONFIGURANDO O BANCO:
 	  NOTA: instalar o mysql server 8.0 e setar as variaveis de ambiente se for necessário.
 	• Modificar as variaveis globais USER e PASSWORD do arquivo SEIAParkingManagement.py 
 	  com as credenciais do seu banco de dados;
@@ -26,11 +26,11 @@
 		```source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql```
 	 
  
- ## CONFIGURAÇÕES FINAIS:
+ ### CONFIGURAÇÕES FINAIS:
 	• ```executar "pip install --upgrade PySide6 pyqtdarktheme"```
 
 
-# INTERFACE DA APLICAÇÃO:
+## INTERFACE DA APLICAÇÃO:
 
 	![Tela do sistema](interface_da_aplicacao/img1.png)
 
