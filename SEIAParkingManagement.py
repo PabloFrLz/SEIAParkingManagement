@@ -7,10 +7,10 @@
     Tools: Python3, PySide6, MySQL, PyQtDarkTheme, Photoshop CC 2015, Github  
     Author: Pablo Franco Luz (pablo-tr1@hotmail.com - https://github.com/PabloFrLz)
     Supervisor: André Luis Costa Batistela 
-    Sector: Diretoria de Inovação (DIN)
-    Ver.: 1.0.0.01
+    Department: Diretoria de Inovação (DIN)
+    Version: 1.0.0.02
     Start: 31/03/2026 - 08:16PM
-    End: 05/05/2026 - 12:38PM
+    End: 08/05/2026 - 20:52PM
     Notas:
         1.   _________________________________________________________________________________________
             |      Dados para acesso ao banco de dados MySQL:                                         |                                                                                   |
