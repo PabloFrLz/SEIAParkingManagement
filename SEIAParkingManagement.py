@@ -582,12 +582,12 @@ class SEIAParkingManagement(QGraphicsView):
         # Ajusta a visão inicial
         #self.fitInView(bg, Qt.KeepAspectRatio)
     
-    
+    """
     def wheelEvent(self, event):
         # Zoom com roda do mouse
         factor = 1.15 if event.angleDelta().y() > 0 else 0.85
         self.scale(factor, factor)
-    
+    """
 
     def initDatabaseMySQL(self):
         # Configurações de conexão com o banco de dados MySQL
