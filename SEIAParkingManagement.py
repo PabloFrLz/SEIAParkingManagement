@@ -5,9 +5,10 @@
              em Inovação (DIN), vinculado à Secretaria da Inovação e Inteligência Artificial (SEIA), 
              do Estado do Paraná.
     Tools: Python3, PySide6, MySQL, PyQtDarkTheme, Photoshop CC 2015, Github  
+    Department: Diretoria de Inovação (DIN)
     Author: Pablo Franco Luz (pablo-tr1@hotmail.com - https://github.com/PabloFrLz)
     Supervisor: André Luis Costa Batistela 
-    Department: Diretoria de Inovação (DIN)
+    Director: Thiago Rodrigo da Silva (Thiago Marcelino)
     Version: 1.0.0.02
     Start: 31/03/2026 - 08:16PM
     End: 08/05/2026 - 20:52PM
