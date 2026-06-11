@@ -1,6 +1,6 @@
 """
     Subject: Software de gerenciamento de vagas de estacionamento das dependências do SEIA, 
-             desenvolvido para o núcleo Administrativo Setorial (NAS) e para a Guarita do 
+             desenvolvido para o Núcleo Administrativo Setorial (NAS) e para a Guarita do 
              edifício onde a secretaria está lotada. Projeto conduzido pelo núcleo de Diretoria
              em Inovação (DIN), vinculado à Secretaria da Inovação e Inteligência Artificial (SEIA), 
              do Estado do Paraná.
@@ -9,7 +9,7 @@
     Author: Pablo Franco Luz (pablo-tr1@hotmail.com - https://github.com/PabloFrLz)
     Supervisor: André Luis Costa Batistela 
     Director: Thiago Rodrigo da Silva (Thiago Marcelino)
-    Version: 1.0.0.02
+    Version: 1.0.0.03
     Start: 31/03/2026 - 08:16PM
     End: 08/05/2026 - 20:52PM
     Notas:
@@ -40,14 +40,14 @@ import Sidebar as sb
 import qdarktheme
 import pymysql
 
-ver = "v1.0.0.02" # versão do software
+ver = "v1.0.0.03" # versão do software
 
 #variaveis de autenticação do banco de dados
 USER = 'root'
 PASSWORD = '5452'
 
 global WIDTH, HEIGHT, K, J
-WIDTH = 1190
+WIDTH = 1300
 HEIGHT = 840
 K = 400 #variavel de ajuste para expansão da propriedade na HORIZONTAL 
 J = 530 ##variavel de ajuste para expansão da propriedade na VERTICAL 
@@ -553,7 +553,7 @@ class SEIAParkingManagement(QGraphicsView):
 
         proxy_toggle = QGraphicsProxyWidget()
         proxy_toggle.setWidget(self.toggle)
-        proxy_toggle.setPos(WIDTH+570, HEIGHT+350)
+        proxy_toggle.setPos(WIDTH+K+120, HEIGHT+350)
         proxy_toggle.setZValue(1000) # força a ficar no topo da pilha de renderização
         self.scene.addItem(proxy_toggle)
         
@@ -565,9 +565,10 @@ class SEIAParkingManagement(QGraphicsView):
         #==============================================================================================
 
         copyright = QGraphicsTextItem("© 2026 SEIA Parking Management "+ver+".\n         Todos os direitos reservados.")
-        copyright.setFont(QFont("Arial", 8))
+        copyright.setFont(QFont("Arial", 10))
         copyright.setDefaultTextColor(QColor("white"))
-        copyright.setPos(WIDTH+K, HEIGHT+J-60)
+        copyright.setPos(WIDTH+K-50, HEIGHT+J-60)
+        copyright.setZValue(10)
         self.scene.addItem(copyright)
 
         #==============================================================================================
@@ -581,7 +582,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.delayApresentacao(10.0) # alterna a view de blocos geometricos para edificio com o delay especificado de 10 segundos
 
         # Ajusta a visão inicial
-        #self.fitInView(bg, Qt.KeepAspectRatio)
+        #self.fitInView(self.bg, Qt.KeepAspectRatio)
     
     """
     def wheelEvent(self, event):
@@ -602,9 +603,6 @@ class SEIAParkingManagement(QGraphicsView):
         return self.conn
     
     def updateStatusVagas(self):
-
-        #self.show_message("bla bla bla", "python e pytgqt são grandes porcarias")
-        
         cursor = self.conn.cursor()
         cursor.execute("select * from registro")
         registro = cursor.fetchall()
@@ -769,8 +767,9 @@ class SEIAParkingManagement(QGraphicsView):
 app = QApplication(sys.argv)
 app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
 viewer = SEIAParkingManagement()
-viewer.setWindowTitle("Car Management - v1.0.0.01")
-viewer.resize(WIDTH+K, HEIGHT)
+viewer.setWindowTitle("SEIA Parking Management - "+ver)
+viewer.resize(WIDTH+K-240, HEIGHT+150)
+viewer.scale(0.85, 0.85)
 viewer.show()
 sys.exit(app.exec())
 

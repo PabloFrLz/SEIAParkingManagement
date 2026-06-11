@@ -16,7 +16,7 @@ class Formulario(QWidget):
         # lista de itens vindas do banco de dados
         for tupla in items:
             if categoria == 1: # servidores
-                item = tupla[0]+"  -  "+tupla[1] # (CPF + Nome)
+                item = tupla[0]+" - "+tupla[1] # (CPF + Nome)
                 self.combo.addItem(item) 
             elif categoria == 2: # carros
                 item = f'{tupla[0]}  -  {tupla[3]}' # (placa/modelo)
@@ -25,7 +25,15 @@ class Formulario(QWidget):
                 self.combo.addItems(tupla)
         self.select.addWidget(self.combo)
         self.combo.currentTextChanged.connect(self.opcaoSelecionada) # conecta signal pra capturar escolha do usuario 
-
+        # estilo dos formulários
+        self.combo.setStyleSheet("""
+            background-color: rgba(0, 0, 0, 0.30);   /* fundo leve */
+            border: none;                                   /* remove borda */
+            border-radius: 8px;
+            padding: 6px 8px;
+            color: white;
+            font-size: 16px;
+        """)
         self.setLayout(self.select)
 
 

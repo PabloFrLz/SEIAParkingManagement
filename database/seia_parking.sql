@@ -17,6 +17,7 @@ create table if not exists Carro(
     autarquia CHAR(16) not null,
     modelo CHAR(100) not null,
     setor CHAR(200) not null,
+    proprietario CHAR(200), -- ideal seria essa coluna referenciar Servidor(nome) - mas como não tenho os dados dos servidores como CPF, isso fica para outro momento.
     foreign key (num_vaga) references Vaga(num_vaga) on delete cascade,
     foreign key (autarquia) references Autarquia(nome) on delete cascade
 );
@@ -42,8 +43,14 @@ create table if not exists Registro(
     foreign key (num_vaga) references Vaga(num_vaga) on delete cascade
 );
 
-source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\database\autarquia.sql
-source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\database\vagas.sql
-source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\database\carros.sql
+-- [ORDEM DE INSERÇÃO]
+-- autarquia.sql
+-- vagas.sql
+-- servidor.sql (caso tenha os dados dos servidores de antemão)
+-- carros.sql
+
+source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\SEIAParkingManagement\database\autarquia.sql
+source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\SEIAParkingManagement\database\vagas.sql
+source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\SEIAParkingManagement\database\carros.sql
 
 --SELECT * FROM carro c WHERE c.autarquia = 'seia' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA');

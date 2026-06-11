@@ -27,11 +27,12 @@ class Vaga(QGraphicsPixmapItem, QObject):
         super().__init__()
 
         
-        self.id = id #identificador do carro
-        self.tipo_carro = tipo_carro #tipo de carro (ex: 1=hatch, 2=sedan, 3=pickup)
-        self.status = 0 #status da vaga (ex: 0=disponível, 1=ocupada, 2=reserva)
-        self.status_name = "" #variavel auxiliar com o nome do status para a GUI
-        self.press_button_status = False #status do botão  (False=desativado, True=ativado)
+        self.id = id # identificador do carro
+        self.autarquia = autarquia # autarquia/orgão vinculado a vaga 
+        self.tipo_carro = tipo_carro # tipo de carro (ex: 1=hatch, 2=sedan, 3=pickup)
+        self.status = 0 # status da vaga (ex: 0=disponível, 1=ocupada, 2=reserva)
+        self.status_name = "" # variavel auxiliar com o nome do status para a GUI
+        self.press_button_status = False # status do botão  (False=desativado, True=ativado)
 
         #variaveis extras com dados restritos ao banco de dados
         #carros
@@ -41,7 +42,6 @@ class Vaga(QGraphicsPixmapItem, QObject):
         # servidores 
         self.cpf_cnpj = " - "
         self.nome = " - "
-        self.autarquia = autarquia
         #registros
         self.data_hora = " - "
         self.tipo = " - "

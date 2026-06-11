@@ -86,7 +86,7 @@ class Sidebar(QWidget, QObject):
                 border: 1px solid #555555;
                 border-radius: 8px;            /* bordas arredondadas */
                 padding: 8px 12px;
-                font-size: 14px;
+                font-size: 18px;
                 min-height: 24px;
             }
             QLineEdit:focus {
@@ -98,8 +98,8 @@ class Sidebar(QWidget, QObject):
                 background-color: transparent;
                 border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
                 padding: 12px 20px;
-                text-align: left;
-                font-size: 14px;
+                text-align: center;
+                font-size: 18px;
                 border-radius: 6px;
                 margin: 4px 8px;
             }
@@ -120,8 +120,8 @@ class Sidebar(QWidget, QObject):
                 background-color: transparent;
                 border: 1px solid rgba(40, 107, 0, 80);
                 padding: 12px 20px;
-                text-align: left;
-                font-size: 14px;
+                text-align: center;
+                font-size: 18px;
                 border-radius: 6px;
                 margin: 4px 8px;
             }
@@ -142,8 +142,8 @@ class Sidebar(QWidget, QObject):
                 background-color: transparent;
                 border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
                 padding: 12px 20px;
-                text-align: left;
-                font-size: 14px;
+                text-align: center;
+                font-size: 18px;
                 border-radius: 6px;
                 margin: 4px 8px;
             }
@@ -154,6 +154,28 @@ class Sidebar(QWidget, QObject):
             
             QPushButton:pressed, QPushButton:checked {
                 background-color: rgba(255, 140, 0, 160);
+                color: white;
+            }  
+        """
+
+        self.button_style_4 = """
+            QPushButton {
+                color: #FFFFFF;
+                background-color: transparent;
+                border: 1px solid rgba(255, 0, 55, 80); /* borda laranja suave */
+                padding: 12px 20px;
+                text-align: center;
+                font-size: 18px;
+                border-radius: 6px;
+                margin: 4px 8px;
+            }
+            
+            QPushButton:hover {
+                background-color: rgba(255, 0, 55, 80);   /* laranja suave */
+            }
+            
+            QPushButton:pressed, QPushButton:checked {
+                background-color: rgba(255, 18, 70, 160);
                 color: white;
             }  
         """
@@ -202,7 +224,7 @@ class Sidebar(QWidget, QObject):
         #======================================
         self.sidebar = QWidget()
         self.sidebar.setFixedWidth(WIDTH - 890)           # largura da sidebar
-        self.sidebar.setFixedHeight(HEIGHT + J - 100)          # altura da sidebar
+        self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar
 
         self.sidebar_layout = QVBoxLayout(self.sidebar)
         self.sidebar_layout.setContentsMargins(20, 20, 20, 20)
@@ -229,27 +251,33 @@ class Sidebar(QWidget, QObject):
         # Botões de ação da sidebar
         #======================================
         # criação e estética dos botoes
-        self.btn_registrar_saida = QPushButton("                    SAIDA") # cria
+        self.btn_registrar_saida = QPushButton("SAIDA") # cria
         self.btn_registrar_saida.setCheckable(True)
         self.sidebar_layout.addWidget(self.btn_registrar_saida) # insere na GUI
         self.btn_registrar_saida.clicked.connect(self.acaoButtonSaida)
         
-        self.btn_registrar_entrada = QPushButton("                 ENTRADA")
+        self.btn_registrar_entrada = QPushButton("ENTRADA")
         self.btn_registrar_entrada.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_registrar_entrada)
         self.btn_registrar_entrada.clicked.connect(self.acaoButtonEntrada)
 
-        self.btn_cadastro = QPushButton("                 CADASTRO")
+        self.btn_cadastro = QPushButton("CADASTRAR SERVIDOR")
         self.btn_cadastro.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_cadastro)
         self.btn_cadastro.clicked.connect(self.acaoButtonCadastro)
         self.btn_cadastro.setStyleSheet(self.button_style_2)
 
-        self.btn_relatorio= QPushButton("                 RELATÓRIO")
+        self.btn_relatorio = QPushButton("RELATÓRIO")
         self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_relatorio)
         self.btn_relatorio.clicked.connect(self.acaoButtonRelatorio)
         self.btn_relatorio.setStyleSheet(self.button_style_2)
+
+        self.btn_remove = QPushButton("REMOVER SERVIDOR")
+        self.btn_remove.setCheckable(True) # destaca o botão selecionado
+        self.sidebar_layout.addWidget(self.btn_remove)
+        self.btn_remove.clicked.connect(self.acaoButtonRemoverServidor)
+        self.btn_remove.setStyleSheet(self.button_style_4)
 
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
@@ -260,7 +288,6 @@ class Sidebar(QWidget, QObject):
         self.regex_nome = QRegularExpression("^[A-Za-z ]*$") # Para o nome
         self.validator_nome = QRegularExpressionValidator(self.regex_nome)
         
-    
         #======================================
         # Configurações finais
         #======================================
@@ -274,9 +301,9 @@ class Sidebar(QWidget, QObject):
 
     def controlActions(self, info):
         self.cancel() # destroi formularios do button de saida ou cadastro caso esteja em andamento - isso permite interagir com outras vagas na interface
-        self.atualizar_info(info)
+        self.atualizar_info(info) 
     
-    def atualizar_info(self, info): 
+    def atualizar_info(self, info): # variavel info contem os dados definidos em Vaga.py, como self.id, self.tipo_carro, self.status, self.status_name, self.press_button_status
         #atualizando a cor do campo "Status da vaga"
         if info.status == 0: # disponivel
             self.status_vaga.setStyleSheet("color: green; font-weight: bold;")
@@ -315,7 +342,7 @@ class Sidebar(QWidget, QObject):
 
         else:
             self.num_vaga.setText(str(info.id))
-            self.orgao_vinculado.setText(" - ")
+            self.orgao_vinculado.setText(str(info.autarquia))
             self.modelo_carro.setText(" - ")
             self.placa_carro.setText(" - ")
             self.nome_servidor.setText(" - ")
@@ -328,8 +355,10 @@ class Sidebar(QWidget, QObject):
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
             self.titulo = self.insertHeader("REGISTRAR SAÍDA")#gera logo no topo e titulo da seção 
-            self.ctrl_forms = True # habilita formularios de registro de ENTRADA/SAIDA 
-            self.controlForms() # gerando o 1º form
+            self.check[0] = True # [v1.0.0.03]: desabilitado o formulario para requisitar o orgão/autarquia desde a v1.0.0.03 - apartir de agora, a autarquia será obtida direto do objeto 'Vaga' e o usuario não precisará fornecer manualmente quando for registrar SAIDA. 
+            self.registroSaida() # inicializa os formularios pra registro de saida
+            #self.ctrl_forms = True # habilita formularios de registro de ENTRADA/SAIDA 
+            #self.controlForms() # gerando o 1º form
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga está OCUPADA/RESERVADA.")
 
@@ -344,9 +373,17 @@ class Sidebar(QWidget, QObject):
 
     def acaoButtonCadastro(self):
         self.transitToFormulario() # animação que empurra pro lado direito as infos
-        self.titulo = self.insertHeader("CADASTRAR SERVIDOR")#gera logo no topo e titulo da seção 
-        self.ctrl_forms = False # habilita formularios de cadastro de servidor;
-        self.controlForms() 
+        self.titulo = self.insertHeader("CADASTRAR SERVIDOR") # gera logo no topo e titulo da seção
+        self.cadastroServidor() # inicializa os formularios pra cadastro de servidor
+        #self.ctrl_forms = False # habilita formularios de cadastro de servidor;
+        #self.controlForms()
+
+    def acaoButtonRemoverServidor(self): # [v1.0.0.03]: método que terá a ação que dará inicio ao processo de remoção de servidor 
+        self.transitToFormulario() # animação que empurra pro lado direito as infos
+        self.titulo = self.insertHeader("REMOVER SERVIDOR") 
+        self.removeServidor() # inicializa os formulários para remoção de servidor
+        #self.ctrl_forms = False # habilita formularios de cadastro de servidor;
+        #self.controlForms()
 
 
 
@@ -364,16 +401,146 @@ class Sidebar(QWidget, QObject):
 
         self.turnRound = not self.turnRound # inverte o estado para a próxima vez que o botão for clicado
     
-    def geraFormulario(self, consulta, texto):
+    def geraFormulario(self, consulta, texto, func):
         #consulta ao banco de dados para obter os dados cadastrados
         cursor = self.conn.cursor()
         cursor.execute(consulta)
         resultado_pesquisa = cursor.fetchall()
-
-        form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=self.controlForms) 
+        form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=func) 
         self.insertOnGUI(form, 0)#inserção na GUI
         return form
     
+    def registroSaida(self):
+        if (self.check[0] is None): 
+            texto = "Selecione a autarquia:"
+            consulta = "select * from autarquia"
+            self.categoria = 0
+            self.form1 = self.geraFormulario(consulta, texto, self.registroSaida) # gera o primeiro formulario
+            self.check[0] = True #desabilita esse bloco condicional na proxima iteração - fazendo com que caia no próximo if relacionado a self.check[1]
+        
+        elif (self.check[1] is None): 
+            #consulta se tem carros disponiveis pra eivtar ficar travado em etapas futuras
+            situacao = self.consultaDisponibilidadeFrota(self.form1.getResult())
+            if situacao:
+                texto = "Selecione o servidor responsável:"
+                #consulta = "select * from servidor where autarquia='{}'".format(self.form1.getResult())  
+                consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
+                self.categoria = 1
+                self.form2 = self.geraFormulario(consulta, texto, self.registroSaida)
+                self.check[1] = True
+                self.form1.setDisabled(True)
+            else:
+                QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.form1.getResult()))
+                self.cancel()
+
+        elif (self.check[2] is None):
+            texto = "Selecione o carro:"
+            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.form1.getResult()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA')"
+            self.categoria = 2
+            self.form3 = self.geraFormulario(consulta, texto, self.registroSaida)
+            self.coord_last_widget[0] = self.form3.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
+            self.coord_last_widget[1] = self.form3.getCoordY() + 20
+            self.check[2] = True
+            self.form2.setDisabled(True)
+        
+        elif(self.check[3] is None):
+            self.check[3] = True
+            # Button pra confirmar entrada no banco de dados
+            self.btn_commit = self.insertButton("CONFIRMAR", self.button_style_3, self.insertRegistro) # linka com a função para inserir na tabela de registros do banco
+            self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
+
+
+    def cadastroServidor(self):
+        if (self.check[0] is None): 
+            texto = "Selecione a autarquia:"
+            consulta = "select * from autarquia"
+            self.categoria = 0
+            self.form1 = self.geraFormulario(consulta, texto, self.cadastroServidor) # gera o primeiro formulario
+            self.check[0] = True #desabilita esse bloco condicional na proxima iteração
+
+        elif (self.check[1] is None): 
+            container = QWidget()
+            label = QLabel("Digite o nome do servidor:")
+            line_edit = QLineEdit()
+            line_edit.setValidator(self.validator_nome) # cria restrição para a entrada ser apenas letras maiusculas, minusculas e espaços
+            line_edit.setPlaceholderText("Digite o nome aqui...")
+            btn_confirmar = QPushButton("PRÓXIMO")
+            btn_confirmar.clicked.connect(lambda: self.capturar_nome(line_edit, self.cadastroServidor))
+            layout = QVBoxLayout(container) 
+            layout.addWidget(label)
+            layout.addWidget(line_edit)
+            layout.addWidget(btn_confirmar)
+            self.setLayout(layout)
+            self.insertOnGUI(container, 25)
+            self.check[1] = True
+            # para destruir os itens posteriormente em cancel()
+            self.garbage_collector.append(container)
+            self.garbage_collector.append(label)
+            self.garbage_collector.append(line_edit)
+            self.garbage_collector.append(btn_confirmar)
+            self.garbage_collector.append(layout)
+
+        elif (self.check[2] is None): 
+            container = QWidget()
+            label = QLabel("Digite o CPF ou CNPJ do servidor:")
+            line_edit = QLineEdit()
+            line_edit.setValidator(self.validator_cpf) # cria restrição para a entrada ser apenas numeros sem pontos, hifens ou letras.
+            line_edit.setMaxLength(11) # limita pra inserir apenas 11 digitos e nao mais que isso
+            line_edit.setPlaceholderText("ex.: 50545642300...")
+            btn_confirmar = QPushButton("PRÓXIMO")
+            btn_confirmar.clicked.connect(lambda: self.capturar_cpf(line_edit, self.cadastroServidor))
+            layout = QVBoxLayout(container)
+            layout.addWidget(label)
+            layout.addWidget(line_edit)
+            layout.addWidget(btn_confirmar)
+            self.setLayout(layout)
+            self.insertOnGUI(container, 35)
+            self.check[2] = True
+            # para destruir os itens posteriormente em cancel()
+            self.garbage_collector.append(container)
+            self.garbage_collector.append(label)
+            self.garbage_collector.append(line_edit)
+            self.garbage_collector.append(btn_confirmar)
+            self.garbage_collector.append(layout)
+            #necessario pra posicionar os botoes
+            self.coord_last_widget[0] = container.x()
+            self.coord_last_widget[1] = container.y() + 20
+
+        elif(self.check[3] is None):
+            self.check[3] = True
+            # Button pra confirmar entrada no banco de dados
+            self.btn_commit = self.insertButton("CONFIRMAR", self.button_style_3, self.insertServidor) # linka com a função que insere no banco os dados do servidor
+            self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
+
+
+    def removeServidor(self): # [v1.0.0.03]: Gerando os formularios do processo de remoção de servidor
+        if (self.check[0] is None): 
+            texto = "Selecione a autarquia:"
+            consulta = "select * from autarquia"
+            self.categoria = 0
+            self.form1 = self.geraFormulario(consulta, texto, self.removeServidor) # gera o primeiro formulario
+            self.check[0] = True #desabilita esse bloco condicional na proxima iteração
+        
+        elif (self.check[1] is None): 
+            texto = "Selecione o servidor responsável:"
+            consulta = "select * from servidor where autarquia='{}'".format(self.form1.getResult())
+            self.categoria = 1
+            self.form2 = self.geraFormulario(consulta, texto, self.removeServidor)
+            self.check[1] = True
+            self.form1.setDisabled(True)
+            # para poder posicionar os botoes corretamente
+            self.coord_last_widget[0] = self.form2.getCoordX() 
+            self.coord_last_widget[1] = self.form2.getCoordY() + 20
+
+        elif(self.check[3] is None):
+            self.check[3] = True
+            aux = self.form2.getResult().split(" - ") # obtem o CPF e nome do servidor selecionado
+            self.nome = aux[1] # usa apenas o nome capturado
+            # Buttons pra confirmar remoção de servidor
+            self.btn_commit = self.insertButton("REMOVER", self.button_style_3, self.deleteServidor) # linka coma função que remove os dados do servidor do banco
+            self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
+
+    '''
     def controlForms(self):
         if self.ctrl_forms: # REGISTRO
             if (self.check[0] is None): 
@@ -474,15 +641,15 @@ class Sidebar(QWidget, QObject):
                 # Button pra confirmar entrada no banco de dados
                 self.btn_commit = self.insertButton("CONFIRMAR", self.insertServidor) # Insere na tabela servidor
                 self.btn_cancel = self.insertButton("CANCELAR", self.cancel)
-            
+    '''   
 
-    def capturar_nome(self, line_edit):
-        self.nome = line_edit.text().strip()
-        self.controlForms()
+    def capturar_nome(self, line_edit, func_call_recursivamente):
+        self.nome = line_edit.text().strip() 
+        func_call_recursivamente()
 
-    def capturar_cpf(self, line_edit):
+    def capturar_cpf(self, line_edit, func_call_recursivamente):
         self.cpf = line_edit.text().strip()
-        self.controlForms()
+        func_call_recursivamente()
 
     def insertRegistro(self, dados=None):
         print(f"\n\n {self.AMARELO}***************** ( DATABASE INSERT) *****************{self.RESET}\n")
@@ -560,12 +727,31 @@ class Sidebar(QWidget, QObject):
             print("Detalhes: ",e,"\n*******************************")
             QMessageBox.warning(self.main_window, "Atenção", "Ocorreu um erro no tratamento dos dados. Verifique o console.")
             
+    def deleteServidor(self): # [v1.0.0.03]: remoção do servidor do banco de dados
+        try:
+            cursor = self.conn.cursor() 
+            cursor.execute(f"delete from servidor where nome='{self.nome}'")
+            self.conn.commit()
+            print(f"\n{self.VERMELHO}================================{self.RESET}")
+            print(f"{self.VERMELHO}Servidor deletado com sucesso!{self.RESET}")
+            print(f"{self.VERMELHO}================================{self.RESET}\n")
+
+            QMessageBox.information(self.main_window, "Sucesso", "Servidor removido com sucesso!")
+            self.cancel(self.sentinel) # reseta informações e retrocede sidebar
+
+        except Error as e:
+            print(f"\n{self.VERMELHO}*******************************{self.RESET}")
+            print(f"{self.VERMELHO}Ocorreu um erro! {self.RESET}")
+            print(f"{self.VERMELHO}*******************************{self.RESET}\n")
+            print("Detalhes: ",e,"\n*******************************")
+            QMessageBox.warning(self.main_window, "Atenção", "Ocorreu um erro ao deletar servidor. Verifique o console.")
+
 
     def insertOnGUI(self, object, deslocamento_mais_profundo):
         #inserção na GUI
         proxy = QGraphicsProxyWidget()
         proxy.setWidget(object)
-        self.eixo_y_form += 70 + deslocamento_mais_profundo
+        self.eixo_y_form += 90 + deslocamento_mais_profundo
         proxy.setPos(self.POS_X_SIDEBAR + self.eixo_x_form, self.eixo_y_form)
         self.scene.addItem(proxy)
         return proxy # retorna o proxy pra caso precise destruir
@@ -601,28 +787,27 @@ class Sidebar(QWidget, QObject):
         return proxy
 
 
-    def insertButton(self, msg, action=None):
+    def insertButton(self, msg, style, action=None):
         button = QPushButton(msg)
         button.setCheckable(True)
         button.clicked.connect(lambda: action()) # chama o metodo para inserção na tabela registro do banco de dados
-        proxyBtn = QGraphicsProxyWidget()
+        proxyBtn = QGraphicsProxyWidget() # cria um proxy pra mostrar diretamente no objeto scene sem necessidade de empilhar em conteiners layouts
         proxyBtn.setWidget(button)
-        x = self.coord_last_widget[0] + self.pos_button_x
+        x = self.coord_last_widget[0] + self.pos_button_x + 7 # +7 é pra corrigir um pequeno desalinhamento no eixo x que notei
         y = self.coord_last_widget[1] + self.pos_button_y
         proxyBtn.setPos(x, y)
         self.scene.addItem(proxyBtn)
         if self.pos_button_x == 0:
-            self.pos_button_x = 140 # coloca o prox. button do lado direito do button anterior
+            self.pos_button_x = 160 # coloca o prox. button do lado direito do button anterior
         else:
             self.pos_button_x = 0        
         
-        button.setStyleSheet(self.button_style_3)
+        button.setStyleSheet(style) # aplica estilo
         return button
         
     def reset(self):
         self.eixo_y_form = 150
         self.check = [None, None, None, None] # habilitando os forms
-
 
     def cancel(self, param1=None):
         #deleta os formularios relacionados a inserção no registro
@@ -657,6 +842,7 @@ class Sidebar(QWidget, QObject):
         
         if param1 is not None:
             self.atualizar_info(self.sentinel)
+
 
     def consultaDisponibilidadeFrota(self, valor):
         cursor = self.conn.cursor()
@@ -711,7 +897,7 @@ class Sidebar(QWidget, QObject):
             self.lista_registro.setItem(linha, 4, QTableWidgetItem(tupla[2])) # coluna CPF/CNPJ
             linha += 1
 
-
+        self.lista_registro.setStyleSheet("font-size: 14px")
 
         self.lista_registro.resizeColumnsToContents()        # Ajusta cada coluna ao conteúdo
         self.lista_registro.horizontalHeader().setStretchLastSection(True)
