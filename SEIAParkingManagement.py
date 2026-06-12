@@ -39,7 +39,9 @@ import Vaga as vg
 import Sidebar as sb
 import qdarktheme
 import pymysql
+from colorama import init
 
+init()
 ver = "v1.0.0.03" # versão do software
 
 #variaveis de autenticação do banco de dados
@@ -611,10 +613,10 @@ class SEIAParkingManagement(QGraphicsView):
             for tupla in registro:
                 if vaga.getVagaID() == tupla[3]: #identifica se esta inserido no registro
                     if tupla[6] == "ENTRADA":
-                        vaga.setStatus(0) # disponivel
+                        vaga.setStatus(1) # ocupado
                         vaga.active_monocromatico() # volta a cor original da imagem caso tenha aplicado monocromatico
                     elif tupla[6] == "SAIDA":
-                        vaga.setStatus(1) # ocupado
+                        vaga.setStatus(0) # disponível
                         vaga.active_monocromatico() #aplica efeito monocromatico
                     elif tupla[6] == "RESERVA":
                         vaga.setStatus(2) # reserva

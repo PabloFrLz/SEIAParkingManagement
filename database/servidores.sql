@@ -1,4 +1,4 @@
-insert into Servidor values ('12345678901', 'João Silva', 'deficiente');
+insert into Servidor values ('12345678901', 'Joao Silva', 'deficiente');
 insert into Servidor values ('98765432100', 'Maria Oliveira', 'SEJU');
 insert into Servidor values ('11122233344', 'Carlos Pereira', 'SEIA');
 insert into Servidor values ('55566677788', 'Ana Souza', 'SESP');

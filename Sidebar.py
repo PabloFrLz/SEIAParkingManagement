@@ -67,6 +67,8 @@ class Sidebar(QWidget, QObject):
         self.form1 = None
         self.form2 = None
         self.form3 = None
+        self.formularios = [self.form1, self.form2, self.form3] # inserindo em um vetor/lista pra facilitar a manipulação e evitar futuros erros de escalamento
+
 
         #======================================
         # Configurações iniciais
@@ -251,16 +253,16 @@ class Sidebar(QWidget, QObject):
         # Botões de ação da sidebar
         #======================================
         # criação e estética dos botoes
-        self.btn_registrar_saida = QPushButton("SAIDA") # cria
-        self.btn_registrar_saida.setCheckable(True)
-        self.sidebar_layout.addWidget(self.btn_registrar_saida) # insere na GUI
-        self.btn_registrar_saida.clicked.connect(self.acaoButtonSaida)
-        
         self.btn_registrar_entrada = QPushButton("ENTRADA")
         self.btn_registrar_entrada.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_registrar_entrada)
         self.btn_registrar_entrada.clicked.connect(self.acaoButtonEntrada)
 
+        self.btn_registrar_saida = QPushButton("SAIDA") # cria
+        self.btn_registrar_saida.setCheckable(True)
+        self.sidebar_layout.addWidget(self.btn_registrar_saida) # insere na GUI
+        self.btn_registrar_saida.clicked.connect(self.acaoButtonSaida)
+        
         self.btn_cadastro = QPushButton("CADASTRAR SERVIDOR")
         self.btn_cadastro.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_cadastro)
@@ -300,7 +302,7 @@ class Sidebar(QWidget, QObject):
         self.animation.setDuration(1200)
 
     def controlActions(self, info):
-        self.cancel() # destroi formularios do button de saida ou cadastro caso esteja em andamento - isso permite interagir com outras vagas na interface
+        self.cancel() # destroi formularios caso esteja em andamento - isso permite interagir com outras vagas na interface
         self.atualizar_info(info) 
     
     def atualizar_info(self, info): # variavel info contem os dados definidos em Vaga.py, como self.id, self.tipo_carro, self.status, self.status_name, self.press_button_status
@@ -315,7 +317,7 @@ class Sidebar(QWidget, QObject):
         self.sentinel = info
 
         #consulta pra pegar a ultima entrada registrada na tabela registro para o numero de vaga atual
-        ultimo_registro_da_vaga = self.getSaidaOnRegistro(info.id) # pega a ultima saida registrada pra uma vaga especifica
+        ultimo_registro_da_vaga = self.getEntradaOnRegistro(info.id) # pega a ultima entrada registrada pra uma vaga especifica
         self.lista_registro.clear() # limpa entradas de outra vagas na tabela de registros da vaga especifica
         self.lista_registro.setRowCount(0) # reseta o contador de linhas da tabela
 
@@ -351,22 +353,22 @@ class Sidebar(QWidget, QObject):
 
         #historico de reservas no formato de lista (exemplo)
     
-    def acaoButtonSaida(self): 
+    def acaoButtonEntrada(self): 
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
-            self.titulo = self.insertHeader("REGISTRAR SAÍDA")#gera logo no topo e titulo da seção 
-            self.check[0] = True # [v1.0.0.03]: desabilitado o formulario para requisitar o orgão/autarquia desde a v1.0.0.03 - apartir de agora, a autarquia será obtida direto do objeto 'Vaga' e o usuario não precisará fornecer manualmente quando for registrar SAIDA. 
-            self.registroSaida() # inicializa os formularios pra registro de saida
+            self.titulo = self.insertHeader("REGISTRAR ENTRADA")#gera logo no topo e titulo da seção 
+            self.check[0] = True # [v1.0.0.03]: desabilitado o formulario para requisitar o orgão/autarquia desde a v1.0.0.03 - apartir de agora, a autarquia será obtida direto do objeto 'Vaga' e o usuario não precisará fornecer manualmente quando for registrar ENTRADA. 
+            self.registroEntrada() # inicializa os formularios pra registro da ENTRADA
             #self.ctrl_forms = True # habilita formularios de registro de ENTRADA/SAIDA 
             #self.controlForms() # gerando o 1º form
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga está OCUPADA/RESERVADA.")
 
 
-    def acaoButtonEntrada(self):
+    def acaoButtonSaida(self):
         dados = None
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() == "OCUPADA" or self.status_vaga.displayText() == "RESERVADA"):
-            dados = self.getSaidaOnRegistro(self.num_vaga.displayText()) #obtem a ultima saida registrada pra uma vaga especifica
+            dados = self.getEntradaOnRegistro(self.num_vaga.displayText()) #obtem a ultima entrada registrada pra uma vaga especifica
             self.insertRegistro(dados=dados)
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga ainda está DISPONÍVEL.")
@@ -410,34 +412,35 @@ class Sidebar(QWidget, QObject):
         self.insertOnGUI(form, 0)#inserção na GUI
         return form
     
-    def registroSaida(self):
+    def registroEntrada(self):
         if (self.check[0] is None): 
             texto = "Selecione a autarquia:"
             consulta = "select * from autarquia"
             self.categoria = 0
-            self.form1 = self.geraFormulario(consulta, texto, self.registroSaida) # gera o primeiro formulario
+            self.form1 = self.geraFormulario(consulta, texto, self.registroEntrada) # gera o primeiro formulario
             self.check[0] = True #desabilita esse bloco condicional na proxima iteração - fazendo com que caia no próximo if relacionado a self.check[1]
         
         elif (self.check[1] is None): 
             #consulta se tem carros disponiveis pra eivtar ficar travado em etapas futuras
-            situacao = self.consultaDisponibilidadeFrota(self.form1.getResult())
+            #situacao = self.consultaDisponibilidadeFrota(self.form1.getResult())
+            situacao = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText())
             if situacao:
                 texto = "Selecione o servidor responsável:"
                 #consulta = "select * from servidor where autarquia='{}'".format(self.form1.getResult())  
                 consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
                 self.categoria = 1
-                self.form2 = self.geraFormulario(consulta, texto, self.registroSaida)
+                self.form2 = self.geraFormulario(consulta, texto, self.registroEntrada)
                 self.check[1] = True
-                self.form1.setDisabled(True)
+                #self.form1.setDisabled(True)
             else:
-                QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.form1.getResult()))
+                QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.orgao_vinculado.displayText()))
                 self.cancel()
 
         elif (self.check[2] is None):
             texto = "Selecione o carro:"
-            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.form1.getResult()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA')"
+            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
             self.categoria = 2
-            self.form3 = self.geraFormulario(consulta, texto, self.registroSaida)
+            self.form3 = self.geraFormulario(consulta, texto, self.registroEntrada)
             self.coord_last_widget[0] = self.form3.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
             self.coord_last_widget[1] = self.form3.getCoordY() + 20
             self.check[2] = True
@@ -445,7 +448,7 @@ class Sidebar(QWidget, QObject):
         
         elif(self.check[3] is None):
             self.check[3] = True
-            # Button pra confirmar entrada no banco de dados
+            # Button pra confirmar inserção no banco de dados
             self.btn_commit = self.insertButton("CONFIRMAR", self.button_style_3, self.insertRegistro) # linka com a função para inserir na tabela de registros do banco
             self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
 
@@ -508,7 +511,7 @@ class Sidebar(QWidget, QObject):
 
         elif(self.check[3] is None):
             self.check[3] = True
-            # Button pra confirmar entrada no banco de dados
+            # Button pra confirmar inserção no banco de dados
             self.btn_commit = self.insertButton("CONFIRMAR", self.button_style_3, self.insertServidor) # linka com a função que insere no banco os dados do servidor
             self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
 
@@ -566,7 +569,7 @@ class Sidebar(QWidget, QObject):
 
             elif (self.check[2] is None):
                 texto = "Selecione o carro:"
-                consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.form1.getResult()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA')"
+                consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.form1.getResult()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
                 self.categoria = 2
                 self.form3 = self.geraFormulario(consulta, texto)
                 self.coord_last_widget[0] = self.form3.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
@@ -653,20 +656,22 @@ class Sidebar(QWidget, QObject):
 
     def insertRegistro(self, dados=None):
         print(f"\n\n {self.AMARELO}***************** ( DATABASE INSERT) *****************{self.RESET}\n")
-
         num_vaga = self.num_vaga.displayText()
         if dados is not None:
             #obtem os dados direto do banco
             placa = dados[0][1]
             cpf_cnpj = dados[0][2]
-            tipo = "ENTRADA"
-            sql = f"UPDATE registro SET data_entrada = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND cpf_cnpj = '{cpf_cnpj}' AND data_entrada IS NULL AND tipo = 'SAIDA'"
+            tipo = "SAIDA"
+            sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND cpf_cnpj = '{cpf_cnpj}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+            # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde a placa e cpf 
+            # baterem com os coletados nesse bloco condicional - por fim, onde 'data_saida' estiver vazio e o tipo estiver definido como ENTRADA, pois assim voce tem a certeza 
+            # de atualizar a tupla no banco com dados de saida em branco e que so tem uma ENTRADA registrada - pode ser que seja redundante, mas funciona!
         else:
-            #obtem os dados apartir dos formularios de saida
+            #obtem os dados apartir dos formularios de ENTRADA
             servidor = self.form2.getResult() 
             carro = self.form3.getResult()
-            tipo = "SAIDA"
-            sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_saida, tipo) VALUES (%s, %s, %s, NOW(), %s)"
+            tipo = "ENTRADA"
+            sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_entrada, tipo) VALUES (%s, %s, %s, NOW(), %s)"
             #tratamento dos dados
             cpf_cnpj, nome_servidor = servidor.split(" - ")
             placa, modelo = carro.split(" - ")
@@ -685,7 +690,7 @@ class Sidebar(QWidget, QObject):
         try:
             cursor = self.conn.cursor()
             #data e hora serão calculados automaticamente pelo banco de dados MySQL com a clausula NOW()
-            if tipo == "SAIDA":
+            if tipo == "ENTRADA":
                 cursor.execute(sql, (placa, cpf_cnpj, num_vaga, tipo))
             else:
                 cursor.execute(sql)
@@ -807,12 +812,13 @@ class Sidebar(QWidget, QObject):
         
     def reset(self):
         self.eixo_y_form = 150
-        self.check = [None, None, None, None] # habilitando os forms
+        #self.check = [None, None, None, None] # habilitando os forms
+        for i in range(len(self.check)):
+            self.check[i] = None # atribuindo None pra habilitar novamente os forms
 
     def cancel(self, param1=None):
-        #deleta os formularios relacionados a inserção no registro
-        formularios = [self.form1, self.form2, self.form3] 
-        for form in formularios:
+        #deleta os formularios relacionados a inserção no registro 
+        for form in self.formularios:
             if form is not None and isValid(form):
                 form.deleteLater()
                 form = None
@@ -858,7 +864,7 @@ class Sidebar(QWidget, QObject):
     def getInstance(self):
         return self
     
-    def getSaidaOnRegistro(self, num_vaga):
+    def getEntradaOnRegistro(self, num_vaga):
         cursor = self.conn.cursor()
         cursor.execute(f"select * from registro where num_vaga='{num_vaga}' order by id desc limit 1")
         return cursor.fetchall() # retorna uma unica tupla e nao uma lista de tuplas
@@ -866,8 +872,8 @@ class Sidebar(QWidget, QObject):
     def getRegistroByVaga(self, num_vaga):
         cursor = self.conn.cursor()
         cursor.execute(f"select * from registro where num_vaga='{num_vaga}'")
-        entradas_tabela = cursor.fetchall()
-        return entradas_tabela
+        tuplas_tabela = cursor.fetchall()
+        return tuplas_tabela
     
     def getServidorByCPF(self, cpf_cnpj):
         cursor = self.conn.cursor()
@@ -876,29 +882,28 @@ class Sidebar(QWidget, QObject):
         return servidor
 
     def updateHistoricoRegistro(self, num_vaga):
-        entradas_tabela = self.getRegistroByVaga(num_vaga)
+        tuplas_tabela = self.getRegistroByVaga(num_vaga)
 
         linha = 0
-        self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤶)", "Data/Hora(⤷)", "CPF/CNPJ"])
-        for tupla in entradas_tabela:
+        self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤷)", "Data/Hora(⤶)", "CPF/CNPJ"])
+        for tupla in tuplas_tabela:
             tipo = QTableWidgetItem(tupla[6])
-            if tupla[6] == "SAIDA":
-                tipo.setForeground(BRUSH_SAIDA)
-                tipo.setBackground(BRUSH_SAIDA_ALPHA)
-            else:
+            if tupla[6] == "ENTRADA":
                 tipo.setForeground(BRUSH_ENTRADA)
                 tipo.setBackground(BRUSH_ENTRADA_ALPHA)
+            else:
+                tipo.setForeground(BRUSH_SAIDA)
+                tipo.setBackground(BRUSH_SAIDA_ALPHA)
             
             self.lista_registro.insertRow(linha) # insere uma nova linha
             self.lista_registro.setItem(linha, 0, QTableWidgetItem(tupla[1])) # coluna Placa
             self.lista_registro.setItem(linha, 1, tipo) # coluna Tipo
-            self.lista_registro.setItem(linha, 2, QTableWidgetItem(str(tupla[4]))) # coluna Data/Hora (Saída)
-            self.lista_registro.setItem(linha, 3, QTableWidgetItem(str(tupla[5]))) # coluna Data/Hora (Entrada)
+            self.lista_registro.setItem(linha, 2, QTableWidgetItem(str(tupla[4]))) # coluna Data/Hora (Entrada)
+            self.lista_registro.setItem(linha, 3, QTableWidgetItem(str(tupla[5]))) # coluna Data/Hora (Saída)
             self.lista_registro.setItem(linha, 4, QTableWidgetItem(tupla[2])) # coluna CPF/CNPJ
             linha += 1
 
         self.lista_registro.setStyleSheet("font-size: 14px")
-
         self.lista_registro.resizeColumnsToContents()        # Ajusta cada coluna ao conteúdo
         self.lista_registro.horizontalHeader().setStretchLastSection(True)
 
@@ -906,16 +911,15 @@ class Sidebar(QWidget, QObject):
         relatorio_pdf = "relatorio.pdf" #nome do arquivo a ser gerado
         
         # ETAPA 1: Consulta
-        entradas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
+        tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
 
         # ETAPA 2: Gerando o documento PDF com os dados
         doc = SimpleDocTemplate("conteudo.pdf")
         count = 0
         linhas = []
-        linhas.append(["Placa", "Data/Hora(SAÍDA)", "Data/Hora(ENTRADA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado"]) # define as colunas da tabela
-        for tupla in entradas_tabela:
+        linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado"]) # define as colunas da tabela
+        for tupla in tuplas_tabela:
             servidor = self.getServidorByCPF(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
-            #print(f"______________________________\n\n{servidor}\n{tupla[2]}\n\n____________________________")
             tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1], servidor[0][2]]
             linhas.append(tupla_formatada) # insere uma linha no pdf
             #linhas.append(Spacer(1, 10))

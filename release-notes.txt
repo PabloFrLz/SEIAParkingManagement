@@ -8,6 +8,6 @@
 #
 #   1.  Adequação para permitir remover servidores já cadastrados no banco de dados;
 #   2.  Adequação para já selecionar o orgão vinculado a vaga no ato de selecionar, não
-        havendo mais a necessidade de selecionar o orgão quando for registrar SAIDA - 
+        havendo mais a necessidade de selecionar o orgão quando for registrar ENTRADA - 
         tendo que fornecer manualmente apenas quando for CADASTRAR SERVIDOR ou REMOVER SERVIDOR (em andamento...)
 #       
