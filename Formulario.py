@@ -14,6 +14,7 @@ class Formulario(QWidget):
         self.combo = QComboBox()
         self.combo.addItem("...")
         # lista de itens vindas do banco de dados
+        self.combo.addItem("VISITANTE") # [v1.0.0.03]: colocando a opção de visitante para a etapa de permitir que visitantes usem vagas da secretaria
         for tupla in items:
             if categoria == 1: # servidores
                 item = tupla[0]+" - "+tupla[1] # (CPF + Nome)
@@ -21,7 +22,7 @@ class Formulario(QWidget):
             elif categoria == 2: # carros
                 item = f'{tupla[0]}  -  {tupla[3]}' # (placa/modelo)
                 self.combo.addItem(item)
-            else: # autarquias/data/horas
+            else: # autarquias/data/horas/vagas
                 self.combo.addItems(tupla)
         self.select.addWidget(self.combo)
         self.combo.currentTextChanged.connect(self.opcaoSelecionada) # conecta signal pra capturar escolha do usuario 
@@ -41,7 +42,7 @@ class Formulario(QWidget):
         # metodo para lidar com a opção selecionada
         print(f"Opção selecionada: {text}") # debug
         self.result_to_return = text # armazena a opção selecionada para ser retornada posteriormente
-        if self.onComplete:
+        if self.onComplete: # executa a função fornecida via parâmetro
             self.onComplete()
 
     def getResult(self):
