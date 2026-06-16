@@ -14,7 +14,6 @@ class Formulario(QWidget):
         self.combo = QComboBox()
         self.combo.addItem("...")
         # lista de itens vindas do banco de dados
-        self.combo.addItem("VISITANTE") # [v1.0.0.03]: colocando a opção de visitante para a etapa de permitir que visitantes usem vagas da secretaria
         for tupla in items:
             if categoria == 1: # servidores
                 item = tupla[0]+" - "+tupla[1] # (CPF + Nome)

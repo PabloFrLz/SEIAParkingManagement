@@ -32,12 +32,13 @@ create table if not exists Servidor(
 
 create table if not exists Registro(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    placa CHAR(8) not null,
-    cpf_cnpj CHAR(14) not null,
+    placa CHAR(8),
+    cpf_cnpj CHAR(14),
     num_vaga INT not null,
     data_entrada DATETIME,
     data_saida DATETIME,
     tipo CHAR(10) not null,
+    nome_visitante CHAR(100),
     foreign key (placa) references Carro(placa) on delete cascade,
     foreign key (cpf_cnpj) references Servidor(cpf_cnpj) on delete cascade,
     foreign key (num_vaga) references Vaga(num_vaga) on delete cascade

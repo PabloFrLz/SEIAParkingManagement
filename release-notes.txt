@@ -11,5 +11,8 @@
 #       havendo mais a necessidade de selecionar o orgão quando for registrar ENTRADA - 
 #       tendo que fornecer manualmente apenas quando for CADASTRAR SERVIDOR ou REMOVER SERVIDOR.
 #   3.  Impedir que um servidor seja removido quando houver um registro de ENTRADA.
-#   4.  Permitir que VISITANTES possam usar vagas da secretaria (em andamento).
-#       
+#   4.  Permitir que VISITANTES possam usar vagas da secretaria (em andamento):
+#       4.1.  Modificado tabela Registro para se adequar ao propósito de permitir visitantes.
+              coluna 'cpf_cnpj' e 'placa' agora permite valores NULL, e foi adicionado uma nova
+              coluna 'nome_visitante';
+        4.2.  

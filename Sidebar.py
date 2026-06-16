@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QPropertyAnimation, Signal
 from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
-from PySide6.QtGui import QBrush, QColor, QPixmap, QRegularExpressionValidator
+from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QRegularExpressionValidator
 from pymysql import Error
 from shiboken6 import isValid
 from pypdf import PdfReader, PdfWriter
@@ -57,7 +57,8 @@ class Sidebar(QWidget, QObject):
         self.turnRound = True
         self.titulo = None
         self.sentinel = None
-        self.ctrl_forms = True 
+        self.lista_carros_disponiveis = None # lista de carros disponíveis - nao possui tupla no registro do tipo ENTRADA
+        #self.ctrl_forms_visitante = False 
         self.coord_last_widget = [None, None]
         self.garbage_collector = []
 
@@ -77,9 +78,6 @@ class Sidebar(QWidget, QObject):
         main_layout.setContentsMargins(0, 0, 0, 0)
         #main_layout.setSpacing(0)
 
-        form = QFormLayout()
-        form.setSpacing(16)
-        form.setLabelAlignment(Qt.AlignRight)
 
         self.button_style = """
             QLineEdit, QComboBox {
@@ -210,14 +208,36 @@ class Sidebar(QWidget, QObject):
         #======================================
         # formatação das informações da sidebar
         #======================================
-        form.addRow("Nº vaga:", self.num_vaga)
-        form.addRow("Órgão:", self.orgao_vinculado)
-        form.addRow("Veículo:", self.modelo_carro)
-        form.addRow("Placa:", self.placa_carro)
-        form.addRow("Servidor:", self.nome_servidor)
-        form.addRow("Status:", self.status_vaga)
-        form.addRow("Registro:", None)
+        form = QFormLayout()
+        form.setSpacing(16)
+        form.setLabelAlignment(Qt.AlignRight)
+
+        text1 = QLabel("Nº vaga:")
+        text2 = QLabel("Órgão:")
+        text3 = QLabel("Veículo:")
+        text4 = QLabel("Placa:")
+        text5 = QLabel("Servidor:")
+        text6 = QLabel("Status:")
+        text7 = QLabel("Registro:")
+
+        fonte_texto = QFont("Segoe UI", 12)
+        text1.setFont(fonte_texto)
+        text2.setFont(fonte_texto)
+        text3.setFont(fonte_texto)
+        text4.setFont(fonte_texto)
+        text5.setFont(fonte_texto)
+        text6.setFont(fonte_texto)
+        text7.setFont(fonte_texto)
+        
+        form.addRow(text1, self.num_vaga)
+        form.addRow(text2, self.orgao_vinculado)
+        form.addRow(text3, self.modelo_carro)
+        form.addRow(text4, self.placa_carro)
+        form.addRow(text5, self.nome_servidor)
+        form.addRow(text6, self.status_vaga)
+        form.addRow(text7, None)
         form.addRow(self.lista_registro)
+        
 
         self.setStyleSheet(self.button_style)
 
@@ -301,10 +321,14 @@ class Sidebar(QWidget, QObject):
         self.animation = QPropertyAnimation(self.sidebar, b"pos")
         self.animation.setDuration(1200)
 
+
+
     def controlActions(self, info):
         self.cancel() # destroi formularios caso esteja em andamento - isso permite interagir com outras vagas na interface
         self.atualizar_info(info) 
     
+
+
     def atualizar_info(self, info): # variavel info contem os dados definidos em Vaga.py, como self.id, self.tipo_carro, self.status, self.status_name, self.press_button_status
         #atualizando a cor do campo "Status da vaga"
         if info.status == 0: # disponivel
@@ -313,7 +337,6 @@ class Sidebar(QWidget, QObject):
             self.status_vaga.setStyleSheet("color: red; font-weight: bold;")
         elif info.status == 2: # reservada
             self.status_vaga.setStyleSheet("color: orange; font-weight: bold;")
-
         self.sentinel = info
 
         #consulta pra pegar a ultima entrada registrada na tabela registro para o numero de vaga atual
@@ -321,53 +344,56 @@ class Sidebar(QWidget, QObject):
         self.lista_registro.clear() # limpa entradas de outra vagas na tabela de registros da vaga especifica
         self.lista_registro.setRowCount(0) # reseta o contador de linhas da tabela
 
+        #atualizando informações principais
+        self.orgao_vinculado.setText(str(info.autarquia))
+        self.num_vaga.setText(str(info.id))
+        self.status_vaga.setText(info.status_name)
+
+        #atualizando informações secundárias
         if len(ultimo_registro_da_vaga) != 0:
-            #consulta pra pegar dados da vaga/carro
-            cursor = self.conn.cursor()
-            cursor.execute(f"select * from carro where placa='{ultimo_registro_da_vaga[0][1]}'")
-            dados_carro = cursor.fetchall()
-
-            #consulta pra pegar o nome do servidor
-            cursor.execute(f"select * from servidor where cpf_cnpj='{ultimo_registro_da_vaga[0][2]}'")
-            dados_servidor = cursor.fetchall()
-
-            # atualizando os valores dos campos
-            self.num_vaga.setText(str(info.id))
-            self.orgao_vinculado.setText(dados_carro[0][2])
-            self.modelo_carro.setText(dados_carro[0][3])
-            self.placa_carro.setText(dados_carro[0][0])
-            self.nome_servidor.setText(dados_servidor[0][1])
-            self.status_vaga.setText(info.status_name)
-
-            #atualizando a lista de registros            
-            self.updateHistoricoRegistro(ultimo_registro_da_vaga[0][3]) 
+            cpf = ultimo_registro_da_vaga[0][2] # [v1.0.0.03]: cpf será null/none quando for VISITANTE
+            if(cpf is None): # [v1.0.0.03]: para quando for atualizar visualmente as informações da vaga registrada para um VISITANTE
+                self.modelo_carro.setText("CARRO PRIVADO (VISITANTE)")
+                self.placa_carro.setText("RESTRITO")
+                self.nome_servidor.setText(ultimo_registro_da_vaga[0][7]) # o nome do servidor nesse momento de execução vai estar salvo em self.nome
+            else: 
+                #consulta pra pegar dados da vaga/carro
+                cursor = self.conn.cursor()
+                cursor.execute(f"select * from carro where placa='{ultimo_registro_da_vaga[0][1]}'")
+                dados_carro = cursor.fetchall()
+                #consulta pra pegar o nome do servidor
+                cursor.execute(f"select * from servidor where cpf_cnpj='{ultimo_registro_da_vaga[0][2]}'")
+                dados_servidor = cursor.fetchall()
+                # atualizando as infos
+                self.modelo_carro.setText(dados_carro[0][3])
+                self.placa_carro.setText(dados_carro[0][0])
+                self.nome_servidor.setText(dados_servidor[0][1])
+            #atualizando a lista de registros com as infos do registro para essa vaga específica
+            self.updateHistoricoRegistro() 
 
         else:
-            self.num_vaga.setText(str(info.id))
-            self.orgao_vinculado.setText(str(info.autarquia))
             self.modelo_carro.setText(" - ")
             self.placa_carro.setText(" - ")
             self.nome_servidor.setText(" - ")
-            self.status_vaga.setText(info.status_name)
 
 
-        #historico de reservas no formato de lista (exemplo)
     
     def acaoButtonEntrada(self): 
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
             self.titulo = self.insertHeader("REGISTRAR ENTRADA")#gera logo no topo e titulo da seção 
-            self.check[0] = True # [v1.0.0.03]: desabilitado o formulario para requisitar o orgão/autarquia desde a v1.0.0.03 - apartir de agora, a autarquia será obtida direto do objeto 'Vaga' e o usuario não precisará fornecer manualmente quando for registrar ENTRADA. 
-
+            #self.check[0] = True # [v1.0.0.03]: desabilitado o formulario para requisitar o orgão/autarquia desde a v1.0.0.03 - apartir de agora, a autarquia será obtida direto do objeto 'Vaga' e o usuario não precisará fornecer manualmente quando for registrar ENTRADA. 
             resposta = QMessageBox.question(self.main_window, "Questão", "Registro de VISITANTE ?") # [v1.0.0.03]: questiona o usuário se será um registro de um visitante ou de um servidor.
             if (resposta == QMessageBox.StandardButton.Yes): # [v1.0.0.03]: verifica se usuario clicou no botao Sim
                 self.registroEntradaVisitante() # inicializa os formularios pra registro da ENTRADA de VISITANTES
+                #self.ctrl_forms_visitante = True # diz a aplicação que se trata de um registro de visitante - necessário pra informar a funções secundárias como atualizar_info() - que fazem parte do fluxo de vários registros e consultas - como se portar quando for atualizar as infos de um VISITANTE
             else:
                 self.registroEntrada() # inicializa os formularios pra registro da ENTRADA de servidores
                 
 
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga está OCUPADA/RESERVADA.")
+
 
 
     def acaoButtonSaida(self):
@@ -378,19 +404,19 @@ class Sidebar(QWidget, QObject):
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga ainda está DISPONÍVEL.")
 
+
+
     def acaoButtonCadastro(self):
         self.transitToFormulario() # animação que empurra pro lado direito as infos
         self.titulo = self.insertHeader("CADASTRAR SERVIDOR") # gera logo no topo e titulo da seção
         self.cadastroServidor() # inicializa os formularios pra cadastro de servidor
-        #self.ctrl_forms = False # habilita formularios de cadastro de servidor;
-        #self.controlForms()
+
+
 
     def acaoButtonRemoverServidor(self): # [v1.0.0.03]: método que terá a ação que dará inicio ao processo de remoção de servidor 
         self.transitToFormulario() # animação que empurra pro lado direito as infos
         self.titulo = self.insertHeader("REMOVER SERVIDOR") 
         self.removeServidor() # inicializa os formulários para remoção de servidor
-        #self.ctrl_forms = False # habilita formularios de cadastro de servidor;
-        #self.controlForms()
 
 
 
@@ -409,58 +435,64 @@ class Sidebar(QWidget, QObject):
         self.turnRound = not self.turnRound # inverte o estado para a próxima vez que o botão for clicado
     
 
+
     def geraFormulario(self, consulta, texto, func):
-        #consulta ao banco de dados para obter os dados cadastrados
-        cursor = self.conn.cursor()
-        cursor.execute(consulta)
-        resultado_pesquisa = cursor.fetchall()
-        form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=func) 
-        self.insertOnGUI(form, 0)#inserção na GUI
-        return form
+        try:
+            #consulta ao banco de dados para obter os dados cadastrados
+            cursor = self.conn.cursor()
+            cursor.execute(consulta)
+            resultado_pesquisa = cursor.fetchall()
+            form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=func) 
+            self.insertOnGUI(form, 0)#inserção na GUI
+            return form
+        except Error as e:
+            self.error_message(e)  
     
 
+
     def registroEntrada(self):
-        if (self.check[0] is None): # [v1.0.0.03]: bloco condicional desativado pois 'self.check[0] == True'.
+        '''if (self.check[0] is None): # [v1.0.0.03]: bloco condicional desativado pois 'self.check[0] == True'.
             texto = "Selecione a autarquia:"
             consulta = "select * from autarquia"
             self.categoria = 0
             self.form1 = self.geraFormulario(consulta, texto, self.registroEntrada) # gera o primeiro formulario
             self.check[0] = True #desabilita esse bloco condicional na proxima iteração - fazendo com que caia no próximo if relacionado a self.check[1]
-        
-        elif (self.check[1] is None): 
+        '''
+        if (self.check[0] is None): 
             #consulta se tem carros disponiveis pra evitar ficar travado em etapas futuras
-            #situacao = self.consultaDisponibilidadeFrota(self.form1.getResult())
-            situacao = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText())
-            if situacao:
-                texto = "Selecione o servidor responsável:"
-                #consulta = "select * from servidor where autarquia='{}'".format(self.form1.getResult())  
+            self.lista_carros_disponiveis = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText())
+            if self.lista_carros_disponiveis[0]:
+                texto = "Selecione o servidor responsável:" 
                 consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
                 self.categoria = 1
                 self.form2 = self.geraFormulario(consulta, texto, self.registroEntrada)
-                self.check[1] = True
+                self.check[0] = True
                 #self.form1.setDisabled(True)
             else:
                 QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.orgao_vinculado.displayText()))
                 self.cancel()
 
-        elif (self.check[2] is None):
+        elif (self.check[1] is None):
             texto = "Selecione o carro:"
-            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
+            #consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
+            #consulta = f"SELECT * FROM carro WHERE autarquia='{self.orgao_vinculado.displayText()}' AND placa NOT IN (SELECT placa FROM registro WHERE placa IS NOT NULL)"
             self.categoria = 2
             self.form3 = self.geraFormulario(consulta, texto, self.registroEntrada)
             self.coord_last_widget[0] = self.form3.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
             self.coord_last_widget[1] = self.form3.getCoordY() + 20
-            self.check[2] = True
+            self.check[1] = True
             self.form2.setDisabled(True)
         
-        elif(self.check[3] is None):
-            self.check[3] = True
+        elif(self.check[2] is None):
+            self.check[2] = True
             # Button pra confirmar inserção no banco de dados
             self.btn_commit = self.insertButton("CONFIRMAR", self.button_style_3, self.insertRegistro) # linka com a função para inserir na tabela de registros do banco
             self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
 
 
+
     def registroEntradaVisitante(self): # [v1.0.0.03]: função propria para o registro de visitantes
+        '''
         if (self.check[0] is None): 
             texto = "Selecione a autarquia que cederá a vaga:"
             consulta = "select * from autarquia"
@@ -474,8 +506,10 @@ class Sidebar(QWidget, QObject):
             self.categoria = 3 # categoria 3 pois são numero de vagas
             self.form2 = self.geraFormulario(consulta, texto, self.registroEntradaVisitante)
             self.check[1] = True
+        '''
 
-        elif (self.check[2] is None): 
+
+        if (self.check[0] is None): # [v1.0.0.03]: para o formulario de registro de visitante só será necessário coletar o nome do visitante.
             container = QWidget()
             label = QLabel("Digite o nome do VISITANTE:")
             line_edit = QLineEdit()
@@ -489,20 +523,25 @@ class Sidebar(QWidget, QObject):
             layout.addWidget(btn_confirmar)
             self.setLayout(layout)
             self.insertOnGUI(container, 25)
-            self.check[2] = True
+            self.check[0] = True
             # para destruir os itens posteriormente em cancel()
             self.garbage_collector.append(container)
             self.garbage_collector.append(label)
             self.garbage_collector.append(line_edit)
             self.garbage_collector.append(btn_confirmar)
             self.garbage_collector.append(layout)
+            #necessario pra posicionar os botoes
+            self.coord_last_widget[0] = container.x()
+            self.coord_last_widget[1] = container.y() + 20
 
-        elif(self.check[3] is None):
-            self.check[3] = True
+
+        elif(self.check[1] is None):
+            self.check[1] = True
             # Button pra confirmar inserção no banco de dados - registro
             self.btn_commit = self.insertButton("CONFIRMAR", self.button_style_3, self.insertVisitante) # linka com a função que insere no banco os dados do servidor
             self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
         
+
 
     def cadastroServidor(self):
         if (self.check[0] is None): 
@@ -567,6 +606,7 @@ class Sidebar(QWidget, QObject):
             self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
 
 
+
     def removeServidor(self): # [v1.0.0.03]: Gerando os formularios do processo de remoção de servidor
         if (self.check[0] is None): 
             texto = "Selecione a autarquia:"
@@ -586,15 +626,13 @@ class Sidebar(QWidget, QObject):
             self.coord_last_widget[0] = self.form2.getCoordX() 
             self.coord_last_widget[1] = self.form2.getCoordY() + 20
 
-        elif(self.check[3] is None):
-
-            self.check[3] = True
+        elif(self.check[2] is None):
+            self.check[2] = True
             servidor = self.form2.getResult().split(" - ") # obtém o nome e cpf do servidor
             self.nome = servidor[1] # usa apenas o nome capturado
             # Buttons pra confirmar remoção de servidor
             self.btn_commit = self.insertButton("REMOVER", self.button_style_3, self.deleteServidor) # linka coma função que remove os dados do servidor do banco
             self.btn_cancel = self.insertButton("CANCELAR", self.button_style_3, self.cancel)
-
             servidor_entrada = self.verificaEntradaServidor(servidor[0]) # [v1.0.0.03]: consulta secundária pra verificar se o servidor possui registro em andamento pra não permitir exclusão até que seja registrado uma saida pra esse servidor.
             if len(servidor_entrada) != 0: # [v1.0.0.03]: se for diferente de zero então significa que tem ocorrencia de entrada do servidor no registro.
                 QMessageBox.warning(self.main_window, "Erro", f"Servidor '{servidor[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua exclusão do banco.")
@@ -603,13 +641,18 @@ class Sidebar(QWidget, QObject):
                 QMessageBox.warning(self.main_window, "Atenção", "Remover servidor implica remover também todos os dados associados a ele no registro. Clique em REMOVER para concluir a operação!")
     
 
+
     def capturar_nome(self, line_edit, func_call_recursivamente):
         self.nome = line_edit.text().strip() 
         func_call_recursivamente()
 
+
+
     def capturar_cpf(self, line_edit, func_call_recursivamente):
         self.cpf = line_edit.text().strip()
         func_call_recursivamente()
+
+
 
     def insertRegistro(self, dados=None):
         print(f"\n\n {self.AMARELO}***************** ( DATABASE INSERT) *****************{self.RESET}\n")
@@ -618,11 +661,17 @@ class Sidebar(QWidget, QObject):
             #obtem os dados direto do banco
             placa = dados[0][1]
             cpf_cnpj = dados[0][2]
+            nome_visitante = dados[0][7] # [v1.0.0.03]: os dados do nome do visitante será a 8ª coluna da tabela Registro
             tipo = "SAIDA"
-            sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND cpf_cnpj = '{cpf_cnpj}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
-            # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde a placa e cpf 
-            # baterem com os coletados nesse bloco condicional - por fim, onde 'data_saida' estiver vazio e o tipo estiver definido como ENTRADA, pois assim voce tem a certeza 
-            # de atualizar a tupla no banco com dados de saida em branco e que so tem uma ENTRADA registrada - pode ser que seja redundante, mas funciona!
+            if placa is None or cpf_cnpj is None: # [v1.0.0.03]: para o caso de ser um visitante, a placa e o cpf_cnpj serão None/null
+                sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE nome_visitante = '{nome_visitante}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+                # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde o nome do visitante
+                # bater com o que foi coletado da tabela Registro - por fim, onde 'data_saida' estiver NULL (vazio) e o tipo for ENTRADA.
+            else:
+                sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND cpf_cnpj = '{cpf_cnpj}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+                # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde a placa e cpf 
+                # baterem com os coletados nesse bloco condicional - por fim, onde 'data_saida' estiver vazio e o tipo estiver definido como ENTRADA, pois assim voce tem a certeza 
+                # de atualizar a tupla no banco com dados de saida em branco e que so tem uma ENTRADA registrada - pode ser que seja redundante, mas funciona!
         else:
             #obtem os dados apartir dos formularios de ENTRADA
             servidor = self.form2.getResult() 
@@ -638,11 +687,9 @@ class Sidebar(QWidget, QObject):
             print("Placa:", placa)
             print("Modelo:", modelo)
             
-        
         print(f"\n{self.AMARELO}================================{self.RESET}")
         print(f"{self.AMARELO}Dados extraídos! {self.RESET}")
         print(f"{self.AMARELO}================================{self.RESET}\n")
-            
         #inserção no banco
         try:
             cursor = self.conn.cursor()
@@ -651,26 +698,28 @@ class Sidebar(QWidget, QObject):
                 cursor.execute(sql, (placa, cpf_cnpj, num_vaga, tipo))
             else:
                 cursor.execute(sql)
-            
             self.conn.commit() # commit - pra persistir no banco
             print(f"\n{self.VERDE}================================{self.RESET}")
             print(f"{self.VERDE}Dados inseridos no Registro com sucesso!{self.RESET}")
             print(f"{self.VERDE}================================{self.RESET}\n")
-            
-
-            self.signal_insert.emit(self) # emite o sinal pra atualizar o estado visual das vagas na interface
             QMessageBox.information(self.main_window, "Sucesso", "Registro efetuado com sucesso!")
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
 
         except Error as e:
-            self.error_message()
+            self.error_message(e)
     
+
 
     def insertVisitante(self):
         try:
-            
+            cursor = self.conn.cursor()
+            cursor.execute(f"INSERT INTO Registro(num_vaga, data_entrada, tipo, nome_visitante) VALUES({self.num_vaga.displayText()}, NOW(), 'ENTRADA', '{self.nome}')")
+            self.conn.commit()
+            QMessageBox.information(self.main_window, "Sucesso", "Registro efetuado com sucesso!")
+            self.cancel(self.sentinel) # reseta informações e retrocede sidebar
+
         except Error as e:
-            self.error_message()
+            self.error_message(e)
             
 
 
@@ -687,8 +736,10 @@ class Sidebar(QWidget, QObject):
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
 
         except Error as e:
-            self.error_message()
+            self.error_message(e)
             
+
+
     def deleteServidor(self): # [v1.0.0.03]: remoção do servidor do banco de dados
         try:
             cursor = self.conn.cursor() 
@@ -702,7 +753,7 @@ class Sidebar(QWidget, QObject):
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
 
         except Error as e:
-            self.error_message()
+            self.error_message(e)
 
 
     def insertOnGUI(self, object, deslocamento_mais_profundo):
@@ -770,6 +821,8 @@ class Sidebar(QWidget, QObject):
             self.check[i] = None # atribuindo None pra habilitar novamente os forms
 
     def cancel(self, param1=None):
+        self.signal_insert.emit(self) # emite o sinal pra atualizar o estado visual das vagas na interface
+
         #deleta os formularios relacionados a inserção no registro 
         formularios = [self.form1, self.form2, self.form3] 
         for form in formularios:
@@ -803,16 +856,21 @@ class Sidebar(QWidget, QObject):
         if param1 is not None:
             self.atualizar_info(self.sentinel)
 
+        #self.ctrl_forms_visitante = False # [v1.0.0.03]: reseta a variavel de controle do formulario de visitante
+
 
     def consultaDisponibilidadeFrota(self, valor):
         cursor = self.conn.cursor()
-        cursor.execute("select * from carro where autarquia='{}' and placa not in (select placa from registro)".format(valor))
+        #cursor.execute(f"SELECT * FROM carro WHERE autarquia='{valor}' AND placa NOT IN (SELECT placa FROM registro WHERE placa IS NOT NULL)")
+        # descrição da consulta: selecione todos os carros onde a autarquia for X e a placa não esteja inclusa no registro e não seja NULL.
+        #cursor.execute(f"SELECT * FROM carro c WHERE autarquia = '{valor}' AND NOT EXISTS (SELECT 1 FROM registro r WHERE r.placa = c.placa)")
+        cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')")
         result = cursor.fetchall()
 
         if len(result) == 0:
-            return False # não há frota disponível
+            return [False, result] # não há frota disponível
         else:
-            return True
+            return [True, result]
         
     
     def getInstance(self):
@@ -820,30 +878,36 @@ class Sidebar(QWidget, QObject):
     
     def getEntradaOnRegistro(self, num_vaga):
         cursor = self.conn.cursor()
-        cursor.execute(f"select * from registro where num_vaga='{num_vaga}' order by id desc limit 1")
+        cursor.execute(f"SELECT * FROM registro WHERE num_vaga='{num_vaga}' ORDER BY id DESC LIMIT 1")
         return cursor.fetchall() # retorna uma unica tupla e nao uma lista de tuplas
 
     def getRegistroByVaga(self, num_vaga): # retorna todas as tuplas do registro onde tenha dados do nº da vaga informada
         cursor = self.conn.cursor()
-        cursor.execute(f"select * from registro where num_vaga='{num_vaga}'")
+        cursor.execute(f"SELECT * FROM registro WHERE num_vaga='{num_vaga}'")
         tuplas_tabela = cursor.fetchall()
         return tuplas_tabela
     
     def getServidorByCPF(self, cpf_cnpj): # busca o servidor a partir do seu CPF
         cursor = self.conn.cursor()
-        cursor.execute(f"select * from servidor where cpf_cnpj='{cpf_cnpj}'")
+        cursor.execute(f"SELECT * FROM servidor WHERE cpf_cnpj='{cpf_cnpj}'")
+        servidor = cursor.fetchall()
+        return servidor
+    
+    def getVisitantes(self): # [v1.0.0.03]: busca dados de visitantes
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM registro WHERE nome_visitante != NULL")
         servidor = cursor.fetchall()
         return servidor
     
     def verificaEntradaServidor(self, cpf_cnpj):
         cursor = self.conn.cursor()
-        cursor.execute(f"select * from registro where cpf_cnpj='{cpf_cnpj}' and tipo='ENTRADA'") # busca no registro se há uma tupla com o cpf do servidor e se ela só foi registrada ENTRADA e não SAIDA
+        cursor.execute(f"SELECT * FROM registro WHERE cpf_cnpj='{cpf_cnpj}' AND tipo='ENTRADA'") # busca no registro se há uma tupla com o cpf do servidor e se ela só foi registrada ENTRADA e não SAIDA
         servidor_entrada = cursor.fetchall()
         return servidor_entrada
         
 
-    def updateHistoricoRegistro(self, num_vaga):
-        tuplas_tabela = self.getRegistroByVaga(num_vaga)
+    def updateHistoricoRegistro(self):
+        tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
 
         linha = 0
         self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤷)", "Data/Hora(⤶)", "CPF/CNPJ"])
@@ -872,7 +936,7 @@ class Sidebar(QWidget, QObject):
         relatorio_pdf = "relatorio.pdf" #nome do arquivo a ser gerado
         
         # ETAPA 1: Consulta
-        tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
+        tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText()) # retorna todos os valores do registro onde tenha incidência do numero de vaga informado
 
         # ETAPA 2: Gerando o documento PDF com os dados
         doc = SimpleDocTemplate("conteudo.pdf")
@@ -881,7 +945,11 @@ class Sidebar(QWidget, QObject):
         linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado"]) # define as colunas da tabela
         for tupla in tuplas_tabela:
             servidor = self.getServidorByCPF(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
-            tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1], servidor[0][2]]
+            if len(servidor) == 0:
+                #visitante = self.getVisitante(tupla[7])
+                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], tupla[7], "[VISITANTE]"]
+            else:
+                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1], servidor[0][2]]
             linhas.append(tupla_formatada) # insere uma linha no pdf
             #linhas.append(Spacer(1, 10))
             count+=1 # contador de linhas 
@@ -929,7 +997,7 @@ class Sidebar(QWidget, QObject):
         os.remove("conteudo.pdf") # deleta do diretorio o documento temporario "conteudo.pdf" 
         QMessageBox.information(self.main_window, "Sucesso", f"Relatório gerado com sucesso!\nConsulte o arquivo '{relatorio_pdf}'.")
 
-    def error_message(self):
+    def error_message(self, e):
         print(f"\n{self.VERMELHO}*******************************{self.RESET}")
         print(f"{self.VERMELHO}Ocorreu um erro! {self.RESET}")
         print(f"{self.VERMELHO}*******************************{self.RESET}\n")
