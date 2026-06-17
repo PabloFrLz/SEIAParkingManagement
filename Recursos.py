@@ -12,6 +12,10 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 
 
+class Constantes:
+    def __init__(self):
+        self.LARGURA_FORMULARIO = 400 # largura dos formularios como o de leitura de nomes na etapa de registro de entrada de servidor e visitante
+        self.LARGURA_FORMULARIO_BUTTON = self.LARGURA_FORMULARIO * 0.125
 class Textos:
     def __init__(self):
         # [v1.0.0.03]: textos da interface - fica fácil de manipular e modificar centralizando nessa classe todos os textos
@@ -36,10 +40,11 @@ class Textos:
 
 class Fontes:
     def __init__(self):
-        self.fonte_texto_pergunta = QFont("Segoe UI", 12) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
+        self.fonte_texto_desc_infoboxes = QFont("Segoe UI", 12) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
+        self.fonte_texto_infoboxes = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte dos textos das boxes da sidebar, como "98, SESP, Carlos João Rodrigues, OCUPADO"
+        self.fonte_texto_pergunta = QFont("Segoe UI", 14) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
         self.fonte_tabela = "font-size: 14px" # [v1.0.0.03]: tamanho da fonte da tabela de registros da sidebar
         self.fonte_texto_buttons = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte do texto dos botões da interface
-        self.fonte_texto_infoboxes = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte dos textos das boxes da sidebar, como "98, SESP, Carlos João Rodrigues, OCUPADO"
         self.fonte_title_header = "<font size='6'>" # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
 
 
@@ -85,7 +90,7 @@ class Estilos:
             }}
             QLineEdit:focus {{
                 border: 1px solid #ffaa00;     /* destaque laranja quando focado */
-                background-color: #2e2e2e;     /* fundo mais escuro quando focado */
+                background-color: #080808;     /* fundo mais escuro quando focado */
             }}
             QPushButton {{
                 color: #ffffff;
@@ -112,7 +117,7 @@ class Estilos:
             QPushButton {{
                 color: #ffffff;
                 background-color: transparent;
-                border: 1px solid rgba(40, 107, 0, 80);
+                border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
                 padding: 12px 20px;
                 text-align: center;
                 {self.FONTES.fonte_texto_buttons};
@@ -156,7 +161,7 @@ class Estilos:
             QPushButton {{
                 color: #FFFFFF;
                 background-color: transparent;
-                border: 1px solid rgba(255, 0, 55, 80); /* borda laranja suave */
+                border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
                 padding: 12px 20px;
                 text-align: center;
                 {self.FONTES.fonte_texto_buttons};
@@ -200,6 +205,8 @@ class Estilos:
 class Paths:
     def __init__(self):
         self.img_logo_sidebar = "imagens/logo_seia_form_sidebar.png"
+        self.icon_btn_relatorio = "imagens/relatorio.png"
+        self.icon_btn_relatorio_completo = "imagens/relatorio_completo.png"
 
 
 
@@ -210,3 +217,4 @@ class Recursos:   # [v1.0.0.03]: classe principal que instancia as outras - cria
         self.CORES = Cores() # [v1.0.0.03]: instancia das cores
         self.PATH = Paths() # [v1.0.0.03]: instancia os caminhos de diretorios de imagens e etc.
         self.TEXTOS = Textos() # [v1.0.0.03]: instancia os textos da interface
+        self.CONST = Constantes() # [v1.0.0.03]: instancia as contantes da aplicação como dimensões em pixels dos objetos

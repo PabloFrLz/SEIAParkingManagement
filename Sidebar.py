@@ -1,6 +1,6 @@
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QPropertyAnimation, Signal
+from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, Qt, QPropertyAnimation, Signal
 from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
-from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QRegularExpressionValidator
+from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QPixmap, QRegularExpressionValidator
 from pymysql import Error
 from shiboken6 import isValid
 from pypdf import PdfReader, PdfWriter
@@ -102,7 +102,7 @@ class Sidebar(QWidget, QObject):
 
         for i, text in enumerate(self.recursos.TEXTOS.text_interface):
             qlabel = QLabel(text) # [v1.0.0.03]: instancia o texto
-            qlabel.setFont(self.recursos.FONTES.fonte_texto_pergunta) # define a fonte
+            qlabel.setFont(self.recursos.FONTES.fonte_texto_desc_infoboxes) # define a fonte
             self.textos_interface.append(qlabel) # [v1.0.0.03]: joga na lista de textos - opcional - bom pra manipular os textos no codigo
             form.addRow(qlabel, self.lista_info_fields_interface[i]) # [v1.0.0.03]: insere as infos no formulário descritivo das vagas
 
@@ -158,22 +158,40 @@ class Sidebar(QWidget, QObject):
         self.btn_cadastro.clicked.connect(self.acaoButtonCadastro)
         self.btn_cadastro.setStyleSheet(self.recursos.ESTILOS.button_style_2)
 
-        self.btn_relatorio = QPushButton("RELATÓRIO")
-        self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
-        self.sidebar_layout.addWidget(self.btn_relatorio)
-        self.btn_relatorio.clicked.connect(self.acaoButtonRelatorio)
-        self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2)
-
         self.btn_remove = QPushButton("REMOVER SERVIDOR")
         self.btn_remove.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_remove)
         self.btn_remove.clicked.connect(self.acaoButtonRemoverServidor)
         self.btn_remove.setStyleSheet(self.recursos.ESTILOS.button_style_4)
 
+        self.btn_relatorio = QPushButton() # Button RELATÓRIO
+        self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio))
+        self.btn_relatorio.setIconSize(QSize(64, 64))
+        self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
+        #self.sidebar_layout.addWidget(self.btn_relatorio)
+        self.btn_relatorio.clicked.connect(lambda: self.acaoButtonRelatorio(False))
+        self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2)
+        self.btn_relatorio.setFixedHeight(100)
+
+        self.btn_relatorio_completo = QPushButton() # Button RELATÓRIO COMPLETO
+        self.btn_relatorio_completo.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio_completo))
+        self.btn_relatorio_completo.setIconSize(QSize(64, 64))
+        self.btn_relatorio_completo.setCheckable(True) # destaca o botão selecionado
+        #self.sidebar_layout.addWidget(self.btn_relatorio_completo)
+        self.btn_relatorio_completo.clicked.connect(lambda: self.acaoButtonRelatorio(True))
+        self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_2)
+        self.btn_relatorio_completo.setFixedHeight(100)
+
+        grupo_buttons_relatorio = QHBoxLayout()
+        grupo_buttons_relatorio.addWidget(self.btn_relatorio)
+        grupo_buttons_relatorio.addWidget(self.btn_relatorio_completo)
+        self.sidebar_layout.addLayout(grupo_buttons_relatorio)
+
+
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
         #======================================
-        self.regex_cpf = QRegularExpression("^[0-9]*$") # para o CPF
+        self.regex_cpf = QRegularExpression(r"^\d{0,11}$") # para o CPF
         self.validator_cpf = QRegularExpressionValidator(self.regex_cpf)
 
         self.regex_nome = QRegularExpression("^[A-Za-z ]*$") # Para o nome
@@ -312,7 +330,8 @@ class Sidebar(QWidget, QObject):
             cursor.execute(consulta)
             resultado_pesquisa = cursor.fetchall()
             form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=func) 
-            self.insertOnGUI(form, 0)#inserção na GUI
+            object_proxy = self.insertOnGUI(form, 0)#inserção na GUI
+            self.garbage_collector.append(object_proxy)
             return form
         except Error as e:
             self.error_message(e)  
@@ -352,32 +371,8 @@ class Sidebar(QWidget, QObject):
 
     def registroEntradaVisitante(self): # [v1.0.0.03]: função propria para o registro de visitantes
         if (self.check[0] is None): # [v1.0.0.03]: para o formulario de registro de visitante só será necessário coletar o nome do visitante.
-            container = QWidget()
-            label = QLabel(self.recursos.TEXTOS.text_insert_nome_visitante)
-            label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-            line_edit = QLineEdit()
-            line_edit.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-            line_edit.setValidator(self.validator_nome) # cria restrição para a entrada ser apenas letras maiusculas, minusculas e espaços
-            line_edit.setPlaceholderText("Digite o nome aqui...")
-            btn_confirmar = QPushButton("PRÓXIMO")
-            btn_confirmar.clicked.connect(lambda: self.capturar_nome(line_edit, self.registroEntradaVisitante)) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
-            layout = QVBoxLayout(container) 
-            layout.addWidget(label)
-            layout.addWidget(line_edit)
-            layout.addWidget(btn_confirmar)
-            self.setLayout(layout)
-            self.insertOnGUI(container, 25)
+            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_visitante, "Digite o nome aqui...", self.validator_nome, self.registroEntradaVisitante)
             self.check[0] = True
-            # para destruir os itens posteriormente em cancel()
-            self.garbage_collector.append(container)
-            self.garbage_collector.append(label)
-            self.garbage_collector.append(line_edit)
-            self.garbage_collector.append(btn_confirmar)
-            self.garbage_collector.append(layout)
-            #necessario pra posicionar os botoes
-            self.coord_last_widget[0] = container.x()
-            self.coord_last_widget[1] = container.y() + 20
-
 
         elif(self.check[1] is None):
             self.check[1] = True
@@ -395,56 +390,12 @@ class Sidebar(QWidget, QObject):
             self.check[0] = True #desabilita esse bloco condicional na proxima iteração
 
         elif (self.check[1] is None): 
-            container = QWidget()
-            label = QLabel(self.recursos.TEXTOS.text_insert_nome_servidor)
-            label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-            line_edit = QLineEdit()
-            line_edit.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-            line_edit.setValidator(self.validator_nome) # cria restrição para a entrada ser apenas letras maiusculas, minusculas e espaços
-            line_edit.setPlaceholderText("Digite o nome aqui...")
-            btn_confirmar = QPushButton("PRÓXIMO")
-            btn_confirmar.clicked.connect(lambda: self.capturar_nome(line_edit, self.cadastroServidor))
-            layout = QVBoxLayout(container) 
-            layout.addWidget(label)
-            layout.addWidget(line_edit)
-            layout.addWidget(btn_confirmar)
-            self.setLayout(layout)
-            self.insertOnGUI(container, 25)
+            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
             self.check[1] = True
-            # para destruir os itens posteriormente em cancel()
-            self.garbage_collector.append(container)
-            self.garbage_collector.append(label)
-            self.garbage_collector.append(line_edit)
-            self.garbage_collector.append(btn_confirmar)
-            self.garbage_collector.append(layout)
 
         elif (self.check[2] is None): 
-            container = QWidget()
-            label = QLabel(self.recursos.TEXTOS.text_insert_cpf_servidor)
-            label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-            line_edit = QLineEdit()
-            line_edit.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-            line_edit.setValidator(self.validator_cpf) # cria restrição para a entrada ser apenas numeros sem pontos, hifens ou letras.
-            line_edit.setMaxLength(11) # limita pra inserir apenas 11 digitos e nao mais que isso
-            line_edit.setPlaceholderText("ex.: 50545642300...")
-            btn_confirmar = QPushButton("PRÓXIMO")
-            btn_confirmar.clicked.connect(lambda: self.capturar_cpf(line_edit, self.cadastroServidor))
-            layout = QVBoxLayout(container)
-            layout.addWidget(label)
-            layout.addWidget(line_edit)
-            layout.addWidget(btn_confirmar)
-            self.setLayout(layout)
-            self.insertOnGUI(container, 35)
+            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_cpf_servidor, "ex.: 50545642300...", self.validator_cpf, self.cadastroServidor)
             self.check[2] = True
-            # para destruir os itens posteriormente em cancel()
-            self.garbage_collector.append(container)
-            self.garbage_collector.append(label)
-            self.garbage_collector.append(line_edit)
-            self.garbage_collector.append(btn_confirmar)
-            self.garbage_collector.append(layout)
-            #necessario pra posicionar os botoes
-            self.coord_last_widget[0] = container.x()
-            self.coord_last_widget[1] = container.y() + 20
 
         elif(self.check[3] is None):
             self.check[3] = True
@@ -487,14 +438,13 @@ class Sidebar(QWidget, QObject):
     
 
 
-    def capturar_nome(self, line_edit, func_call_recursivamente):
-        self.nome = line_edit.text().strip() 
-        func_call_recursivamente()
-
-
-
-    def capturar_cpf(self, line_edit, func_call_recursivamente):
-        self.cpf = line_edit.text().strip()
+    def capturar_nome_cpf(self, line_edit, func_call_recursivamente):
+        texto = line_edit.text().strip() 
+        if(texto.isdigit()): # verifica se é digito pra direcionar of luxo pra etapa de CPF
+            self.cpf = texto
+        else:
+            self.nome = texto
+        
         func_call_recursivamente()
 
 
@@ -717,14 +667,19 @@ class Sidebar(QWidget, QObject):
         else:
             return [True, result]
         
+
     
     def getInstance(self):
         return self
     
+
+
     def getEntradaOnRegistro(self, num_vaga):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE num_vaga='{num_vaga}' ORDER BY id DESC LIMIT 1")
         return cursor.fetchall() # retorna uma unica tupla e nao uma lista de tuplas
+
+
 
     def getRegistroByVaga(self, num_vaga): # retorna todas as tuplas do registro onde tenha dados do nº da vaga informada
         cursor = self.conn.cursor()
@@ -732,24 +687,39 @@ class Sidebar(QWidget, QObject):
         tuplas_tabela = cursor.fetchall()
         return tuplas_tabela
     
+
+
+    def getAllFromRegistro(self): # retorna todas as tuplas do registro onde tenha dados do nº da vaga informada
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM registro")
+        tuplas_tabela = cursor.fetchall()
+        return tuplas_tabela
+
+
+
     def getServidorByCPF(self, cpf_cnpj): # busca o servidor a partir do seu CPF
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM servidor WHERE cpf_cnpj='{cpf_cnpj}'")
         servidor = cursor.fetchall()
         return servidor
     
+
+
     def getVisitantes(self): # [v1.0.0.03]: busca dados de visitantes
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE nome_visitante != NULL")
         servidor = cursor.fetchall()
         return servidor
     
+
+
     def verificaEntradaServidor(self, cpf_cnpj):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE cpf_cnpj='{cpf_cnpj}' AND tipo='ENTRADA'") # busca no registro se há uma tupla com o cpf do servidor e se ela só foi registrada ENTRADA e não SAIDA
         servidor_entrada = cursor.fetchall()
         return servidor_entrada
         
+
 
     def updateHistoricoRegistro(self):
         tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
@@ -777,11 +747,62 @@ class Sidebar(QWidget, QObject):
         self.lista_registro.resizeColumnsToContents()        # Ajusta cada coluna ao conteúdo
         self.lista_registro.horizontalHeader().setStretchLastSection(True)
 
-    def acaoButtonRelatorio(self):
-        relatorio_pdf = "relatorio.pdf" #nome do arquivo a ser gerado
+
+
+    def FormularioLeituraDados(self, pergunta, instrucao_in_box, regex_validacao, func): # [v1.0.0.03]: metodo pra ler nomes e etc
+        container = QWidget()
+        label = QLabel(pergunta)
+        label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
+        line_edit = QLineEdit()
+        line_edit.setFont(self.recursos.FONTES.fonte_texto_pergunta)
+        line_edit.setValidator(regex_validacao) # cria restrição para a entrada ser apenas letras maiusculas, minusculas e espaços
+        line_edit.setPlaceholderText(instrucao_in_box)
+        line_edit.setContentsMargins(5,0,0,0) # remove margens adicionais
+        btn_confirmar = QPushButton("OK")
+        btn_confirmar.setFixedHeight(self.recursos.CONST.LARGURA_FORMULARIO_BUTTON)
+        btn_confirmar.clicked.connect(lambda: self.capturar_nome_cpf(line_edit, func)) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
+        layout = QVBoxLayout(container) # conteiner vertical pro nome da pergunta ficar acima da caixa/box de leitura de nome
+        layout_2 = QHBoxLayout() # conteiner horizontal pro button ficar de lado nesses tipos de formulario que requisitam entrada
+        layout.addWidget(label) # insere a pergunta
+        layout_2.addWidget(line_edit) # insere a caixa de leitura de texto à esquerda
+        layout_2.addWidget(btn_confirmar, stretch=0.2) # insere o botão 'OK' comprimido ao lado da caixa de leitura de texto
+        layout.addLayout(layout_2) # insere a box de leitura + botão
+        
+        #self.setLayout(layout) 
+        object_proxy = self.insertOnGUI(container, 30)
+        container.setStyleSheet(self.recursos.ESTILOS.button_style) # define o estilo 
+        container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
+        self.check[0] = True
+        # para destruir os itens posteriormente em cancel()
+        self.garbage_collector.append(container)
+        self.garbage_collector.append(label)
+        self.garbage_collector.append(line_edit)
+        self.garbage_collector.append(btn_confirmar)
+        self.garbage_collector.append(layout)
+        self.garbage_collector.append(layout_2)
+        self.garbage_collector.append(object_proxy)
+        #necessario pra posicionar os botoes
+        self.coord_last_widget[0] = container.x()
+        self.coord_last_widget[1] = container.y() + 25
+        
+
+
+    def acaoButtonRelatorio(self, enable_relatorio_completo):
+        relatorio_pdf = "relatorio.pdf" # nome do arquivo a ser gerado
+        titulo = f"<font size='16'>Relatório Completo</font>"
         
         # ETAPA 1: Consulta
-        tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText()) # retorna todos os valores do registro onde tenha incidência do numero de vaga informado
+        if(enable_relatorio_completo):
+            relatorio_pdf = "relatorio_completo.pdf"
+            tuplas_tabela = self.getAllFromRegistro() # [v1.0.0.03]: retorna todos os valores do registro
+        else:
+            if(self.num_vaga.displayText() != "-"): # [v1.0.0.03]: verifica se o usuario selecionou alguma vaga ou ainda esta o valor default
+                relatorio_pdf = "relatorio_vaga_"+self.num_vaga.displayText()+".pdf" # [v1.0.0.03]: nome do arquivo concatenado com o numero da vaga
+                tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText()) # retorna todos os valores do registro onde tenha incidência do numero da vaga informado
+                titulo = f"<font size='16'>Relatório da vaga nº: {self.num_vaga.displayText()}</font>"
+            else:
+                QMessageBox.warning(self.main_window, "Erro", "Selecione uma vaga para imprimir o relatório da vaga.")
+                return # [v1.0.0.03]: sai da função sem nenhuma ação
 
         # ETAPA 2: Gerando o documento PDF com os dados
         doc = SimpleDocTemplate("conteudo.pdf")
@@ -792,9 +813,9 @@ class Sidebar(QWidget, QObject):
             servidor = self.getServidorByCPF(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
             if len(servidor) == 0:
                 #visitante = self.getVisitante(tupla[7])
-                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], tupla[7], "[VISITANTE]"]
+                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], tupla[7].upper(), "[VISITANTE]: "+self.orgao_vinculado.displayText()]
             else:
-                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1], servidor[0][2]]
+                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1].upper(), servidor[0][2]]
             linhas.append(tupla_formatada) # insere uma linha no pdf
             #linhas.append(Spacer(1, 10))
             count+=1 # contador de linhas 
@@ -803,7 +824,7 @@ class Sidebar(QWidget, QObject):
         tabela.setStyle(TableStyle(self.recursos.ESTILOS.estilo_tabela))
 
         elemento = []
-        elemento.append(Paragraph(f"<font size='16'>Nº da vaga: {self.num_vaga.displayText()}</font>"))
+        elemento.append(Paragraph(titulo))
         elemento.append(Spacer(1, 10 * mm))
         elemento.append(tabela)
 

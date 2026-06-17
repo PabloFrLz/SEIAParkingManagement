@@ -13,6 +13,10 @@
 #   3.  Impedir que um servidor seja removido quando houver um registro de ENTRADA.
 #   4.  Permitir que VISITANTES possam usar vagas da secretaria (em andamento):
 #       4.1.  Modificado tabela Registro para se adequar ao propósito de permitir visitantes.
-              coluna 'cpf_cnpj' e 'placa' agora permite valores NULL, e foi adicionado uma nova
-              coluna 'nome_visitante';
-        4.2.  
+#              coluna 'cpf_cnpj' e 'placa' agora permite valores NULL, e foi adicionado uma nova
+#              coluna 'nome_visitante';
+#   5.  Inserido a classe Recursos que irá centralizar todos os recursos da aplicação, como Textos,
+#       Cores, Fontes, Estilos CSS, etc.        
+#   6.  Inserido a opção dos botoes para RELATORIO e RELATORIO COMPLETO - e adaptador para mostrar
+#       dados dos VISITANTES.
+#
