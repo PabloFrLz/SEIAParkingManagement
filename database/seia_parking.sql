@@ -50,8 +50,8 @@ create table if not exists Registro(
 -- servidor.sql (caso tenha os dados dos servidores de antemão)
 -- carros.sql
 
-source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\SEIAParkingManagement\database\autarquia.sql
-source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\SEIAParkingManagement\database\vagas.sql
-source C:\Users\pablo.resi\Documents\Diretoria Inovacao\blank project\pyside6\SEIAParkingManagement\database\carros.sql
+source C:\SEIA\diretoria_inovacao\SEIAParkingManagement\database\autarquia.sql
+source C:\SEIA\diretoria_inovacao\SEIAParkingManagement\database\vagas.sql
+source C:\SEIA\diretoria_inovacao\SEIAParkingManagement\database\carros.sql
 
 --SELECT * FROM carro c WHERE c.autarquia = 'seia' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA');

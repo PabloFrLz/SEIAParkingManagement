@@ -1,8 +1,17 @@
 insert into Servidor values ('12345678901', 'Joao Silva', 'deficiente');
 insert into Servidor values ('98765432100', 'Maria Oliveira', 'SEJU');
+insert into Servidor values ('79116611345', 'Carmélia Lopes Teixeira', 'SEJU');
+insert into Servidor values ('89765225889', 'Arthur do Vrau', 'SEJU');
+insert into Servidor values ('65423871584', 'Vanessa Hirata', 'SEJU');
+insert into Servidor values ('89794313454', 'Josana Stadler', 'SEJU');
 insert into Servidor values ('11122233344', 'Carlos Pereira', 'SEIA');
 insert into Servidor values ('55566677788', 'Ana Souza', 'SESP');
+insert into Servidor values ('98735232853', 'Higor Canalheira da Silva', 'SESP');
+insert into Servidor values ('96311254442', 'Guilherme Stead Costa', 'SESP');
+insert into Servidor values ('81325844227', 'Sir Friedrich Gauss', 'SESP');
 insert into Servidor values ('99988877766', 'Fernanda Lima', 'COHAPAR');
+insert into Servidor values ('86351599841', 'José benifácio', 'COHAPAR');
+insert into Servidor values ('37791346462', 'Carlos Massa Ratinho', 'COHAPAR');
 insert into Servidor values ('54984469465', 'Andre Luis Costa Batistela', 'SEIA');
 insert into Servidor values ('34789489356', 'Fernanda Larocca Colaco Vaz', 'SEIA');
 insert into Servidor values ('12382478956', 'Bateny Monteiro Sanca', 'SEIA');

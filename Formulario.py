@@ -1,14 +1,17 @@
 from PySide6.QtWidgets import QLabel, QComboBox, QWidget, QVBoxLayout
 
+import Recursos
 
 class Formulario(QWidget):
 
     def __init__(self, texto, items, categoria, onComplete=None):
         super().__init__()
+        self.recursos = Recursos.Recursos()
         self.onComplete = onComplete
         self.result_to_return = None # variável para armazenar o resultado a ser retornado
         self.select = QVBoxLayout()
         self.label = QLabel(texto) # texto a ser mostrado, como por exemplo: "selecione a autarquia:"
+        self.label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
         self.select.addWidget(self.label)
 
         self.combo = QComboBox()
