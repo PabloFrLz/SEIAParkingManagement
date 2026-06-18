@@ -533,6 +533,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.toggle.setCheckable(True)
         self.toggle.setStyleSheet("""
             QCheckBox {
+                background-color: transparent;
                 spacing: 20px;
             }
             QCheckBox::indicator {
@@ -541,13 +542,13 @@ class SEIAParkingManagement(QGraphicsView):
             }
             QCheckBox::indicator:unchecked {
                 image: url(imagens/off2.png);  /* ou usar border-radius + background */
-                border: 5px solid gray;
+                border: 2px solid gray;
                 border-radius: 15px;
                 background-color: #ccc;
             }
             QCheckBox::indicator:checked {
                 image: url(imagens/on2.png);
-                border: 5px solid #2196F3;
+                border: 2px solid #2196F3;
                 border-radius: 15px;
                 background-color: #2196F3;
             }
@@ -555,7 +556,7 @@ class SEIAParkingManagement(QGraphicsView):
 
         proxy_toggle = QGraphicsProxyWidget()
         proxy_toggle.setWidget(self.toggle)
-        proxy_toggle.setPos(WIDTH+K+120, HEIGHT+350)
+        proxy_toggle.setPos(20, 10)
         proxy_toggle.setZValue(1000) # força a ficar no topo da pilha de renderização
         self.scene.addItem(proxy_toggle)
         
@@ -770,7 +771,7 @@ app = QApplication(sys.argv)
 app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
 viewer = SEIAParkingManagement()
 viewer.setWindowTitle("SEIA Parking Management - "+ver)
-viewer.resize(WIDTH+K-240, HEIGHT+150)
+viewer.setFixedSize(WIDTH+K-240, HEIGHT+150)
 viewer.scale(0.85, 0.85)
 viewer.show()
 sys.exit(app.exec())

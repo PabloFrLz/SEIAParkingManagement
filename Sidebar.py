@@ -21,7 +21,7 @@ class Sidebar(QWidget, QObject):
 
         super().__init__()
         self.POS_X_SIDEBAR = POS_X_SIDEBAR
-        
+        self.CONST_DESLOCAMENTO = 220
 
         #======================================
         # Vars
@@ -32,7 +32,7 @@ class Sidebar(QWidget, QObject):
         self.scene = janela_principal.scene
         self.check = [None, None, None, None]
         self.eixo_x_form = 30
-        self.eixo_y_form = 150
+        self.eixo_y_form = self.CONST_DESLOCAMENTO
         self.categoria = 0 
         self.tipo_form = ""
         self.btn_commit = QPushButton("")
@@ -61,7 +61,7 @@ class Sidebar(QWidget, QObject):
         #======================================
         # Configurações iniciais
         #======================================
-        main_layout = QHBoxLayout(self)
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         #main_layout.setSpacing(0)
 
@@ -108,39 +108,58 @@ class Sidebar(QWidget, QObject):
 
         form.addRow(self.lista_registro) # [v1.0.0.03]: insere a lista no formulário descritivo das vagas 
         
-        self.setStyleSheet(self.recursos.ESTILOS.button_style)
 
         #======================================
         # Sidebar
         #======================================
         self.sidebar = QWidget()
         self.sidebar.setFixedWidth(WIDTH - 890)           # largura da sidebar
-        self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar
+        self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar 
 
         self.sidebar_layout = QVBoxLayout(self.sidebar)
-        self.sidebar_layout.setContentsMargins(20, 20, 20, 20)
+        self.sidebar_layout.setContentsMargins(20, 0, 20, 20)
 
         #======================================
         # Logomarca da SEIA na sidebar
         #====================================== 
+        self.header = QWidget() # [v1.0.0.03]: criando um widget próprio pra logomarca e título pra evitar da logo entrar na animação de transição 
+        self.header_conteiner = QVBoxLayout(self.header) # [v1.0.0.03]: conteiner vertical que vai agrupar a logomarca superior e título
         self.img = QPixmap(self.recursos.PATH.img_logo_sidebar) #imagem de plano de fundo
         self.seia_logo = QLabel()
+        '''
         self.seia_logo.setPixmap(self.img.scaled(
             260, 145,  # ajuste conforme necessário
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
-        ))
-        self.sidebar_layout.addWidget(self.seia_logo) # insere na sidebar de infos de estacionamento
-        
-        self.stack = QStackedWidget()
-        
+        ))'''
+        self.seia_logo.setPixmap(self.img)
+        self.seia_logo.setFixedSize(QSize(370, 180))
+        self.seia_logo.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo)
+        self.titulo = QLabel("DESCRIÇÃO") # [v1.0.0.03]: Cria um titulo para descrever a seção atual da sidebar
+        self.titulo.setFont(self.recursos.FONTES.fonte_title_header) # [v1.0.0.03]: define a fonte do texto do titulo
+        self.header_conteiner.addWidget(self.seia_logo) # [v1.0.0.03]: adiciona a logomarca superior no conteiner
+        self.header_conteiner.addSpacing(30) # [v1.0.0.03]: adicionando espaço entre a logomarca e o titulo da seção
+        self.header_conteiner.addWidget(self.titulo) # [v1.0.0.03]: insere o título abaixo
+        self.header_conteiner.setAlignment(Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: alinhamento ao centro
+        self.header_conteiner.setContentsMargins(0,30,0,0)
+
+        #======================================
+        # Inserção dos objetos na sidebar
+        #====================================== 
+        main_layout.addWidget(self.header) # [v1.0.0.03]: insere o widget do header primeiro pra fazer com que os formularios ficam logo abaixo
         main_layout.addWidget(self.sidebar)
-        main_layout.addWidget(self.stack)
+        #self.sidebar_layout.addWidget(self.seia_logo) # insere a logo do NAS no topo da sidebar
+        self.sidebar_layout.addLayout(self.header_conteiner) # insere o conteiner com a logo do NAS e o título no topo da sidebar
+        self.sidebar_layout.addSpacing(30) # adicionando um espaço de 30 pixels entre a logo do NAS e os formularios descritivos
         self.sidebar_layout.addLayout(form) # insere os formulários descritivos das vagas no layout da interface gráfica
+        
 
         #======================================
         # Botões de ação da sidebar
         #======================================
+
+        self.setStyleSheet(self.recursos.ESTILOS.button_style) # [v1.0.0.03]: se não definir um setStyleSheet() pra cada button, eles vão herdar esse estilo padrão de Button
+
         # criação e estética dos botoes
         self.btn_registrar_entrada = QPushButton("ENTRADA")
         self.btn_registrar_entrada.setCheckable(True) # destaca o botão selecionado
@@ -156,7 +175,7 @@ class Sidebar(QWidget, QObject):
         self.btn_cadastro.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_cadastro)
         self.btn_cadastro.clicked.connect(self.acaoButtonCadastro)
-        self.btn_cadastro.setStyleSheet(self.recursos.ESTILOS.button_style_2)
+        #self.btn_cadastro.setStyleSheet(self.recursos.ESTILOS.button_style_2)
 
         self.btn_remove = QPushButton("REMOVER SERVIDOR")
         self.btn_remove.setCheckable(True) # destaca o botão selecionado
@@ -165,21 +184,19 @@ class Sidebar(QWidget, QObject):
         self.btn_remove.setStyleSheet(self.recursos.ESTILOS.button_style_4)
 
         self.btn_relatorio = QPushButton() # Button RELATÓRIO
-        self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio))
+        self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio)) # carrega icone para o botão de relatorio
         self.btn_relatorio.setIconSize(QSize(64, 64))
         self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
-        #self.sidebar_layout.addWidget(self.btn_relatorio)
         self.btn_relatorio.clicked.connect(lambda: self.acaoButtonRelatorio(False))
-        self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2)
+        #self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2)
         self.btn_relatorio.setFixedHeight(100)
 
         self.btn_relatorio_completo = QPushButton() # Button RELATÓRIO COMPLETO
-        self.btn_relatorio_completo.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio_completo))
+        self.btn_relatorio_completo.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio_completo)) # carrega icone para o botão de relatorio completo
         self.btn_relatorio_completo.setIconSize(QSize(64, 64))
         self.btn_relatorio_completo.setCheckable(True) # destaca o botão selecionado
-        #self.sidebar_layout.addWidget(self.btn_relatorio_completo)
         self.btn_relatorio_completo.clicked.connect(lambda: self.acaoButtonRelatorio(True))
-        self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_2)
+        #self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_2)
         self.btn_relatorio_completo.setFixedHeight(100)
 
         grupo_buttons_relatorio = QHBoxLayout()
@@ -187,6 +204,7 @@ class Sidebar(QWidget, QObject):
         grupo_buttons_relatorio.addWidget(self.btn_relatorio_completo)
         self.sidebar_layout.addLayout(grupo_buttons_relatorio)
 
+        self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro, self.btn_remove, self.btn_relatorio, self.btn_relatorio_completo]
 
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
@@ -268,8 +286,8 @@ class Sidebar(QWidget, QObject):
     def acaoButtonEntrada(self): 
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
-            self.titulo = self.insertHeader("REGISTRAR ENTRADA")#gera logo no topo e titulo da seção 
-            #self.check[0] = True # [v1.0.0.03]: desabilitado o formulario para requisitar o orgão/autarquia desde a v1.0.0.03 - apartir de agora, a autarquia será obtida direto do objeto 'Vaga' e o usuario não precisará fornecer manualmente quando for registrar ENTRADA. 
+            #self.titulo = self.insertHeader("REGISTRAR ENTRADA")#gera logo no topo e titulo da seção 
+            self.titulo.setText("REGISTRO") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
             resposta = QMessageBox.question(self.main_window, "Questão", "Registro de VISITANTE ?") # [v1.0.0.03]: questiona o usuário se será um registro de um visitante ou de um servidor.
             if (resposta == QMessageBox.StandardButton.Yes): # [v1.0.0.03]: verifica se usuario clicou no botao Sim
                 self.registroEntradaVisitante() # inicializa os formularios pra registro da ENTRADA de VISITANTES
@@ -295,14 +313,16 @@ class Sidebar(QWidget, QObject):
 
     def acaoButtonCadastro(self):
         self.transitToFormulario() # animação que empurra pro lado direito as infos
-        self.titulo = self.insertHeader("CADASTRAR SERVIDOR") # gera logo no topo e titulo da seção
+        #self.titulo = self.insertHeader("CADASTRAR SERVIDOR") # gera logo no topo e titulo da seção
+        self.titulo.setText("CADASTRAR SERVIDOR") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
         self.cadastroServidor() # inicializa os formularios pra cadastro de servidor
 
 
 
     def acaoButtonRemoverServidor(self): # [v1.0.0.03]: método que terá a ação que dará inicio ao processo de remoção de servidor 
         self.transitToFormulario() # animação que empurra pro lado direito as infos
-        self.titulo = self.insertHeader("REMOVER SERVIDOR") 
+        #self.titulo = self.insertHeader("REMOVER SERVIDOR") 
+        self.titulo.setText("REMOVER SERVIDOR") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
         self.removeServidor() # inicializa os formulários para remoção de servidor
 
 
@@ -310,13 +330,13 @@ class Sidebar(QWidget, QObject):
     # transiciona para o formulario de registro e posteriomente de volta para a tela de informações da vaga
     def transitToFormulario(self):
         if self.turnRound: # empurra os elementos da sidebar pra direita (ocultando-os)
-            self.animation.setStartValue(QPoint(0, 0))
-            self.animation.setEndValue(QPoint(self.largura + 400, 0))
+            self.animation.setStartValue(QPoint(0, self.sidebar.pos().y()))
+            self.animation.setEndValue(QPoint(self.largura + 400, self.sidebar.pos().y()))
             self.animation.start() #inicia a animação
 
         else: # puxa os elementos da sidebar pra esquerda (mostrando-os de volta)
-            self.animation.setStartValue(QPoint(self.largura + 400, 0))
-            self.animation.setEndValue(QPoint(0, 0))  
+            self.animation.setStartValue(QPoint(self.largura + 400, self.sidebar.pos().y()))
+            self.animation.setEndValue(QPoint(0, self.sidebar.pos().y()))  
             self.animation.start() #inicia a animação
 
         self.turnRound = not self.turnRound # inverte o estado para a próxima vez que o botão for clicado
@@ -560,7 +580,7 @@ class Sidebar(QWidget, QObject):
         self.scene.addItem(proxy)
         return proxy # retorna o proxy pra caso precise destruir
 
-    
+    '''
     def insertHeader(self, msg):
         #Conteiner
         conteiner = QWidget()
@@ -589,7 +609,7 @@ class Sidebar(QWidget, QObject):
         #inserindo o proxy no cenário
         self.scene.addItem(proxy) 
         return proxy
-
+    '''
 
     def insertButton(self, msg, style, action=None):
         button = QPushButton(msg)
@@ -610,7 +630,7 @@ class Sidebar(QWidget, QObject):
         return button
         
     def reset(self):
-        self.eixo_y_form = 150
+        self.eixo_y_form = self.CONST_DESLOCAMENTO
         #self.check = [None, None, None, None] # habilitando os forms
         for i in range(len(self.check)):
             self.check[i] = None # atribuindo None pra habilitar novamente os forms
@@ -633,9 +653,12 @@ class Sidebar(QWidget, QObject):
                 btn = None
 
         #destruindo a logomarca e o texto titulo
+        
+        '''
         if self.titulo is not None and isValid(self.titulo):
             self.titulo.deleteLater()
             self.titulo = None
+        '''
         
         # destruindo os formularios de leitura pra cadastro de servidor
         if self.garbage_collector is not None:
@@ -652,6 +675,15 @@ class Sidebar(QWidget, QObject):
             self.atualizar_info(self.sentinel)
 
         #self.ctrl_forms_visitante = False # [v1.0.0.03]: reseta a variavel de controle do formulario de visitante
+
+        '''
+        for btn in self.list_buttons:
+            btn.setCheckable(False) # desabilita o efeito de checked do CSS 
+            btn.setCheckable(True) # habilita novamente pra habilitar o efeito pra futuras interações do usuário.
+        '''
+
+        self.titulo.setText("DESCRIÇÃO") # [v1.0.0.03]: Altera o nome de volta pro titulo inicial
+    
 
 
     def consultaDisponibilidadeFrota(self, valor):

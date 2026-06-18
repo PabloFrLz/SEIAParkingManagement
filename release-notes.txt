@@ -19,4 +19,8 @@
 #       Cores, Fontes, Estilos CSS, etc.        
 #   6.  Inserido a opção dos botoes para RELATORIO e RELATORIO COMPLETO - e adaptador para mostrar
 #       dados dos VISITANTES.
+#   7.  Modificações na logomarca e campos de formularios da sidebar - alterado logica de inserção 
+#       de título e logomarca na interface - agora a logomarca e titulo estão em um widget e formularios
+#       e demais elementos em outro - isso torna a aplicação mais eficiente principalmente nas animações.
+#       
 #

@@ -45,7 +45,8 @@ class Fontes:
         self.fonte_texto_pergunta = QFont("Segoe UI", 14) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
         self.fonte_tabela = "font-size: 14px" # [v1.0.0.03]: tamanho da fonte da tabela de registros da sidebar
         self.fonte_texto_buttons = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte do texto dos botões da interface
-        self.fonte_title_header = "<font size='6'>" # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
+        #self.fonte_title_header = "<font size='6'>" # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
+        self.fonte_title_header = QFont("Segoe UI", 20) # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
 
 
 
@@ -77,6 +78,17 @@ class Estilos:
     def __init__(self, fontes):
         self.FONTES = fontes
 
+        # estilo toolbars de fundo
+        self.toolbar_estilo =  """QLabel {
+                background-color: #000000;     /* fundo que destoa */
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 8px;            /* bordas arredondadas */
+                padding: 8px 12px;
+                opacity: 0.5;
+                }
+            """
+
         # estilos de botões 
         self.button_style = f"""
             QLineEdit, QComboBox {{
@@ -107,8 +119,8 @@ class Estilos:
                 background-color: rgba(255, 165, 0, 80);   /* laranja suave */
             }}
             
-            QPushButton:pressed, QPushButton:checked {{
-                background-color: rgba(255, 140, 0, 160);
+            QPushButton:pressed {{
+                background-color: rgba(0, 255, 155, 80);
                 color: white;
             }}
         """
@@ -129,7 +141,7 @@ class Estilos:
                 background-color: rgba(0, 255, 155, 80); 
             }}
             
-            QPushButton:pressed, QPushButton:checked {{
+            QPushButton:pressed {{
                 background-color: rgba(0, 255, 0, 160);
                 color: white;
             }}
@@ -151,7 +163,7 @@ class Estilos:
                 background-color: rgba(255, 165, 0, 80);   /* laranja suave */
             }}
             
-            QPushButton:pressed, QPushButton:checked {{
+            QPushButton:pressed {{
                 background-color: rgba(255, 140, 0, 160);
                 color: white;
             }}
@@ -173,7 +185,7 @@ class Estilos:
                 background-color: rgba(255, 0, 55, 80);   /* laranja suave */
             }}
             
-            QPushButton:pressed, QPushButton:checked {{
+            QPushButton:pressed {{
                 background-color: rgba(255, 18, 70, 160);
                 color: white;
             }} 
@@ -204,7 +216,7 @@ class Estilos:
 
 class Paths:
     def __init__(self):
-        self.img_logo_sidebar = "imagens/logo_seia_form_sidebar.png"
+        self.img_logo_sidebar = "imagens/nas_logo.png"
         self.icon_btn_relatorio = "imagens/relatorio.png"
         self.icon_btn_relatorio_completo = "imagens/relatorio_completo.png"
 
