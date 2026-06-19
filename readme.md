@@ -30,9 +30,32 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql
 ```
 	 
  
- ## CONFIGURAÇÕES FINAIS:
+ ## CONFIGURAÇÕES COMPLEMENTARES:
 ```bash
 pip install --upgrade PySide6 pyqtdarktheme"
+```
+
+ ## CRIAÇÃO DO EXECUTÁVEL PYTHON
+```bash
+pip install pyinstaller
+
+pyinstaller --onefile --windowed --clean ^
+    --icon=icone.ico ^
+    --version-file version_info.txt ^
+    --add-data "imagens;imagens" ^
+    SEIAParkingManagement.py
+```
+### Caso ocorra dê problemas de conflito entre PyQt5 e PySide6 com o erro "ERROR: Aborting build process due to attempt to collect multiple Qt bindings packages: attempting to run hook for 'PyQt5', while hook for 'PySide6' has already been run!". Execute o comando: 
+```bash
+pyinstaller --onefile --windowed --clean ^
+    --icon=icone.ico ^
+    --version-file version_info.txt ^
+    --add-data "imagens;imagens" ^
+    --exclude-module PyQt5 ^
+    --exclude-module PyQt5.QtCore ^
+    --exclude-module PyQt5.QtGui ^
+    --exclude-module PyQt5.QtWidgets ^
+    SEIAParkingManagement.py
 ```
 
 

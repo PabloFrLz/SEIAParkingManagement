@@ -28,15 +28,16 @@
 import threading
 
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QGraphicsItem, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
+    QApplication, QCheckBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout
+    QGraphicsProxyWidget, QMessageBox
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QPointF
 import sys
 import Vaga as vg
 import Sidebar as sb
+import Recursos
 import qdarktheme
 import pymysql
 from colorama import init
@@ -88,25 +89,25 @@ class SEIAParkingManagement(QGraphicsView):
         self.setScene(self.scene)
         self.turnRound = True
         self.anim = None
+        self.recursos = Recursos.Recursos()
         
 
         #==============================================================================================
         # construção do cenário da propriedade (fundo, contorno, blocos, recepção, torre, entradas/saídas)
         #==============================================================================================
 
-        # 1. Imagem de satélite como fundo
-        self.pixmap = QPixmap("imagens/background-3.png") #imagem de plano de fundo
+        self.pixmap = QPixmap(self.recursos.PATH.background_app) #imagem de plano de fundo
         self.bg = QGraphicsPixmapItem(self.pixmap)
-        self.bg.setOpacity(0.85) # um pouco transparente para destacar desenho
+        self.bg.setOpacity(0.85) # um pouco transparente para destacar o desenho
         self.scene.addItem(self.bg)
         
-        self.pixmap2 = QPixmap("logos/SEIA3.png") #imagem da secretaria
+        self.pixmap2 = QPixmap(self.recursos.PATH.logo_marca_dagua_parana) #imagem marca d'agua do gov. do paraná
         self.bg2 = QGraphicsPixmapItem(self.pixmap2)
         self.bg2.setOpacity(0.05)
         self.bg2.setPos(WIDTH/2-80, HEIGHT/2) 
         self.scene.addItem(self.bg2)
 
-        self.pixmap_edificios = QPixmap("imagens/edificacoes.png") #imagem da secretaria
+        self.pixmap_edificios = QPixmap(self.recursos.PATH.edificio_hauer) # imagem do edificio do prédio Hauer da SEIA
         self.bg3 = QGraphicsPixmapItem(self.pixmap_edificios)
         self.bg3.setOpacity(0.01) 
         self.bg3.setPos(WIDTH/11, HEIGHT/5.5) 
@@ -531,29 +532,12 @@ class SEIAParkingManagement(QGraphicsView):
         # Toggle Switch customizado via stylesheet
         self.toggle = QCheckBox()
         self.toggle.setCheckable(True)
-        self.toggle.setStyleSheet("""
-            QCheckBox {
-                background-color: transparent;
-                spacing: 20px;
-                border: none;
-            }
-            QCheckBox::indicator {
-                width: 60px;
-                height: 30px;                 
-            }
-            QCheckBox::indicator:unchecked {
-                image: url(imagens/off2.png); 
-                
-            }
-            QCheckBox::indicator:checked {
-                image: url(imagens/on2.png);
-
-            }
-        """)
+        self.toggle.setStyleSheet(self.recursos.ESTILOS.estilo_toggle_switch)
+        self.toggle.setText("DISPOSIÇÃO DAS VAGAS")
 
         proxy_toggle = QGraphicsProxyWidget()
         proxy_toggle.setWidget(self.toggle)
-        proxy_toggle.setPos(30, 10)
+        proxy_toggle.setPos(25, 10)
         proxy_toggle.setZValue(1000) # força a ficar no topo da pilha de renderização
         self.scene.addItem(proxy_toggle)
         
@@ -564,10 +548,10 @@ class SEIAParkingManagement(QGraphicsView):
         # Copyright
         #==============================================================================================
 
-        copyright = QGraphicsTextItem("© 2026 SEIA Parking Management "+ver+".\n         Todos os direitos reservados.")
+        copyright = QGraphicsTextItem("                                                                                                                                                  © 2026 SEIA Parking Management "+ver+".\n Todos os direitos reservados ao Supervisor Especialista em Governança Digital & Transformação Digital André Luis Costa Batistela - um dos nomes mais proeminentes da Diretoria de Inovação e um dos pilares da Inovação no Estado do Paraná.")
         copyright.setFont(QFont("Arial", 10))
         copyright.setDefaultTextColor(QColor("white"))
-        copyright.setPos(WIDTH+K-50, HEIGHT+J-60)
+        copyright.setPos(WIDTH-1250, HEIGHT+J)
         copyright.setZValue(10)
         self.scene.addItem(copyright)
 

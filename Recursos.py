@@ -1,15 +1,6 @@
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QPropertyAnimation, Signal
-from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
-from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QRegularExpressionValidator
-from pymysql import Error
-from shiboken6 import isValid
-from pypdf import PdfReader, PdfWriter
-from reportlab.lib.pagesizes import A4
-import os
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
+from PySide6.QtGui import QBrush, QColor, QFont
 from reportlab.lib import colors
-from reportlab.lib.units import mm
+import os, sys
 
 
 class Constantes:
@@ -75,8 +66,9 @@ class Cores:
 
 
 class Estilos:
-    def __init__(self, fontes):
+    def __init__(self, fontes, path):
         self.FONTES = fontes
+        self.PATH = path
 
         # estilo toolbars de fundo
         self.toolbar_estilo =  """QLabel {
@@ -190,6 +182,25 @@ class Estilos:
                 color: white;
             }} 
         """
+
+        self.estilo_toggle_switch = f"""
+            QCheckBox {{
+                background-color: transparent;
+                border: none;
+            }}
+            QCheckBox::indicator {{
+                width: 30px;
+                height: 30px;                 
+            }}
+            QCheckBox::indicator:unchecked {{
+                /* image: url("{self.PATH.togle_switch_off}"); */
+                
+            }}
+            QCheckBox::indicator:checked {{
+                /* image: url("{self.PATH.togle_switch_on}"); */
+
+            }}
+        """
         self.status_vaga_green = "color: green; font-weight: bold;"
         self.status_vaga_red = "color: red; font-weight: bold;"
         self.status_vaga_orange = "color: orange; font-weight: bold;"
@@ -216,17 +227,31 @@ class Estilos:
 
 class Paths:
     def __init__(self):
-        self.img_logo_sidebar = "imagens/nas_logo.png"
-        self.icon_btn_relatorio = "imagens/relatorio.png"
-        self.icon_btn_relatorio_completo = "imagens/relatorio_completo.png"
+        self.background_app = self.resource_path("imagens/background-3.png") # [v1.0.0.03]: imagem de background geral da aplicação
+        self.logo_marca_dagua_parana = self.resource_path("imagens/SEIA3.png") # [v1.0.0.03]: imagem de marca d'agua do governo do estado do paraná que fica visivel na seção onde mostra os numeros das vagas e as legendas
+        self.edificio_hauer = self.resource_path("imagens/edificacoes.png") # [v1.0.0.03]: imagem do edificio hauer onde a SEIA está situada
+        self.togle_switch_off = self.resource_path("imagens/off2.png") # [v1.0.0.03]: imagem do switch off
+        self.togle_switch_on = self.resource_path("imagens/on2.png") # [v1.0.0.03]: imagem do switch on
+
+        self.img_logo_sidebar = self.resource_path("imagens/nas_logo_3.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
+        self.icon_btn_relatorio = self.resource_path("imagens/relatorio.png") # [v1.0.0.03]: imagem do button de relatorio por vaga
+        self.icon_btn_relatorio_completo = self.resource_path("imagens/relatorio_completo.png") # [v1.0.0.03]: imagem do button relatorio completo
+    
+    def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
 
 
 
 class Recursos:   # [v1.0.0.03]: classe principal que instancia as outras - criada pra centralizar as configurações graficas e de consulta da aplicação
     def __init__(self):
         self.FONTES = Fontes() # [v1.0.0.03]: instancia as fontes
-        self.ESTILOS = Estilos(self.FONTES) # [v1.0.0.03]: instancia os estilos
-        self.CORES = Cores() # [v1.0.0.03]: instancia das cores
         self.PATH = Paths() # [v1.0.0.03]: instancia os caminhos de diretorios de imagens e etc.
+        self.ESTILOS = Estilos(self.FONTES, self.PATH) # [v1.0.0.03]: instancia os estilos
+        self.CORES = Cores() # [v1.0.0.03]: instancia das cores
         self.TEXTOS = Textos() # [v1.0.0.03]: instancia os textos da interface
         self.CONST = Constantes() # [v1.0.0.03]: instancia as contantes da aplicação como dimensões em pixels dos objetos

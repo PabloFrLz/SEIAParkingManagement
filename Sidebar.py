@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, Qt, QPropertyAnimation, Signal
 from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
-from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QPixmap, QRegularExpressionValidator
+from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from pymysql import Error
 from shiboken6 import isValid
 from pypdf import PdfReader, PdfWriter
@@ -126,14 +126,14 @@ class Sidebar(QWidget, QObject):
         self.header_conteiner = QVBoxLayout(self.header) # [v1.0.0.03]: conteiner vertical que vai agrupar a logomarca superior e título
         self.img = QPixmap(self.recursos.PATH.img_logo_sidebar) #imagem de plano de fundo
         self.seia_logo = QLabel()
-        '''
+        
         self.seia_logo.setPixmap(self.img.scaled(
-            260, 145,  # ajuste conforme necessário
+            320, 150,  # ajuste conforme necessário
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
-        ))'''
-        self.seia_logo.setPixmap(self.img)
-        self.seia_logo.setFixedSize(QSize(370, 150))
+        ))
+        #self.seia_logo.setPixmap(self.img)
+        #self.seia_logo.setFixedSize(QSize(370, 150))
         self.seia_logo.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo)
         self.titulo = QLabel("DESCRIÇÃO") # [v1.0.0.03]: Cria um titulo para descrever a seção atual da sidebar
         self.titulo.setFont(self.recursos.FONTES.fonte_title_header) # [v1.0.0.03]: define a fonte do texto do titulo
