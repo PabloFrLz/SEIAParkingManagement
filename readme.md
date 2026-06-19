@@ -45,7 +45,7 @@ pyinstaller --onefile --windowed --clean ^
     --add-data "imagens;imagens" ^
     SEIAParkingManagement.py
 ```
-### Caso ocorra dê problemas de conflito entre PyQt5 e PySide6 com o erro "ERROR: Aborting build process due to attempt to collect multiple Qt bindings packages: attempting to run hook for 'PyQt5', while hook for 'PySide6' has already been run!". Execute o comando: 
+### Caso dê problemas de conflito entre PyQt5 e PySide6 com o erro "ERROR: Aborting build process due to attempt to collect multiple Qt bindings packages: attempting to run hook for 'PyQt5', while hook for 'PySide6' has already been run!". Execute o comando: 
 ```bash
 pyinstaller --onefile --windowed --clean ^
     --icon=icone.ico ^

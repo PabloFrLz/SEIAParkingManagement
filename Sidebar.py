@@ -128,7 +128,7 @@ class Sidebar(QWidget, QObject):
         self.seia_logo = QLabel()
         
         self.seia_logo.setPixmap(self.img.scaled(
-            320, 150,  # ajuste conforme necessário
+            320, 180,  # ajuste conforme necessário
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
         ))
@@ -185,19 +185,21 @@ class Sidebar(QWidget, QObject):
 
         self.btn_relatorio = QPushButton() # Button RELATÓRIO
         self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio)) # carrega icone para o botão de relatorio
-        self.btn_relatorio.setIconSize(QSize(64, 64))
+        self.btn_relatorio.setIconSize(QSize(64, 64)) # define e fixa o tamanho (width, height) do icone
         self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
-        self.btn_relatorio.clicked.connect(lambda: self.acaoButtonRelatorio(False))
-        #self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2)
-        self.btn_relatorio.setFixedHeight(100)
+        self.btn_relatorio.clicked.connect(lambda: self.acaoButtonRelatorio(False)) # função que será chamada ao detectar click no botão
+        #self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2) # estilo CSS do botão
+        self.btn_relatorio.setFixedHeight(100) # definindo apenas a altura pra 100px pra fazer o botão ficar maior na vertical
+        self.btn_relatorio.setToolTip("Emitir relatório dessa vaga.")
 
         self.btn_relatorio_completo = QPushButton() # Button RELATÓRIO COMPLETO
         self.btn_relatorio_completo.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio_completo)) # carrega icone para o botão de relatorio completo
-        self.btn_relatorio_completo.setIconSize(QSize(64, 64))
+        self.btn_relatorio_completo.setIconSize(QSize(64, 64)) # define e fixa o tamanho (width, height) do icone
         self.btn_relatorio_completo.setCheckable(True) # destaca o botão selecionado
-        self.btn_relatorio_completo.clicked.connect(lambda: self.acaoButtonRelatorio(True))
+        self.btn_relatorio_completo.clicked.connect(lambda: self.acaoButtonRelatorio(True)) # função que será chamada ao detectar click no botão
         #self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_2)
         self.btn_relatorio_completo.setFixedHeight(100)
+        self.btn_relatorio_completo.setToolTip("Emitir relatório de todas as vagas.")
 
         grupo_buttons_relatorio = QHBoxLayout()
         grupo_buttons_relatorio.addWidget(self.btn_relatorio)

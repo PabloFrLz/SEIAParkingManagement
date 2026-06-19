@@ -236,6 +236,12 @@ class Paths:
         self.img_logo_sidebar = self.resource_path("imagens/nas_logo_3.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
         self.icon_btn_relatorio = self.resource_path("imagens/relatorio.png") # [v1.0.0.03]: imagem do button de relatorio por vaga
         self.icon_btn_relatorio_completo = self.resource_path("imagens/relatorio_completo.png") # [v1.0.0.03]: imagem do button relatorio completo
+
+        self.img_carro_hatch = self.resource_path("imagens/hatch.png") # [v1.0.0.03]: imagem que representa o carro hatch da SEIA
+        self.img_carro_sedan = self.resource_path("imagens/sedan.png") # [v1.0.0.03]: imagem que representa o carro sedan da SEIA
+        self.img_carro_pickup = self.resource_path("imagens/pickup.png") # [v1.0.0.03]: imagem que representa o carro pickup da SEIA
+        self.img_carro_pmpr = self.resource_path("imagens/pmpr-car.png") # [v1.0.0.03]: imagem que representa o carro da PMPR da SESP
+        self.img_carro_deficiente = self.resource_path("imagens/deficiente.png") # [v1.0.0.03]: imagem que representa o carro de deficiente 
     
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:

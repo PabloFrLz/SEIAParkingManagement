@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QGraphicsDropShadowEffect, QGraphicsPixmapItem
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, Signal, QObject
 from shiboken6 import isValid
 
+import Recursos
 
 LARGURA = 70
 ALTURA = 40
@@ -26,7 +27,8 @@ class Vaga(QGraphicsPixmapItem, QObject):
         QObject.__init__(self)
         super().__init__()
 
-        
+        self.recursos = Recursos.Recursos() # [v1.0.0.03]: instanciando a variavel com os recursos da aplicação 
+
         self.id = id # identificador do carro
         self.autarquia = autarquia # autarquia/orgão vinculado a vaga 
         self.tipo_carro = tipo_carro # tipo de carro (ex: 1=hatch, 2=sedan, 3=pickup)
@@ -49,15 +51,15 @@ class Vaga(QGraphicsPixmapItem, QObject):
 
         #geração da imagem do carro
         if tipo_carro == 1:
-            self.pixmap_original = QPixmap("imagens/hatch.png")
+            self.pixmap_original = QPixmap(self.recursos.PATH.img_carro_hatch) # [v1.0.0.03]: Carrega a imagem do carro Hatch da SEIA
         elif tipo_carro == 2:
-            self.pixmap_original = QPixmap("imagens/sedan.png")
+            self.pixmap_original = QPixmap(self.recursos.PATH.img_carro_sedan)
         elif tipo_carro == 3:
-            self.pixmap_original = QPixmap("imagens/pickup.png")
+            self.pixmap_original = QPixmap(self.recursos.PATH.img_carro_pickup)
         elif tipo_carro == 4:
-            self.pixmap_original = QPixmap("imagens/pmpr-car.png")
+            self.pixmap_original = QPixmap(self.recursos.PATH.img_carro_pmpr)
         elif tipo_carro == 5:
-            self.pixmap_original = QPixmap("imagens/deficiente.png")
+            self.pixmap_original = QPixmap(self.recursos.PATH.img_carro_deficiente)
 
         # Redimensiona a imagem e demais ajustes
         self.pixmap_original = self.pixmap_original.scaled(LARGURA, ALTURA, Qt.KeepAspectRatio, Qt.SmoothTransformation)
