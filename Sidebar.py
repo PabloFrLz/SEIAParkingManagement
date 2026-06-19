@@ -133,7 +133,7 @@ class Sidebar(QWidget, QObject):
             Qt.SmoothTransformation
         ))'''
         self.seia_logo.setPixmap(self.img)
-        self.seia_logo.setFixedSize(QSize(370, 180))
+        self.seia_logo.setFixedSize(QSize(370, 150))
         self.seia_logo.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo)
         self.titulo = QLabel("DESCRIÇÃO") # [v1.0.0.03]: Cria um titulo para descrever a seção atual da sidebar
         self.titulo.setFont(self.recursos.FONTES.fonte_title_header) # [v1.0.0.03]: define a fonte do texto do titulo

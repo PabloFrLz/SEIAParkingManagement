@@ -535,28 +535,25 @@ class SEIAParkingManagement(QGraphicsView):
             QCheckBox {
                 background-color: transparent;
                 spacing: 20px;
+                border: none;
             }
             QCheckBox::indicator {
-                width: 55px;
-                height: 20px;
+                width: 60px;
+                height: 30px;                 
             }
             QCheckBox::indicator:unchecked {
-                image: url(imagens/off2.png);  /* ou usar border-radius + background */
-                border: 2px solid gray;
-                border-radius: 15px;
-                background-color: #ccc;
+                image: url(imagens/off2.png); 
+                
             }
             QCheckBox::indicator:checked {
                 image: url(imagens/on2.png);
-                border: 2px solid #2196F3;
-                border-radius: 15px;
-                background-color: #2196F3;
+
             }
         """)
 
         proxy_toggle = QGraphicsProxyWidget()
         proxy_toggle.setWidget(self.toggle)
-        proxy_toggle.setPos(20, 10)
+        proxy_toggle.setPos(30, 10)
         proxy_toggle.setZValue(1000) # força a ficar no topo da pilha de renderização
         self.scene.addItem(proxy_toggle)
         
