@@ -22,5 +22,11 @@
 #   7.  Modificações na logomarca e campos de formularios da sidebar - alterado logica de inserção 
 #       de título e logomarca na interface - agora a logomarca e titulo estão em um widget e formularios
 #       e demais elementos em outro - isso torna a aplicação mais eficiente principalmente nas animações.
+#   8.  Gerado o executável (.exe) da aplicação
+#       8.1.  Removido imagem do Toggle Switch - colocado uma CheckBox padrão no local pra maior
+#             contraste com a interface gráfica (GUI) 
+#   9.  Alterado REGISTRO DE ENTRADA e CADASTRO DE SERVIDOR para permitir que o na etapa de cadastro o 
+#       sevidor seja vinculado a um dos veículos na base de dados da aplicação - isso agilizaria os 
+#       registros de entrada já que nao precisaria mais colocar manualmente a placa do carro.
 #       
 #

@@ -38,7 +38,9 @@ class Fontes:
         self.fonte_texto_buttons = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte do texto dos botões da interface
         #self.fonte_title_header = "<font size='6'>" # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
         self.fonte_title_header = QFont("Segoe UI", 20) # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
+        self.fonte_copyright = QFont("Segoe UI Condensed", 10) # [v1.0.0.03]: Fonte do texto de copyright
 
+        self.fonte_texto_desc_infoboxes_2 = QFont("Consolas", 12)
 
 
 class Cores:
@@ -74,6 +76,16 @@ class Estilos:
         self.toolbar_estilo =  """QLabel {
                 background-color: #000000;     /* fundo que destoa */
                 color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 8px;            /* bordas arredondadas */
+                padding: 8px 12px;
+                opacity: 0.5;
+                }
+            """
+        
+        self.toolbar_estilo_2 =  """QLabel {
+                background-color: #000000;     /* fundo que destoa */
+                color: #828282;
                 border: 1px solid #555555;
                 border-radius: 8px;            /* bordas arredondadas */
                 padding: 8px 12px;

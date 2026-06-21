@@ -65,4 +65,3 @@ pyinstaller --onefile --windowed --clean ^
 ![Tela do sistema 2](interface_da_aplicacao/img2.png)
 ![Tela do sistema 3](interface_da_aplicacao/img3.png)
 ![Tela do sistema 4](interface_da_aplicacao/img4.png)
-![Tela do sistema 5](interface_da_aplicacao/img5.png)

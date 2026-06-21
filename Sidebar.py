@@ -30,9 +30,9 @@ class Sidebar(QWidget, QObject):
         self.main_window = janela_principal
         self.conn = janela_principal.conn
         self.scene = janela_principal.scene
-        self.check = [None, None, None, None]
-        self.eixo_x_form = 30
-        self.eixo_y_form = self.CONST_DESLOCAMENTO
+        self.check = [None, None, None, None, None]
+        #self.eixo_x_form = 30
+        #self.eixo_y_form = self.CONST_DESLOCAMENTO
         self.categoria = 0 
         self.tipo_form = ""
         self.btn_commit = QPushButton("")
@@ -48,6 +48,9 @@ class Sidebar(QWidget, QObject):
         self.coord_last_widget = [None, None]
         self.garbage_collector = []
         self.textos_interface = []
+
+        self.coord_last_widget[0] = self.POS_X_SIDEBAR + 30
+        self.coord_last_widget[1] =  self.CONST_DESLOCAMENTO
 
         #======================================
         # Formularios
@@ -352,7 +355,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(consulta)
             resultado_pesquisa = cursor.fetchall()
             form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=func) 
-            object_proxy = self.insertOnGUI(form, 0)#inserção na GUI
+            object_proxy = self.insertOnGUI(form, 25)#inserção na GUI
             self.garbage_collector.append(object_proxy)
             return form
         except Error as e:
@@ -373,15 +376,17 @@ class Sidebar(QWidget, QObject):
                 QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.orgao_vinculado.displayText()))
                 self.cancel()
 
+        
         elif (self.check[1] is None):
-            #consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
-            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')"
-            self.categoria = 2
-            self.form3 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
-            self.coord_last_widget[0] = self.form3.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
-            self.coord_last_widget[1] = self.form3.getCoordY() + 20
-            self.check[1] = True
             self.form2.setDisabled(True)
+            #consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
+            cpf_cnpj, nome_servidor = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtendo o CPF e NOME do servidor selecionado para a consulta
+            #consulta = f"SELECT * FROM carro WHERE proprietario_cpf = '{cpf_cnpj}'"
+            #self.categoria = 2 # informa pra classe Formulario que se trata de um carro
+            #self.form3 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
+            self.showInformacoesServidor("CARRO VINCULADO AO SERVIDOR: ", cpf_cnpj)
+            self.check[1] = True
+            self.registroEntrada() # [v1.0.0.03]: chamada recursiva
         
         elif(self.check[2] is None):
             self.check[2] = True
@@ -414,13 +419,25 @@ class Sidebar(QWidget, QObject):
         elif (self.check[1] is None): 
             self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
             self.check[1] = True
+            self.form1.setDisabled(True)
 
         elif (self.check[2] is None): 
             self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_cpf_servidor, "ex.: 50545642300...", self.validator_cpf, self.cadastroServidor)
             self.check[2] = True
-
-        elif(self.check[3] is None):
+            #self.coord_last_widget[1] = self.coord_last_widget[1] + 30 # [v1.0.0.03]: deslocando novamente pra corrigir diferença de espaço entre formularios
+        
+        elif (self.check[3] is None): 
+            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.form1.getResult()}' AND proprietario_cpf IS NULL" # [v1.0.0.03]: selecione todos os servidores onde a autarquia for igual a de interesse e nao tenha proprietarios (null)
+            print(consulta)
+            self.categoria = 2 # informa pra classe Formulario que se trata de um carro
+            self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.cadastroServidor)
+            #self.coord_last_widget[0] = self.form2.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
+            #self.coord_last_widget[1] = self.form2.getCoordY() + 30
             self.check[3] = True
+
+        elif(self.check[4] is None):
+            self.form2.setDisabled(True)
+            self.check[4] = True
             # Button pra confirmar inserção no banco de dados
             self.btn_commit = self.insertButton("CONFIRMAR", self.recursos.ESTILOS.button_style_3, self.insertServidor) # linka com a função que insere no banco os dados do servidor
             self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
@@ -491,13 +508,13 @@ class Sidebar(QWidget, QObject):
                 # de atualizar a tupla no banco com dados de saida em branco e que so tem uma ENTRADA registrada - pode ser que seja redundante, mas funciona!
         else:
             #obtem os dados apartir dos formularios de ENTRADA
-            servidor = self.form2.getResult() 
-            carro = self.form3.getResult()
             tipo = "ENTRADA"
             sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_entrada, tipo) VALUES (%s, %s, %s, NOW(), %s)"
-            #tratamento dos dados
+            servidor = self.form2.getResult() 
             cpf_cnpj, nome_servidor = servidor.split(" - ")
-            placa, modelo = carro.split(" - ")
+            carro = self.getCarroByCPF(cpf_cnpj)
+            placa, modelo = carro[0][0], carro[0][3]
+            #tratamento dos dados
             print("Nº vaga:", num_vaga)
             print("CPF/CNPJ:", cpf_cnpj)
             print("Nome:", nome_servidor)
@@ -543,12 +560,20 @@ class Sidebar(QWidget, QObject):
     def insertServidor(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"insert into Servidor values('{self.cpf}', '{self.nome}', '{self.form1.getResult()}')")
+            cursor.execute(f"INSERT INTO Servidor VALUES('{self.cpf}', '{self.nome}', '{self.form1.getResult()}')")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERDE}Servidor registrado com sucesso!{self.recursos.CORES.RESET}")
+            print(f"{self.recursos.CORES.VERDE}Servidor '{self.nome}' registrado com sucesso!{self.recursos.CORES.RESET}")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
 
+            # [v1.0.0.03]: a partir dessa versão o servidor tem que selecionar o carro no cadastro para linkar o veiculo ao seu cpf
+            placa, modelo = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtem a placa
+            cursor.execute(f"UPDATE Carro SET proprietario_cpf = '{self.cpf}' WHERE placa = '{placa}'") # [v1.0.0.03]: atualiza o campo proprietario_cpf da tabela carro com o CPF do servidor
+            self.conn.commit()
+            print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
+            print(f"{self.recursos.CORES.VERDE}Carro {modelo} de placa {placa} atualizado com CPF {self.cpf} do Servidor {self.nome} com sucesso!{self.recursos.CORES.RESET}")
+            print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
+            
             QMessageBox.information(self.main_window, "Sucesso", "Servidor cadastrado com sucesso!")
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
 
@@ -577,41 +602,14 @@ class Sidebar(QWidget, QObject):
         #inserção na GUI
         proxy = QGraphicsProxyWidget()
         proxy.setWidget(object)
-        self.eixo_y_form += 90 + deslocamento_mais_profundo
-        proxy.setPos(self.POS_X_SIDEBAR + self.eixo_x_form, self.eixo_y_form)
+        #self.eixo_y_form += 90 + deslocamento_mais_profundo
+        #proxy.setPos(self.POS_X_SIDEBAR + self.eixo_x_form, self.eixo_y_form)
+        self.coord_last_widget[1] += 75 + deslocamento_mais_profundo
+        proxy.setPos(self.coord_last_widget[0], self.coord_last_widget[1])
         self.scene.addItem(proxy)
         return proxy # retorna o proxy pra caso precise destruir
 
-    '''
-    def insertHeader(self, msg):
-        #Conteiner
-        conteiner = QWidget()
-        layout = QVBoxLayout(conteiner)
 
-        # Logomarca SEIA 2
-        seia_logo_2 = QLabel()
-        seia_logo_2.setPixmap(self.img.scaled(
-            260, 145,  # ajuste conforme necessário
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation
-        ))
-        #texto
-        text = QLabel(self.recursos.FONTES.fonte_title_header+msg+"</font")
-
-        #inserindo no conteiner
-        layout.addWidget(seia_logo_2)
-        layout.addWidget(text)
-
-        #inserindo conteiner no proxy grafico
-        proxy = QGraphicsProxyWidget()
-        proxy.setWidget(conteiner)
-        pos_x = 20
-        proxy.setPos(self.POS_X_SIDEBAR + pos_x, 0)
-
-        #inserindo o proxy no cenário
-        self.scene.addItem(proxy) 
-        return proxy
-    '''
 
     def insertButton(self, msg, style, action=None):
         button = QPushButton(msg)
@@ -620,7 +618,7 @@ class Sidebar(QWidget, QObject):
         proxyBtn = QGraphicsProxyWidget() # cria um proxy pra mostrar diretamente no objeto scene sem necessidade de empilhar em conteiners layouts
         proxyBtn.setWidget(button)
         x = self.coord_last_widget[0] + self.pos_button_x + 7 # +7 é pra corrigir um pequeno desalinhamento no eixo x que notei
-        y = self.coord_last_widget[1] + self.pos_button_y
+        y = self.coord_last_widget[1] + self.pos_button_y + 15
         proxyBtn.setPos(x, y)
         self.scene.addItem(proxyBtn)
         if self.pos_button_x == 0:
@@ -632,8 +630,9 @@ class Sidebar(QWidget, QObject):
         return button
         
     def reset(self):
-        self.eixo_y_form = self.CONST_DESLOCAMENTO
-        #self.check = [None, None, None, None] # habilitando os forms
+        #self.eixo_y_form = self.CONST_DESLOCAMENTO
+        self.coord_last_widget[1] = self.CONST_DESLOCAMENTO
+        #self.check = [None, None, None, None, None] # habilitando os forms
         for i in range(len(self.check)):
             self.check[i] = None # atribuindo None pra habilitar novamente os forms
 
@@ -669,7 +668,7 @@ class Sidebar(QWidget, QObject):
                     item.deleteLater()
                     item = None
 
-        self.reset() # reseta demais variaveis auxiliares
+        self.reset() # reseta demais variaveis auxiliares, como a variavel de posição vertical dos objetos na sidebar self.coord_last_widget[1]
         if not self.turnRound:
             self.transitToFormulario() #animação que transiciona de volta para a interface padrão.
         
@@ -752,6 +751,14 @@ class Sidebar(QWidget, QObject):
         cursor.execute(f"SELECT * FROM registro WHERE cpf_cnpj='{cpf_cnpj}' AND tipo='ENTRADA'") # busca no registro se há uma tupla com o cpf do servidor e se ela só foi registrada ENTRADA e não SAIDA
         servidor_entrada = cursor.fetchall()
         return servidor_entrada
+    
+
+
+    def getCarroByCPF(self, cpf_cnpj):  # [v1.0.0.03]: função para obter os dados do carro vinculado ao CPF do servidor
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM Carro WHERE proprietario_cpf = '{cpf_cnpj}'")
+        servidor = cursor.fetchall()
+        return servidor
         
 
 
@@ -802,11 +809,10 @@ class Sidebar(QWidget, QObject):
         layout_2.addWidget(btn_confirmar, stretch=0.2) # insere o botão 'OK' comprimido ao lado da caixa de leitura de texto
         layout.addLayout(layout_2) # insere a box de leitura + botão
         
-        #self.setLayout(layout) 
         object_proxy = self.insertOnGUI(container, 30)
         container.setStyleSheet(self.recursos.ESTILOS.button_style) # define o estilo 
         container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
-        self.check[0] = True
+        #self.check[0] = True
         # para destruir os itens posteriormente em cancel()
         self.garbage_collector.append(container)
         self.garbage_collector.append(label)
@@ -816,8 +822,48 @@ class Sidebar(QWidget, QObject):
         self.garbage_collector.append(layout_2)
         self.garbage_collector.append(object_proxy)
         #necessario pra posicionar os botoes
-        self.coord_last_widget[0] = container.x()
-        self.coord_last_widget[1] = container.y() + 25
+        #self.coord_last_widget[0] = container.x()
+        #self.coord_last_widget[1] = container.y() + 25
+
+
+
+    def showInformacoesServidor(self, titulo, id): # [v1.0.0.03]: metodo para mostrar informações do Servidor nos formularios
+        servidor = self.getServidorByCPF(id)
+        carro = self.getCarroByCPF(id)
+        container = QWidget()
+        texto = """
+        <b>"""+titulo+"""</b><br>
+        <br>
+        <b>CPF:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][0]+"""<br>
+        <b>NOME:</b>&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][1]+"""<br>
+        <b>CARRO:</b>&nbsp;&nbsp;&nbsp;"""+carro[0][3]+"""<br>
+        <b>PLACA:</b>&nbsp;&nbsp;&nbsp;"""+carro[0][0]+"""<br>
+        """
+        label = QLabel(texto) #  [v1.0.0.03]: cria a label e define o titulo + informações
+        #label.setFixedHeight(200)
+        label.setFont(self.recursos.FONTES.fonte_texto_desc_infoboxes_2)
+        #label.setContentsMargins(0,0,0,0)
+        #btn_confirmar = QPushButton("OK")
+        #btn_confirmar.setFixedHeight(self.recursos.CONST.LARGURA_FORMULARIO_BUTTON)
+        #btn_confirmar.clicked.connect(self.registroEntrada) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
+        layout = QVBoxLayout(container) # [v1.0.0.03]: conteiner vertical pro nome do titulo e as informações ficarem uma abaixo da outra
+        layout.addWidget(label) # [v1.0.0.03]: insere o titulo + informações
+        #layout.addWidget(btn_confirmar, stretch=0.2) # insere o botão 'OK' com tamanho comprimido 
+        
+        object_proxy = self.insertOnGUI(container, 30)
+        container.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo_2) # [v1.0.0.03]: altera o estilo para o mesmo estilo de planod e fundo do header (onde está a logomarca) da aplicação
+        container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
+        #self.check[0] = True
+        # para destruir os itens posteriormente em cancel()
+        self.garbage_collector.append(container)
+        self.garbage_collector.append(label)
+        #self.garbage_collector.append(btn_confirmar)
+        self.garbage_collector.append(layout)
+        self.garbage_collector.append(object_proxy)
+        #necessario pra posicionar os botoes
+        #self.coord_last_widget[0] = container.x()
+        #self.coord_last_widget[1] = container.y() + 25
+        self.coord_last_widget[1] =  container.y() + 100
         
 
 

@@ -51,7 +51,7 @@ PASSWORD = '5452'
 
 global WIDTH, HEIGHT, K, J
 WIDTH = 1300
-HEIGHT = 840
+HEIGHT = 860
 K = 400 #variavel de ajuste para expansão da propriedade na HORIZONTAL 
 J = 530 ##variavel de ajuste para expansão da propriedade na VERTICAL 
 D = 30 #variavel de deslocamento dos carros na horizontal
@@ -342,20 +342,20 @@ class SEIAParkingManagement(QGraphicsView):
         #______________________
         #Vagas INFERIOR DIREITO
         #SEIA
-        self.vagas.append(vg.Vaga(16, 1, "SEIA", 780+D, 1095, 135))
-        self.vagas.append(vg.Vaga(17, 1, "SEIA", 820+D, 1095, 135))
-        self.vagas.append(vg.Vaga(18, 1, "SEIA", 860+D, 1095, 135))
-        self.vagas.append(vg.Vaga(19, 1, "SEIA", 900+D, 1095, 135))
-        self.vagas.append(vg.Vaga(20, 1, "SEIA", 940+D, 1095, 135))
-        self.vagas.append(vg.Vaga(21, 1, "SEIA", 980+D, 1095, 135))
-        self.vagas.append(vg.Vaga(22, 1, "SEIA", 1020+D, 1095, 135))
-        self.vagas.append(vg.Vaga(23, 1, "SEIA", 1060+D, 1095, 135))
-        self.vagas.append(vg.Vaga(24, 1, "SEIA", 1100+D, 1095, 135))
-        self.vagas.append(vg.Vaga(25, 1, "SEIA", 1140+D, 1095, 135))
-        self.vagas.append(vg.Vaga(26, 1, "SEIA", 1180+D, 1095, 135))
-        self.vagas.append(vg.Vaga(27, 1, "SEIA", 1220+D, 1095, 135))
-        self.vagas.append(vg.Vaga(28, 1, "SEIA", 1260+D, 1095, 135))
-        self.vagas.append(vg.Vaga(29, 1, "SEIA", 1300+D, 1095, 135))
+        self.vagas.append(vg.Vaga(16, 1, "SEIA", 800+D, 1095, 135))
+        self.vagas.append(vg.Vaga(17, 1, "SEIA", 840+D, 1095, 135))
+        self.vagas.append(vg.Vaga(18, 1, "SEIA", 880+D, 1095, 135))
+        self.vagas.append(vg.Vaga(19, 1, "SEIA", 920+D, 1095, 135))
+        self.vagas.append(vg.Vaga(20, 1, "SEIA", 960+D, 1095, 135))
+        self.vagas.append(vg.Vaga(21, 1, "SEIA", 1000+D, 1095, 135))
+        self.vagas.append(vg.Vaga(22, 1, "SEIA", 1040+D, 1095, 135))
+        self.vagas.append(vg.Vaga(23, 1, "SEIA", 1080+D, 1095, 135))
+        self.vagas.append(vg.Vaga(24, 1, "SEIA", 1120+D, 1095, 135))
+        self.vagas.append(vg.Vaga(25, 1, "SEIA", 1160+D, 1095, 135))
+        self.vagas.append(vg.Vaga(26, 1, "SEIA", 1200+D, 1095, 135))
+        self.vagas.append(vg.Vaga(27, 1, "SEIA", 1240+D, 1095, 135))
+        self.vagas.append(vg.Vaga(28, 1, "SEIA", 1280+D, 1095, 135))
+        self.vagas.append(vg.Vaga(29, 1, "SEIA", 1320+D, 1095, 135))
         # Especial p/ deficiente
         self.vagas.append(vg.Vaga(142, 5, "Deficiente", 780+D, 1285, 225))
         #SEIA
@@ -548,10 +548,16 @@ class SEIAParkingManagement(QGraphicsView):
         # Copyright
         #==============================================================================================
 
-        copyright = QGraphicsTextItem("                                                                                                                                                  © 2026 SEIA Parking Management "+ver+".\n Todos os direitos reservados ao Supervisor Especialista em Governança Digital & Transformação Digital André Luis Costa Batistela - um dos nomes mais proeminentes da Diretoria de Inovação e um dos pilares da Inovação no Estado do Paraná.")
-        copyright.setFont(QFont("Arial", 10))
-        copyright.setDefaultTextColor(QColor("white"))
-        copyright.setPos(WIDTH-1250, HEIGHT+J)
+        #copyright = QGraphicsTextItem("                                                                                                                                                  © 2026 SEIA Parking Management "+ver+".\n Todos os direitos reservados ao Supervisor Especialista em Governança Digital & Transformação Digital André Luis Costa Batistela - um dos nomes mais proeminentes da Diretoria de Inovação e um dos pilares da Inovação no Estado do Paraná.")
+        copyright = QGraphicsTextItem(
+            "      © 2026 SEIA Parking Management " + ver + ". Todos os direitos reservados.\n"
+            "               Secretaria de Inovação e Inteligência Artificial (SEIA)\n"
+            "                             Diretoria de Inovação (DIN)\n"
+            "               Desenvolvido por Pablo F. L. (github.com/PabloFrLz)" 
+        )        
+        copyright.setFont(self.recursos.FONTES.fonte_copyright)
+        copyright.setDefaultTextColor(QColor("gray"))
+        copyright.setPos(WIDTH+230, HEIGHT+J-120)
         copyright.setZValue(10)
         self.scene.addItem(copyright)
 

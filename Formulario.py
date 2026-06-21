@@ -22,7 +22,7 @@ class Formulario(QWidget):
                 item = tupla[0]+" - "+tupla[1] # (CPF + Nome)
                 self.combo.addItem(item) 
             elif categoria == 2: # carros
-                item = f'{tupla[0]}  -  {tupla[3]}' # (placa/modelo)
+                item = f'{tupla[0]} - {tupla[3]}' # (placa/modelo)
                 self.combo.addItem(item)
             else: # autarquias/data/horas/vagas
                 self.combo.addItems(tupla)

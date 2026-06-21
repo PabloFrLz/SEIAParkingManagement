@@ -17,9 +17,10 @@ create table if not exists Carro(
     autarquia CHAR(16) not null,
     modelo CHAR(100) not null,
     setor CHAR(200) not null,
-    proprietario CHAR(200), -- ideal seria essa coluna referenciar Servidor(nome) - mas como não tenho os dados dos servidores como CPF, isso fica para outro momento.
+    proprietario_cpf CHAR(14), 
     foreign key (num_vaga) references Vaga(num_vaga) on delete cascade,
-    foreign key (autarquia) references Autarquia(nome) on delete cascade
+    foreign key (autarquia) references Autarquia(nome) on delete cascade,
+    foreign key (proprietario_cpf) references Servidor(cpf_cnpj) on delete set null
 );
 
 
@@ -50,8 +51,8 @@ create table if not exists Registro(
 -- servidor.sql (caso tenha os dados dos servidores de antemão)
 -- carros.sql
 
-source C:\SEIA\diretoria_inovacao\SEIAParkingManagement\database\autarquia.sql
-source C:\SEIA\diretoria_inovacao\SEIAParkingManagement\database\vagas.sql
-source C:\SEIA\diretoria_inovacao\SEIAParkingManagement\database\carros.sql
+source C:\SEIA\nucleo_administrativo_setorial\SEIAParkingManagement\database\autarquia.sql
+source C:\SEIA\nucleo_administrativo_setorial\SEIAParkingManagement\database\vagas.sql
+source C:\SEIA\nucleo_administrativo_setorial\SEIAParkingManagement\database\carros2.sql
 
 --SELECT * FROM carro c WHERE c.autarquia = 'seia' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA');
