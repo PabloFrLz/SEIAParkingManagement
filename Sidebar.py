@@ -368,7 +368,8 @@ class Sidebar(QWidget, QObject):
             #consulta se tem carros disponiveis pra evitar ficar travado em etapas futuras
             self.lista_carros_disponiveis = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText())
             if self.lista_carros_disponiveis[0]:
-                consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
+                #consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
+                consulta = "select * from Carro where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
                 self.categoria = 1
                 self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_servidor, self.registroEntrada)
                 self.check[0] = True
@@ -384,7 +385,7 @@ class Sidebar(QWidget, QObject):
             #consulta = f"SELECT * FROM carro WHERE proprietario_cpf = '{cpf_cnpj}'"
             #self.categoria = 2 # informa pra classe Formulario que se trata de um carro
             #self.form3 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
-            self.showInformacoesServidor("CARRO VINCULADO AO SERVIDOR: ", cpf_cnpj)
+            self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", cpf_cnpj)
             self.check[1] = True
             self.registroEntrada() # [v1.0.0.03]: chamada recursiva
         
