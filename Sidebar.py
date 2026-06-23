@@ -365,27 +365,26 @@ class Sidebar(QWidget, QObject):
 
     def registroEntrada(self):
         if (self.check[0] is None): 
-            #consulta se tem carros disponiveis pra evitar ficar travado em etapas futuras
-            self.lista_carros_disponiveis = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText())
-            if self.lista_carros_disponiveis[0]:
+            #self.lista_carros_disponiveis = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText()) #consulta se tem carros disponiveis pra evitar ficar travado em etapas futuras
+            #if self.lista_carros_disponiveis[0]:
                 #consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
-                consulta = "select * from Carro where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
-                self.categoria = 1
-                self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_servidor, self.registroEntrada)
-                self.check[0] = True
-            else:
-                QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.orgao_vinculado.displayText()))
-                self.cancel()
-
+            consulta = "select * from Carro" # [v1.0.0.03]: Emc onversa com guardas da guarita, fui informado que a abordagem melhor seria o fluxo começar com a placa do veiculo
+            self.categoria = 2 # [v1.0.0.03]: informa a classe formularios que se trata de um carro
+            self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
+            self.check[0] = True
+            #else:
+            #    QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.orgao_vinculado.displayText()))
+            #    self.cancel()
         
         elif (self.check[1] is None):
+            # aqui eu so vou ter !!!!! PLACA E MODELO  !!!!!
             self.form2.setDisabled(True)
-            #consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'ENTRADA')"
-            cpf_cnpj, nome_servidor = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtendo o CPF e NOME do servidor selecionado para a consulta
-            #consulta = f"SELECT * FROM carro WHERE proprietario_cpf = '{cpf_cnpj}'"
-            #self.categoria = 2 # informa pra classe Formulario que se trata de um carro
-            #self.form3 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
-            self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", cpf_cnpj)
+            placa, modelo = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtendo a PLACA e MODELO do carro
+            self.placa_carro.setText(placa) # [v1.0.0.03]: gambiarra pra pdoer pegar dados de placa e carro no insert
+            self.modelo_carro.setText(modelo)
+            cpf = self.getCPFbyPlaca(placa)
+            print(f"_______________________________________ {cpf}")
+            self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", cpf)
             self.check[1] = True
             self.registroEntrada() # [v1.0.0.03]: chamada recursiva
         
@@ -511,14 +510,15 @@ class Sidebar(QWidget, QObject):
             #obtem os dados apartir dos formularios de ENTRADA
             tipo = "ENTRADA"
             sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_entrada, tipo) VALUES (%s, %s, %s, NOW(), %s)"
-            servidor = self.form2.getResult() 
-            cpf_cnpj, nome_servidor = servidor.split(" - ")
-            carro = self.getCarroByCPF(cpf_cnpj)
-            placa, modelo = carro[0][0], carro[0][3]
+            placa, modelo = self.placa_carro.displayText(), self.modelo_carro.displayText()
+            cpf_cnpj = self.getCPFbyPlaca(placa)
+            #servidor = self.getServidorByCPF(cpf_cnpj)
+            #nome_servidor = servidor[0][1]
+
             #tratamento dos dados
             print("Nº vaga:", num_vaga)
             print("CPF/CNPJ:", cpf_cnpj)
-            print("Nome:", nome_servidor)
+            #print("Nome:", nome_servidor)
             print("Placa:", placa)
             print("Modelo:", modelo)
             
@@ -760,6 +760,12 @@ class Sidebar(QWidget, QObject):
         cursor.execute(f"SELECT * FROM Carro WHERE proprietario_cpf = '{cpf_cnpj}'")
         servidor = cursor.fetchall()
         return servidor
+    
+    def getCPFbyPlaca(self, placa):
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM Carro WHERE placa = '{placa}'")
+        cpf = cursor.fetchall()
+        return cpf[0][5] # retorna apenas o CPF e nao a tupla inteira
         
 
 
@@ -828,9 +834,9 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def showInformacoesServidor(self, titulo, id): # [v1.0.0.03]: metodo para mostrar informações do Servidor nos formularios
-        servidor = self.getServidorByCPF(id)
-        carro = self.getCarroByCPF(id)
+    def showInformacoesServidor(self, titulo, cpf): # [v1.0.0.03]: metodo para mostrar informações do Servidor nos formularios
+        servidor = self.getServidorByCPF(cpf)
+        carro = self.getCarroByCPF(cpf)
         container = QWidget()
         texto = """
         <b>"""+titulo+"""</b><br>

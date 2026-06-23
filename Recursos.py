@@ -7,6 +7,9 @@ class Constantes:
     def __init__(self):
         self.LARGURA_FORMULARIO = 400 # largura dos formularios como o de leitura de nomes na etapa de registro de entrada de servidor e visitante
         self.LARGURA_FORMULARIO_BUTTON = self.LARGURA_FORMULARIO * 0.125
+
+
+
 class Textos:
     def __init__(self):
         # [v1.0.0.03]: textos da interface - fica fácil de manipular e modificar centralizando nessa classe todos os textos
@@ -22,7 +25,7 @@ class Textos:
         # [v1.0.0.03]: textos da interface - textos da seção de perguntas ao usuario, como "selecione a autarquia:"
         self.text_select_autarquia = "Selecione a autarquia:"
         self.text_select_servidor = "Selecione o servidor:"
-        self.text_select_carro = "Selecione o carro:"
+        self.text_select_carro = "Selecione a placa e modelo do carro:"
         self.text_insert_nome_servidor = "Digite o nome do servidor:"
         self.text_insert_nome_visitante = "Digite o nome do visitante:"
         self.text_insert_cpf_servidor = "Digite o CPF ou CNPJ do servidor:"
@@ -41,6 +44,7 @@ class Fontes:
         self.fonte_copyright = QFont("Segoe UI Condensed", 10) # [v1.0.0.03]: Fonte do texto de copyright
 
         self.fonte_texto_desc_infoboxes_2 = QFont("Consolas", 12)
+
 
 
 class Cores:
@@ -234,6 +238,15 @@ class Estilos:
             # cor linhas internas
             ("GRID", (0, 0), (-1, -1), 1, colors.black),
         ]
+
+        self.estilo_combo_box = """
+            background-color: rgba(0, 0, 0, 0.30);   /* fundo leve */
+            border: none;                                   /* remove borda */
+            border-radius: 8px;
+            padding: 6px 8px;
+            color: white;
+            font-size: 16px;
+        """
 
 
 

@@ -126,8 +126,8 @@ class Vaga(QGraphicsPixmapItem, QObject):
         self.animation.setDirection(QPropertyAnimation.Backward) # define a direção da animação para trás
         self.animation.start() # inicia a animação
         if isValid(self.shadow):
-            self.animation.finished.connect(lambda: self.shadow.setColor(preto)) # executa ao final da animação para atualizar a cor de animação devolta para o padrão preto de sombra
-
+            #self.animation.finished.connect(lambda: self.shadow.setColor(preto)) # executa ao final da animação para atualizar a cor de animação devolta para o padrão preto de sombra
+            self.animation.finished.connect(self.on_animation_finished)
 
     # Evento especial ao passar o mouse sobre a vaga
     def hoverEnterEvent(self, event):
@@ -228,4 +228,14 @@ class Vaga(QGraphicsPixmapItem, QObject):
     
     def getY(self):
         return self.y()
+    
+    def on_animation_finished(self): # [v1.0.0.03]: funçãozinha pra evitar o erro de 'libshiboken: Internal C++ object (PySide6.QtWidgets.QGraphicsDropShadowEffect) already deleted.'
+        if self.shadow is not None:        # proteção
+            try:
+                self.shadow.setColor(preto)
+            except RuntimeError:
+                pass  # objeto já foi deletado, ignora silenciosamente
+
+
+
     

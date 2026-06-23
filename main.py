@@ -2,6 +2,7 @@ import requests
 from PIL import Image
 import io
 
+# codigo teste - nao faz parte do SEIAParkingManagement até o momento
 def getImage(save_path="ultima_foto.jpg"):
     url = "http://192.168.0.39/capture"   # ← mude pro IP do seu ESP32
     

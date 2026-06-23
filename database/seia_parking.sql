@@ -11,8 +11,17 @@ create table if not exists Vaga(
     foreign key (autarquia) references Autarquia(nome) on delete cascade
 );
 
-
-
+create table if not exists Carro(
+    placa CHAR(8) PRIMARY KEY,
+    num_vaga INT not null,
+    autarquia CHAR(16) not null,
+    modelo CHAR(100) not null,
+    setor CHAR(200) not null,
+    proprietario_cpf CHAR(14), 
+    foreign key (num_vaga) references Vaga(num_vaga) on delete cascade,
+    foreign key (autarquia) references Autarquia(nome) on delete cascade,
+    foreign key (proprietario_cpf) references Servidor(cpf_cnpj) on delete set null
+);
 
 create table if not exists Servidor(
     cpf_cnpj CHAR(14) PRIMARY KEY,
