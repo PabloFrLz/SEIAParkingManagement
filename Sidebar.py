@@ -365,17 +365,12 @@ class Sidebar(QWidget, QObject):
 
     def registroEntrada(self):
         if (self.check[0] is None): 
-            #self.lista_carros_disponiveis = self.consultaDisponibilidadeFrota(self.orgao_vinculado.displayText()) #consulta se tem carros disponiveis pra evitar ficar travado em etapas futuras
-            #if self.lista_carros_disponiveis[0]:
-                #consulta = "select * from servidor where autarquia='{}'".format(self.orgao_vinculado.displayText()) # [v1.0.0.03]: Obtendo o orgão/autarquia direto da vaga que foi selecionada e não mais via requisição do usuário.
-            consulta = "select * from Carro" # [v1.0.0.03]: Emc onversa com guardas da guarita, fui informado que a abordagem melhor seria o fluxo começar com a placa do veiculo
-            self.categoria = 2 # [v1.0.0.03]: informa a classe formularios que se trata de um carro
+            # [v1.0.0.03]: Em conversas com guardas da guarita, fui informado que a abordagem melhor seria o fluxo começar com a placa do veiculo
+            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.orgao_vinculado.displayText()}' AND proprietario_cpf IS NOT NULL" # [v1.0.0.03]: selecione todos os carros que sejam vinculados ao orgão da vaga e que tenha um cpf de proprietario válido
+            self.categoria = 2 # [v1.0.0.03]: informa a classe Formulario() que se trata de um carro
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
             self.check[0] = True
-            #else:
-            #    QMessageBox.warning(self.main_window, "Atenção", "Não há carros disponíveis para o orgão {}.".format(self.orgao_vinculado.displayText()))
-            #    self.cancel()
-        
+
         elif (self.check[1] is None):
             # aqui eu so vou ter !!!!! PLACA E MODELO  !!!!!
             self.form2.setDisabled(True)
@@ -383,7 +378,6 @@ class Sidebar(QWidget, QObject):
             self.placa_carro.setText(placa) # [v1.0.0.03]: gambiarra pra pdoer pegar dados de placa e carro no insert
             self.modelo_carro.setText(modelo)
             cpf = self.getCPFbyPlaca(placa)
-            print(f"_______________________________________ {cpf}")
             self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", cpf)
             self.check[1] = True
             self.registroEntrada() # [v1.0.0.03]: chamada recursiva
@@ -417,9 +411,9 @@ class Sidebar(QWidget, QObject):
             self.check[0] = True #desabilita esse bloco condicional na proxima iteração
 
         elif (self.check[1] is None): 
+            self.form1.setDisabled(True)
             self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
             self.check[1] = True
-            self.form1.setDisabled(True)
 
         elif (self.check[2] is None): 
             self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_cpf_servidor, "ex.: 50545642300...", self.validator_cpf, self.cadastroServidor)
@@ -452,23 +446,24 @@ class Sidebar(QWidget, QObject):
             self.check[0] = True #desabilita esse bloco condicional na proxima iteração
         
         elif (self.check[1] is None): 
+            self.form1.setDisabled(True)
             consulta = "select * from servidor where autarquia='{}'".format(self.form1.getResult())
             self.categoria = 1
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_servidor, self.removeServidor)
             self.check[1] = True
-            self.form1.setDisabled(True)
             # para poder posicionar os botoes corretamente
             self.coord_last_widget[0] = self.form2.getCoordX() 
             self.coord_last_widget[1] = self.form2.getCoordY() + 20
 
         elif(self.check[2] is None):
-            self.check[2] = True
+            self.form2.setDisabled(True)
             servidor = self.form2.getResult().split(" - ") # obtém o nome e cpf do servidor
             self.nome = servidor[1] # usa apenas o nome capturado
             # Buttons pra confirmar remoção de servidor
             self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_3, self.deleteServidor) # linka coma função que remove os dados do servidor do banco
             self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
             servidor_entrada = self.verificaEntradaServidor(servidor[0]) # [v1.0.0.03]: consulta secundária pra verificar se o servidor possui registro em andamento pra não permitir exclusão até que seja registrado uma saida pra esse servidor.
+            self.check[2] = True
             if len(servidor_entrada) != 0: # [v1.0.0.03]: se for diferente de zero então significa que tem ocorrencia de entrada do servidor no registro.
                 QMessageBox.warning(self.main_window, "Erro", f"Servidor '{servidor[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua exclusão do banco.")
                 self.cancel() # [v1.0.0.03]: cancela a operação

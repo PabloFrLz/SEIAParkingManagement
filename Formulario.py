@@ -38,7 +38,6 @@ class Formulario(QWidget):
         self.completer.setFilterMode(Qt.MatchContains)   # busca em qualquer parte
         self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion) 
         #completer.setCompletionMode(QtWidgets.QCompleter.UnfilteredPopupCompletion)
-
         
         
         # Solução mais curta e que resolve na maioria dos casos difíceis:
@@ -46,15 +45,11 @@ class Formulario(QWidget):
         popup.setParent(self.combo.window())        # ← linha principal
         popup.setWindowFlags(Qt.Popup)
 
-        
-
         self.combo.lineEdit().textEdited.connect(lambda: self.show_completer_popup(self.completer))
-
-
-
         self.select.addWidget(self.combo)
         
         self.combo.activated.connect(self.opcaoSelecionada) # conecta signal pra capturar escolha do usuario 
+        self.combo.setFixedWidth(350) # [v1.0.0.03]: fixa a largura dos formularios
         self.setLayout(self.select)
 
 
@@ -84,6 +79,7 @@ class Formulario(QWidget):
         rect = self.combo.rect()
         rect.setTop(rect.bottom() + 2)   # força aparecer logo abaixo
         completer.complete(rect)         # ← Isso é o que realmente controla a posição
+        self.combo.setFocus()
     
     
 

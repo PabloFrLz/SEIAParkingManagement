@@ -20,12 +20,12 @@ amarelo = QColor(255, 255, 0, 160) # amarelo
 vermelho = QColor(255, 0, 0, 160) # vermelho
 laranja = QColor(255, 168, 0, 160) # laranja
 
-class Vaga(QGraphicsPixmapItem, QObject):
+class Vaga(QObject, QGraphicsPixmapItem):
     habilitar_sidebar = Signal(object) # sinal para habilitar a sidebar e enviar as informações da vaga clicada (id, tipo_carro, status) para a sidebar exibir as informações correspondentes
 
     def __init__(self, id, tipo_carro, autarquia, x, y, rotate):
         QObject.__init__(self)
-        super().__init__()
+        QGraphicsPixmapItem.__init__(self)
 
         self.recursos = Recursos.Recursos() # [v1.0.0.03]: instanciando a variavel com os recursos da aplicação 
 
@@ -34,7 +34,8 @@ class Vaga(QGraphicsPixmapItem, QObject):
         self.tipo_carro = tipo_carro # tipo de carro (ex: 1=hatch, 2=sedan, 3=pickup)
         self.status = 0 # status da vaga (ex: 0=disponível, 1=ocupada, 2=reserva)
         self.status_name = "" # variavel auxiliar com o nome do status para a GUI
-        self.press_button_status = False # status do botão  (False=desativado, True=ativado)
+        self.press_button_status = False # status do botão  (False=desativado, True=ativado).
+        self.html_font_color = "<font color='white'>"
 
         #variaveis extras com dados restritos ao banco de dados
         #carros
@@ -85,12 +86,12 @@ class Vaga(QGraphicsPixmapItem, QObject):
         self.animation.setEndValue(30) # valor final do blurRadius
         self.animation.setEasingCurve(QEasingCurve.OutCubic) # curva de animação suave
         #self.animation.setLoopCount(-1) # loop infinito
-        
-        #configurações finais
-        #habilitando hover
+ 
         self.setAcceptHoverEvents(True) # habilita eventos de hover para a vaga (importante para os efeitos de destaque e clique)
 
-        #chamada ao banco de dados (MySQL/PostgreeSQL) - criar a vaga no banco de dados
+        
+
+
 
     '''def getVagaInfo(self, id):
         if id == self.id:
@@ -132,11 +133,13 @@ class Vaga(QGraphicsPixmapItem, QObject):
     # Evento especial ao passar o mouse sobre a vaga
     def hoverEnterEvent(self, event):
         #tooltip com informações básicas
+        status = self.checkStatus()
         self.setToolTip(f"""
             <b>Vaga {self.id}</b><br>
-            Status: {self.checkStatus()}<br>
+            Status: {self.html_font_color}{status}</font><br>
             Propriedade: {self.autarquia}
         """)
+        
 
         if not self.press_button_status: #se o botão nao for pressionado -> execute
             self.setCursor(Qt.PointingHandCursor) # muda o cursor para mãozinha ao passar o mouse sobre a vaga
@@ -165,12 +168,15 @@ class Vaga(QGraphicsPixmapItem, QObject):
         if self.status == 0: #disponível - verde
             self.color = verde # verde com transparência (alpha 160)
             self.status_name = "LIVRE"
+            self.html_font_color = "<font color='green'>"
         elif self.status == 1: #ocupada - vermelho
             self.color = vermelho # vermelho com transparência (alpha 160)
             self.status_name = "OCUPADA"
+            self.html_font_color = "<font color='red'>"
         elif self.status == 2: #reserva - laranja
             self.color = laranja # laranja com transparência (alpha 160)
             self.status_name = "RESERVADA"
+            self.html_font_color = "<font color='orange'>"
         
         self.shadow.setColor(self.color) # cor de seleção de acordo com o status da vaga
         return self.status_name # retorna o status em string já formatado HTML

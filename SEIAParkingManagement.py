@@ -27,10 +27,11 @@
 
 import threading
 
+from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
+    QApplication, QCheckBox, QComboBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QMessageBox
+    QGraphicsProxyWidget, QHBoxLayout, QMessageBox
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QPointF
@@ -90,6 +91,27 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos()
+
+        #==============================================================================================
+        # Caixa de busca de placas (v1.0.0.03)
+        #==============================================================================================
+
+        self.search_box = QComboBox()
+        self.search_box.setEditable(True)
+        self.search_box.setPlaceholderText("Digite os dados da placa no formato ABC-XXXX")
+        self.search_box.editTextChanged.connect(self.processarVagaBuscada)
+
+        self.completer = self.search_box.completer()
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setFilterMode(Qt.MatchContains)   # busca em qualquer parte
+        self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        #self.scene.addWidget(self.search_box)
+
+        self.conteiner_search = QHBoxLayout()
+        self.conteiner_search.addWidget(self.search_box)
+        self.scene.addLayout(self.conteiner_search)
+
+
         
 
         #==============================================================================================
@@ -752,10 +774,25 @@ class SEIAParkingManagement(QGraphicsView):
             desl_y += 20
 
             self.legendas.append([item, item_text]) # insere as legendas como tuplas (QUADRADO + TEXTO DESCRITIVO)
+    
+    def processarVagaBuscada(self):
+        pass
 
 
 app = QApplication(sys.argv)
-app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+app.setStyleSheet(
+    qdarktheme.load_stylesheet("dark") + 
+    """
+    QToolTip {
+        background-color: #000000;
+        color: grey;
+        border: 1px solid #5a5a5a;
+        padding: 5px;
+        font-size: 10pt;
+        opacity: 0.75;
+    }
+    """
+) # [v1.0.0.03]: adaptado pra estilizar a Qtooltip dos objetos Vaga()
 viewer = SEIAParkingManagement()
 viewer.setWindowTitle("SEIA Parking Management - "+ver)
 viewer.setFixedSize(WIDTH+K-240, HEIGHT+150)
