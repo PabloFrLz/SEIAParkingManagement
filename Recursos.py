@@ -1,3 +1,5 @@
+from PySide6.QtWidgets import QGraphicsDropShadowEffect
+from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QSequentialAnimationGroup
 from PySide6.QtGui import QBrush, QColor, QFont
 from reportlab.lib import colors
 import os, sys
@@ -248,6 +250,15 @@ class Estilos:
             font-size: 16px;
         """
 
+        self.estilo_search_box = """
+            background-color: rgba(0, 0, 0, 0.60);   /* fundo leve */
+            border: 1px solid rgba(255, 165, 0, 80); 
+            border-radius: 8px;
+            padding: 6px 8px;
+            color: white;
+            font-size: 16px;
+        """
+
 
 
 class Paths:
@@ -267,7 +278,14 @@ class Paths:
         self.img_carro_pickup = self.resource_path("imagens/pickup.png") # [v1.0.0.03]: imagem que representa o carro pickup da SEIA
         self.img_carro_pmpr = self.resource_path("imagens/pmpr-car.png") # [v1.0.0.03]: imagem que representa o carro da PMPR da SESP
         self.img_carro_deficiente = self.resource_path("imagens/deficiente.png") # [v1.0.0.03]: imagem que representa o carro de deficiente 
-    
+
+        self.img_placa = self.resource_path("imagens/placa.png") # [v1.0.0.03]: placa de instrução
+        self.img_setas = [
+            self.resource_path("imagens/1-arrow.png"),
+            self.resource_path("imagens/2-arrows.png"),
+            self.resource_path("imagens/3-arrows.png")
+        ]
+
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:
             base_path = sys._MEIPASS
@@ -286,3 +304,6 @@ class Recursos:   # [v1.0.0.03]: classe principal que instancia as outras - cria
         self.CORES = Cores() # [v1.0.0.03]: instancia das cores
         self.TEXTOS = Textos() # [v1.0.0.03]: instancia os textos da interface
         self.CONST = Constantes() # [v1.0.0.03]: instancia as contantes da aplicação como dimensões em pixels dos objetos
+
+
+    

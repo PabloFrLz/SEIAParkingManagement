@@ -31,10 +31,12 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QHBoxLayout, QMessageBox
+    QGraphicsProxyWidget, QHBoxLayout, QLabel, QMessageBox, QVBoxLayout, QWidget
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QPointF
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
+from PySide6.QtCore import qInstallMessageHandler, QtMsgType
+import traceback
 import sys
 import Vaga as vg
 import Sidebar as sb
@@ -91,26 +93,6 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos()
-
-        #==============================================================================================
-        # Caixa de busca de placas (v1.0.0.03)
-        #==============================================================================================
-
-        self.search_box = QComboBox()
-        self.search_box.setEditable(True)
-        self.search_box.setPlaceholderText("Digite os dados da placa no formato ABC-XXXX")
-        self.search_box.editTextChanged.connect(self.processarVagaBuscada)
-
-        self.completer = self.search_box.completer()
-        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
-        self.completer.setFilterMode(Qt.MatchContains)   # busca em qualquer parte
-        self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
-        #self.scene.addWidget(self.search_box)
-
-        self.conteiner_search = QHBoxLayout()
-        self.conteiner_search.addWidget(self.search_box)
-        self.scene.addLayout(self.conteiner_search)
-
 
         
 
@@ -518,14 +500,14 @@ class SEIAParkingManagement(QGraphicsView):
         #==============================================================================================
         # Sidebar lateral direita para exibição das informações
         #==============================================================================================
-        sidebar = sb.Sidebar(self, WIDTH, HEIGHT, J, POS_X_SIDEBAR) # cria a sidebar passando o tamanho da janela para ajustar o layout
+        self.sidebar = sb.Sidebar(self, WIDTH, HEIGHT, J, POS_X_SIDEBAR) # cria a sidebar passando o tamanho da janela para ajustar o layout
 
 
         #==============================================================================================
         # Inserindo as vagas com imagens e circulos e inserindo 'ouvintes' pra atualizar informações 
         #==============================================================================================
         for vaga in self.vagas:
-            vaga.habilitar_sidebar.connect(sidebar.controlActions) # conecta o sinal da vaga para atualizar a sidebar automaticamente quando o valor da variavel habilitar_sidebar for alterado
+            vaga.habilitar_sidebar.connect(self.sidebar.controlActions) # conecta o sinal da vaga para atualizar a sidebar automaticamente quando o valor da variavel habilitar_sidebar for alterado
             if vaga.tipo_carro == 1: # SEIA
                 circle = self.insertCircle(vaga.getVagaID(), vaga.getX(), vaga.getY(), PEN_VERDE, BRUSH_VERDE) # gerando os circulos com o numero das vagas
             elif vaga.tipo_carro == 2: # SEJU
@@ -543,7 +525,7 @@ class SEIAParkingManagement(QGraphicsView):
 
         
         self.updateStatusVagas() # atualizando o status das vagas conforme dados do Registro do Banco de Dados
-        sidebar.signal_insert.connect(self.updateStatusVagas) 
+        self.sidebar.signal_insert.connect(self.updateStatusVagas) 
 
         self.generateLegenda() # gerando as legendas
 
@@ -587,14 +569,97 @@ class SEIAParkingManagement(QGraphicsView):
         # Configurações finais
         #==============================================================================================
         proxy = QGraphicsProxyWidget()
-        proxy.setWidget(sidebar)
+        proxy.setWidget(self.sidebar)
         proxy.setPos(POS_X_SIDEBAR, 0)
         self.scene.addItem(proxy) # insere a sidebar no cenário
         self.scale(0.85, 0.85)
-        self.delayApresentacao(10.0) # alterna a view de blocos geometricos para edificio com o delay especificado de 10 segundos
+        #self.delayApresentacao(10.0) # alterna a view de blocos geometricos para edificio com o delay especificado de 10 segundos
+        self.alternar_view() # chama de imediato pra chamar a view principal (a que tem o predio do Hauer)
 
         # Ajusta a visão inicial
         #self.fitInView(self.bg, Qt.KeepAspectRatio)
+
+        #==============================================================================================
+        # Caixa de busca de placas (v1.0.0.03)
+        #==============================================================================================
+
+        self.search_box = QComboBox()
+        self.search_box.setEditable(True)
+        self.search_box.editTextChanged.connect(self.processarVagaBuscada)
+
+        # [v1.0.0.03]: completer pra sugestões de busca em tempo real
+        self.completer = self.search_box.completer()
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setFilterMode(Qt.MatchContains)   # [v1.0.0.03]: busca em qualquer parte
+        self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        
+        # [v1.0.0.03]: proxy pra determinar a posição do elemento na interface
+        proxy_search = QGraphicsProxyWidget()
+        proxy_search.setWidget(self.search_box)
+        proxy_search.setPos((WIDTH+K-240)/2.5, 0)  # [v1.0.0.03]: Ajuste as coordenadas conforme necessário
+        proxy_search.setZValue(999) # [v1.0.0.03]: necessario pra janela das palcas se sobrepor ao predio do Hauer e carros
+        self.scene.addItem(proxy_search)
+
+        # [v1.0.0.03]: estilos e formatos
+        self.search_box.setStyleSheet(self.recursos.ESTILOS.estilo_search_box)
+        self.search_box.setFixedWidth(400)
+
+        # [v1.0.0.03]: preenche o combo box com TODAS as placas dos veiculos
+        carros = self.getAllCarros() # [v1.0.0.03]: pega todos os carros/placas do banco
+        #self.search_box.addItem("Digite os dados da placa no formato ABC-XXXX...")
+        self.search_box.addItem(" . . .")
+        for i, carro in enumerate(carros):
+            self.search_box.addItem(carros[i][0]+" - "+carros[i][3]) # insere no formato "PLACA - MODELO"
+
+
+
+
+        #==============================================================================================
+        # Imagem da placa de exemplo para a caixa de buscas (v1.0.0.03)
+        #==============================================================================================
+
+        placa_pixmap = QPixmap(self.recursos.PATH.img_placa)
+        placa_label = QLabel()
+        # escala a pixmap para caber no tamanho desejado e mantém proporção
+        scaled = placa_pixmap.scaled(150, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        placa_label.setPixmap(scaled)
+        #placa_label.setFixedSize(20, 20)
+        placa_label.setStyleSheet("background: transparent")
+        placa_label.setScaledContents(True)
+        proxy_placa = QGraphicsProxyWidget()
+        proxy_placa.setWidget(placa_label)
+        proxy_placa.setPos((WIDTH+K-240)/1.4, 0)
+        proxy_placa.setZValue(999)
+        self.scene.addItem(proxy_placa)
+
+
+
+        #==============================================================================================
+        # Animação das setas para a caixa de buscas (v1.0.0.03)
+        #==============================================================================================
+
+       
+        arrow_images = self.recursos.PATH.img_setas
+        self.current_index = 0 # indice pra ir iterando sobre as imagens
+
+        label = QLabel()
+        label.setStyleSheet("background: transparent;")
+
+        proxy_setas = QGraphicsProxyWidget()
+        proxy_setas.setWidget(label)
+        proxy_setas.setPos((WIDTH+K-240)/1.47, 8) # posicionando
+        proxy_setas.setZValue(999) # colocando no topo da pilha de renderização
+        self.scene.addItem(proxy_setas)
+
+        timer = QTimer(self)
+        timer.timeout.connect(lambda: self.next_frame(arrow_images, label)) # função que o timer vai chamar a cada 180ms
+        timer.start(180) # tempo de 180ms entre as chamadas
+        self.next_frame(arrow_images, label) # chama a função na primeira vez - as demais serão o Timer
+        
+        #self.conteiner_search = QHBoxLayout()
+        #self.conteiner_search.addWidget(self.search_box)
+        #self.scene.addLayout(self.conteiner_search)
+
     
     """
     def wheelEvent(self, event):
@@ -723,8 +788,9 @@ class SEIAParkingManagement(QGraphicsView):
 
     def delayApresentacao(self, sec):
         # Cria um timer
-        timer = threading.Timer(sec, self.alternar_view())
-        timer.start()
+        #timer = threading.Timer(sec, self.alternar_view)
+        QTimer.singleShot(int(sec * 1000), self.alternar_view)  # sec em segundos, QTimer usa milissegundos
+        #timer.start()
 
     def insertCircle(self, numero, x, y, paint1, paint2):
         # Circulo
@@ -775,9 +841,49 @@ class SEIAParkingManagement(QGraphicsView):
 
             self.legendas.append([item, item_text]) # insere as legendas como tuplas (QUADRADO + TEXTO DESCRITIVO)
     
-    def processarVagaBuscada(self):
-        pass
 
+
+    def getAllCarros(self): # [v1.0.0.03]: retorna todos os carros do banco
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM Carro")
+        all_carros = cursor.fetchall()
+        return all_carros 
+
+
+    def processarVagaBuscada(self, text): # [v1.0.0.03]: metodo para processar a palca selecionada no buscador principal de placas da aplicação 'self.search_box'
+        if (text != " . . ."):
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa selecionada: {text}")
+            placa, modelo = text.split(" - ") # [v1.0.0.03]: extrai a placa e modelo
+            num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: pesquisa o numero da vaga no banco
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga[0][0]}")
+            self.selecionarVagaPorID(num_vaga[0][0]) # [v1.0.0.03]: seleciona a vaga na GUI
+
+
+
+    def getVagaByID(self, id):
+        for vaga in self.vagas:
+            if(vaga.getVagaID() == id):   
+                return vaga 
+        return None # [v1.0.0.03]: se nao encontrar a vaga retorna None
+
+
+
+    def selecionarVagaPorID(self, vaga_id):
+        vaga = self.getVagaByID(vaga_id)
+        if vaga is not None: # [v1.0.0.03]: o codigo dentro desse if é o mesmo presente dentro do metodo mousePressEvent() de Vaga()
+            vaga.press_button_status = True
+            vaga.checkStatus()
+            vaga.habilitar_sidebar.emit(vaga)
+            vaga.press_button_status = False
+        else:
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Vaga de nº {vaga_id} não encontrada.")
+
+
+
+    def next_frame(self, arrow_images, label): # [v1.0.0.03]: método responsável por animar as setas em complemento a imagem da placa da caixa de buscas
+        pixmap = QPixmap(arrow_images[self.current_index])
+        label.setPixmap(pixmap)  # Ajuste o tamanho
+        self.current_index = (self.current_index + 1) % len(arrow_images)
 
 app = QApplication(sys.argv)
 app.setStyleSheet(
@@ -800,5 +906,16 @@ viewer.scale(0.85, 0.85)
 viewer.show()
 sys.exit(app.exec())
 
+
+def qt_message_handler(mode, context, message):
+    if "Point size" in message:
+        print(f"\n>>> QT WARNING CAPTURADO: {message}")
+        print(">>> STACK TRACE PYTHON NO MOMENTO DO AVISO:")
+        traceback.print_stack()
+        print()
+    # opcional: ainda imprime as mensagens normais
+    print(message)
+
+qInstallMessageHandler(qt_message_handler)
 
 

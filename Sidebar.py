@@ -1,6 +1,7 @@
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, Qt, QPropertyAnimation, Signal
-from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
-from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
+from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation, QEasingCurve, QSequentialAnimationGroup
+from PySide6.QtWidgets import QGraphicsDropShadowEffect, QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
+from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator, QColor
+
 from pymysql import Error
 from shiboken6 import isValid
 from pypdf import PdfReader, PdfWriter
@@ -151,8 +152,6 @@ class Sidebar(QWidget, QObject):
         #====================================== 
         main_layout.addWidget(self.header) # [v1.0.0.03]: insere o widget do header primeiro pra fazer com que os formularios ficam logo abaixo
         main_layout.addWidget(self.sidebar)
-        #self.sidebar_layout.addWidget(self.seia_logo) # insere a logo do NAS no topo da sidebar
-        self.sidebar_layout.addLayout(self.header_conteiner) # insere o conteiner com a logo do NAS e o título no topo da sidebar
         self.sidebar_layout.addSpacing(30) # adicionando um espaço de 30 pixels entre a logo do NAS e os formularios descritivos
         self.sidebar_layout.addLayout(form) # insere os formulários descritivos das vagas no layout da interface gráfica
         
@@ -259,6 +258,7 @@ class Sidebar(QWidget, QObject):
         self.num_vaga.setText(str(info.id))
         self.status_vaga.setText(info.status_name)
 
+
         #atualizando informações secundárias
         if len(ultimo_registro_da_vaga) != 0:
             cpf = ultimo_registro_da_vaga[0][2] # [v1.0.0.03]: cpf será null/none quando for VISITANTE
@@ -285,6 +285,14 @@ class Sidebar(QWidget, QObject):
             self.modelo_carro.setText(" - ")
             self.placa_carro.setText(" - ")
             self.nome_servidor.setText(" - ")
+        
+         # [v1.0.0.03]: aplica animações de destaque pra atrair atenção do usuario
+        self.destacar_campo(self.orgao_vinculado)
+        self.destacar_campo(self.num_vaga)
+        self.destacar_campo(self.status_vaga)
+        self.destacar_campo(self.modelo_carro)
+        self.destacar_campo(self.placa_carro)
+        self.destacar_campo(self.nome_servidor)
 
 
     
@@ -763,6 +771,11 @@ class Sidebar(QWidget, QObject):
         return cpf[0][5] # retorna apenas o CPF e nao a tupla inteira
         
 
+    def getIdVagaByPlaca(self, placa):
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT num_vaga FROM Carro WHERE placa = '{placa}'")
+        num_vaga = cursor.fetchall()
+        return num_vaga # retorna apenas o numero da vaga e nao a tupla inteira
 
     def updateHistoricoRegistro(self):
         tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
@@ -936,4 +949,48 @@ class Sidebar(QWidget, QObject):
         print("Detalhes: ",e,"\n*******************************")
         QMessageBox.warning(self.main_window, "Atenção", "Ocorreu um erro no tratamento dos dados. Verifique o console.")
 
+
+    #==============================================================================================
+    # [v1.0.0.03]: animação para destaque de modificações de texto na interface 
+    #==============================================================================================
+    '''def destacar_campo(self, line_edit, cor=QColor(255, 165, 0, 200), pulsos=2):
+        #Aplica um efeito de glow pulsante no QLineEdit para chamar atenção do usuário.
+        
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setColor(cor)
+        shadow.setOffset(0, 0)
+        shadow.setBlurRadius(0)
+        line_edit.setGraphicsEffect(shadow)
+
+        grupo = QSequentialAnimationGroup(line_edit)  # parent garante que não seja coletado pelo GC antes de terminar
+
+        for _ in range(pulsos):
+            sobe = QPropertyAnimation(shadow, b"blurRadius")
+            sobe.setDuration(250)
+            sobe.setStartValue(0)
+            sobe.setEndValue(25)
+            sobe.setEasingCurve(QEasingCurve.OutCubic)
+
+            desce = QPropertyAnimation(shadow, b"blurRadius")
+            desce.setDuration(250)
+            desce.setStartValue(25)
+            desce.setEndValue(0)
+            desce.setEasingCurve(QEasingCurve.InCubic)
+
+            grupo.addAnimation(sobe)
+            grupo.addAnimation(desce)
+
+        grupo.start()
+    '''
+
+    def destacar_campo(self, line_edit):
+        anim = QVariantAnimation(line_edit)
+        anim.setDuration(600)
+        anim.setStartValue(QColor(255, 165, 0, 180))
+        anim.setEndValue(QColor(0, 0, 0, 0))
+        anim.valueChanged.connect(lambda cor: line_edit.setStyleSheet(
+            f"background-color: rgba({cor.red()}, {cor.green()}, {cor.blue()}, {cor.alpha()});"
+        ))
+        anim.start()
+        line_edit._highlight_anim = anim  # mantém referência viva
 
