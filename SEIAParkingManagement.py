@@ -607,7 +607,8 @@ class SEIAParkingManagement(QGraphicsView):
         # [v1.0.0.03]: preenche o combo box com TODAS as placas dos veiculos
         carros = self.getAllCarros() # [v1.0.0.03]: pega todos os carros/placas do banco
         #self.search_box.addItem("Digite os dados da placa no formato ABC-XXXX...")
-        self.search_box.addItem(" . . .")
+        #self.search_box.addItem(" . . .")
+        self.search_box.addItem("Selecione uma placa . . .")
         for i, carro in enumerate(carros):
             self.search_box.addItem(carros[i][0]+" - "+carros[i][3]) # insere no formato "PLACA - MODELO"
 
@@ -620,17 +621,30 @@ class SEIAParkingManagement(QGraphicsView):
 
         placa_pixmap = QPixmap(self.recursos.PATH.img_placa)
         placa_label = QLabel()
-        # escala a pixmap para caber no tamanho desejado e mantém proporção
-        scaled = placa_pixmap.scaled(150, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        scaled = placa_pixmap.scaled(150, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)# escala a pixmap para caber no tamanho desejado e mantém proporção
         placa_label.setPixmap(scaled)
-        #placa_label.setFixedSize(20, 20)
         placa_label.setStyleSheet("background: transparent")
         placa_label.setScaledContents(True)
+
+        # [v1.0.0.03]: Texto da placa pra ser alterado ao usuario selecionar
+        self.placa_label_text = QLabel()
+        self.placa_label_text.setText("ABC-1234")
+        self.placa_label_text.setFont(self.recursos.FONTES.fonte_texto_placa)
+        self.placa_label_text.setStyleSheet("background: transparent; color: #000000;")
+        self.placa_label_text.setScaledContents(True)
+
+        # [v1.0.0.03]: insere no proxy
         proxy_placa = QGraphicsProxyWidget()
         proxy_placa.setWidget(placa_label)
         proxy_placa.setPos((WIDTH+K-240)/1.4, 0)
-        proxy_placa.setZValue(999)
+        proxy_placa.setZValue(998)
         self.scene.addItem(proxy_placa)
+
+        self.proxy_placa_text = QGraphicsProxyWidget()
+        self.proxy_placa_text.setWidget(self.placa_label_text)
+        self.proxy_placa_text.setPos((WIDTH+K-240)/1.38, 15)
+        self.proxy_placa_text.setZValue(999)
+        self.scene.addItem(self.proxy_placa_text)
 
 
 
@@ -850,13 +864,19 @@ class SEIAParkingManagement(QGraphicsView):
         return all_carros 
 
 
+
     def processarVagaBuscada(self, text): # [v1.0.0.03]: metodo para processar a palca selecionada no buscador principal de placas da aplicação 'self.search_box'
-        if (text != " . . ."):
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa selecionada: {text}")
-            placa, modelo = text.split(" - ") # [v1.0.0.03]: extrai a placa e modelo
-            num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: pesquisa o numero da vaga no banco
+        if (text != "Selecione uma placa . . ." and self.sidebar.vaga_processada):
+            self.sidebar.vaga_processada = False  # [v1.0.0.03]: desabilita esse bloco if momentaneamente até cocnlusão do registro de ENTRADA
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa e modelo selecionados: {text}")
+            placa, modelo = text.split(" - ") # [v1.0.0.03]: Extrai a placa e modelo
+            self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
+            num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga[0][0]}")
             self.selecionarVagaPorID(num_vaga[0][0]) # [v1.0.0.03]: seleciona a vaga na GUI
+            # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
+            self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
+            self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
 
 
 

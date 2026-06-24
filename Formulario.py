@@ -48,7 +48,7 @@ class Formulario(QWidget):
         self.combo.lineEdit().textEdited.connect(lambda: self.show_completer_popup(self.completer))
         self.select.addWidget(self.combo)
         
-        self.combo.activated.connect(self.opcaoSelecionada) # conecta signal pra capturar escolha do usuario 
+        self.combo.activated.connect(lambda: self.opcaoSelecionada(self.combo.currentText())) # conecta signal pra capturar escolha do usuario 
         self.combo.setFixedWidth(350) # [v1.0.0.03]: fixa a largura dos formularios
         self.setLayout(self.select)
 
@@ -56,8 +56,8 @@ class Formulario(QWidget):
     def opcaoSelecionada(self, text):
         # metodo para lidar com a opção selecionada
         #self.combo.setCurrentIndex(int(text))
-        print(f"Opção selecionada: {self.combo.currentText()}") # debug
-        self.result_to_return = self.combo.currentText() # armazena a opção selecionada para ser retornada posteriormente
+        print(f"[{self.recursos.CORES.AMARELO}Formulario.py{self.recursos.CORES.RESET}]: Opção selecionada: {text}") # debug
+        self.result_to_return = text # armazena a opção selecionada para ser retornada posteriormente
         if self.onComplete: # executa a função fornecida via parâmetro
             self.onComplete()
 

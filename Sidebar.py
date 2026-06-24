@@ -32,6 +32,7 @@ class Sidebar(QWidget, QObject):
         self.conn = janela_principal.conn
         self.scene = janela_principal.scene
         self.check = [None, None, None, None, None]
+        self.vaga_processada = True # [v1.0.0.03]: variavel pra identificar quando há um fluxo de formulario (ENTRADA, CADASTRO, REMOVER) em andamento
         #self.eixo_x_form = 30
         #self.eixo_y_form = self.CONST_DESLOCAMENTO
         self.categoria = 0 
@@ -233,21 +234,12 @@ class Sidebar(QWidget, QObject):
 
 
     def controlActions(self, info):
-        self.cancel() # destroi formularios caso esteja em andamento - isso permite interagir com outras vagas na interface
+        self.cancel() # destroi formularios caso esteja em andamento - isso permite interagir com outras vagas na interface enquanto em outras etapas do fluxo dos formularios de ENTRADA, CADASTRO, etc.
         self.atualizar_info(info) 
     
 
 
     def atualizar_info(self, info): # variavel info contem os dados definidos em Vaga.py, como self.id, self.tipo_carro, self.status, self.status_name, self.press_button_status
-        #atualizando a cor do campo "Status da vaga"
-        if info.status == 0: # disponivel
-            self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_green)
-        elif info.status == 1: # ocupada
-            self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_red)
-        elif info.status == 2: # reservada
-            self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_orange)
-        self.sentinel = info
-
         #consulta pra pegar a ultima entrada registrada na tabela registro para o numero de vaga atual
         ultimo_registro_da_vaga = self.getEntradaOnRegistro(info.id) # pega a ultima entrada registrada pra uma vaga especifica
         self.lista_registro.clear() # limpa entradas de outra vagas na tabela de registros da vaga especifica
@@ -289,26 +281,40 @@ class Sidebar(QWidget, QObject):
          # [v1.0.0.03]: aplica animações de destaque pra atrair atenção do usuario
         self.destacar_campo(self.orgao_vinculado)
         self.destacar_campo(self.num_vaga)
-        self.destacar_campo(self.status_vaga)
         self.destacar_campo(self.modelo_carro)
         self.destacar_campo(self.placa_carro)
         self.destacar_campo(self.nome_servidor)
 
+        #atualizando a cor do campo "Status da vaga"
+        if info.status == 0: # disponivel
+            #self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_green)
+            self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_green)
+        elif info.status == 1: # ocupada
+            #self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_red)
+            self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_red)
+        elif info.status == 2: # reservada
+            #self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_orange)
+            self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_orange)
+        self.sentinel = info
+
 
     
-    def acaoButtonEntrada(self): 
+    def acaoButtonEntrada(self, ignoredMessageBox=None): 
         if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
             self.transitToFormulario() # animação que empurra pro lado direito as infos
             #self.titulo = self.insertHeader("REGISTRAR ENTRADA")#gera logo no topo e titulo da seção 
-            self.titulo.setText("REGISTRO") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
-            resposta = QMessageBox.question(self.main_window, "Questão", "Registro de VISITANTE ?") # [v1.0.0.03]: questiona o usuário se será um registro de um visitante ou de um servidor.
+            self.titulo.setText("REGISTRO DE ENTRADA") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
+            if (ignoredMessageBox):
+                resposta = QMessageBox.StandardButton.No # [v1.0.0.03]: Define manualmente "Não" ao invés de solicitar ao usuario - necessário pra direcionar o fluxo automaticamente sem solicitar nada ao usuário
+            else:
+                resposta = QMessageBox.question(self.main_window, "Questão", "Registro de VISITANTE ?") # [v1.0.0.03]: questiona o usuário se será um registro de um visitante ou de um servidor.
+            
             if (resposta == QMessageBox.StandardButton.Yes): # [v1.0.0.03]: verifica se usuario clicou no botao Sim
                 self.registroEntradaVisitante() # inicializa os formularios pra registro da ENTRADA de VISITANTES
                 #self.ctrl_forms_visitante = True # diz a aplicação que se trata de um registro de visitante - necessário pra informar a funções secundárias como atualizar_info() - que fazem parte do fluxo de vários registros e consultas - como se portar quando for atualizar as infos de um VISITANTE
             else:
                 self.registroEntrada() # inicializa os formularios pra registro da ENTRADA de servidores
                 
-
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga está OCUPADA/RESERVADA.")
 
@@ -380,7 +386,6 @@ class Sidebar(QWidget, QObject):
             self.check[0] = True
 
         elif (self.check[1] is None):
-            # aqui eu so vou ter !!!!! PLACA E MODELO  !!!!!
             self.form2.setDisabled(True)
             placa, modelo = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtendo a PLACA e MODELO do carro
             self.placa_carro.setText(placa) # [v1.0.0.03]: gambiarra pra pdoer pegar dados de placa e carro no insert
@@ -430,7 +435,6 @@ class Sidebar(QWidget, QObject):
         
         elif (self.check[3] is None): 
             consulta = f"SELECT * FROM carro WHERE autarquia = '{self.form1.getResult()}' AND proprietario_cpf IS NULL" # [v1.0.0.03]: selecione todos os servidores onde a autarquia for igual a de interesse e nao tenha proprietarios (null)
-            print(consulta)
             self.categoria = 2 # informa pra classe Formulario que se trata de um carro
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.cadastroServidor)
             #self.coord_last_widget[0] = self.form2.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
@@ -465,16 +469,20 @@ class Sidebar(QWidget, QObject):
 
         elif(self.check[2] is None):
             self.form2.setDisabled(True)
-            servidor = self.form2.getResult().split(" - ") # obtém o nome e cpf do servidor
-            self.nome = servidor[1] # usa apenas o nome capturado
-            # Buttons pra confirmar remoção de servidor
-            self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_3, self.deleteServidor) # linka coma função que remove os dados do servidor do banco
+            servidor = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtém o nome e cpf do servidor
+            self.nome = servidor[1] # [v1.0.0.03]: usa apenas o nome capturado
+            # [v1.0.0.03]: Buttons pra confirmar remoção de servidor
+            self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_3, self.deleteServidor) # [v1.0.0.03]: linka coma função que remove os dados do servidor do banco
             self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
             servidor_entrada = self.verificaEntradaServidor(servidor[0]) # [v1.0.0.03]: consulta secundária pra verificar se o servidor possui registro em andamento pra não permitir exclusão até que seja registrado uma saida pra esse servidor.
             self.check[2] = True
             if len(servidor_entrada) != 0: # [v1.0.0.03]: se for diferente de zero então significa que tem ocorrencia de entrada do servidor no registro.
-                QMessageBox.warning(self.main_window, "Erro", f"Servidor '{servidor[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua exclusão do banco.")
-                self.cancel() # [v1.0.0.03]: cancela a operação
+                resposta = QMessageBox.question(self.main_window, "Erro", f"Servidor '{servidor[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua exclusão do banco.\nGostaria de registrar SAIDA para esse servidor e exclui-lo em seguida ?")
+                if (resposta == QMessageBox.StandardButton.Yes):
+                    self.acaoButtonSaida() # [v1.0.0.03]: registra a SAIDA
+                    self.deleteServidor() # [v1.0.0.03]: chama direto a função que deleta do banco pra nao ter que começar a remoção do servidor do inicio chamando removeServidor()
+                else:
+                    self.cancel() # [v1.0.0.03]: cancela a operação
             else:
                 QMessageBox.warning(self.main_window, "Atenção", "Remover servidor implica remover também todos os dados associados a ele no registro. Clique em REMOVER para concluir a operação!")
     
@@ -482,10 +490,15 @@ class Sidebar(QWidget, QObject):
 
     def capturar_nome_cpf(self, line_edit, func_call_recursivamente):
         texto = line_edit.text().strip() 
-        if(texto.isdigit()): # verifica se é digito pra direcionar of luxo pra etapa de CPF
+        if(texto.isdigit()): # verifica se é digito pra direcionar o fluxo pra etapa de CPF
             self.cpf = texto
         else:
-            self.nome = texto
+            if(len(texto) >= self.recursos.CONST.MINIMUN_CHARACTER_TO_NAME): # Evita não inserir nada no formulario
+                self.nome = texto
+            else:
+                QMessageBox.warning(self.main_window, "Erro", "insira um nome válido meu considerado.")
+                self.cancel()
+                return;
         
         func_call_recursivamente()
 
@@ -519,11 +532,11 @@ class Sidebar(QWidget, QObject):
             #nome_servidor = servidor[0][1]
 
             #tratamento dos dados
-            print("Nº vaga:", num_vaga)
-            print("CPF/CNPJ:", cpf_cnpj)
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Nº vaga: {num_vaga}")
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF/CNPJ: {cpf_cnpj}")
             #print("Nome:", nome_servidor)
-            print("Placa:", placa)
-            print("Modelo:", modelo)
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Placa: {placa}")
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Modelo: {modelo}")
             
         print(f"\n{self.recursos.CORES.AMARELO}================================{self.recursos.CORES.RESET}")
         print(f"{self.recursos.CORES.AMARELO}Dados extraídos! {self.recursos.CORES.RESET}")
@@ -633,12 +646,6 @@ class Sidebar(QWidget, QObject):
         button.setStyleSheet(style) # aplica estilo
         return button
         
-    def reset(self):
-        #self.eixo_y_form = self.CONST_DESLOCAMENTO
-        self.coord_last_widget[1] = self.CONST_DESLOCAMENTO
-        #self.check = [None, None, None, None, None] # habilitando os forms
-        for i in range(len(self.check)):
-            self.check[i] = None # atribuindo None pra habilitar novamente os forms
 
     def cancel(self, param1=None):
         self.signal_insert.emit(self) # emite o sinal pra atualizar o estado visual das vagas na interface
@@ -672,7 +679,6 @@ class Sidebar(QWidget, QObject):
                     item.deleteLater()
                     item = None
 
-        self.reset() # reseta demais variaveis auxiliares, como a variavel de posição vertical dos objetos na sidebar self.coord_last_widget[1]
         if not self.turnRound:
             self.transitToFormulario() #animação que transiciona de volta para a interface padrão.
         
@@ -688,6 +694,13 @@ class Sidebar(QWidget, QObject):
         '''
 
         self.titulo.setText("DESCRIÇÃO") # [v1.0.0.03]: Altera o nome de volta pro titulo inicial
+
+        self.coord_last_widget[1] = self.CONST_DESLOCAMENTO # [v1.0.0.03]: variavel que desloca verticalmente os formularios
+
+        for i in range(len(self.check)):
+            self.check[i] = None # atribuindo None pra habilitar novamente os forms
+
+        self.vaga_processada = True # [v1.0.0.03]: habilita novas chamadas ao processo de ENTRADA via campo de busca global de placas
     
 
 
@@ -827,7 +840,6 @@ class Sidebar(QWidget, QObject):
         object_proxy = self.insertOnGUI(container, 30)
         container.setStyleSheet(self.recursos.ESTILOS.button_style) # define o estilo 
         container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
-        #self.check[0] = True
         # para destruir os itens posteriormente em cancel()
         self.garbage_collector.append(container)
         self.garbage_collector.append(label)
@@ -837,8 +849,6 @@ class Sidebar(QWidget, QObject):
         self.garbage_collector.append(layout_2)
         self.garbage_collector.append(object_proxy)
         #necessario pra posicionar os botoes
-        #self.coord_last_widget[0] = container.x()
-        #self.coord_last_widget[1] = container.y() + 25
 
 
 
@@ -849,13 +859,14 @@ class Sidebar(QWidget, QObject):
         texto = """
         <b>"""+titulo+"""</b><br>
         <br>
+        <b>Nº VAGA:</b>&nbsp;"""+str(carro[0][1])+"""<br>
         <b>CPF:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][0]+"""<br>
         <b>NOME:</b>&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][1]+"""<br>
+        <b>ORGÃO:</b>&nbsp;&nbsp;&nbsp;"""+servidor[0][2]+"""<br>
         <b>CARRO:</b>&nbsp;&nbsp;&nbsp;"""+carro[0][3]+"""<br>
         <b>PLACA:</b>&nbsp;&nbsp;&nbsp;"""+carro[0][0]+"""<br>
         """
         label = QLabel(texto) #  [v1.0.0.03]: cria a label e define o titulo + informações
-        #label.setFixedHeight(200)
         label.setFont(self.recursos.FONTES.fonte_texto_desc_infoboxes_2)
         #label.setContentsMargins(0,0,0,0)
         #btn_confirmar = QPushButton("OK")
@@ -868,7 +879,6 @@ class Sidebar(QWidget, QObject):
         object_proxy = self.insertOnGUI(container, 30)
         container.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo_2) # [v1.0.0.03]: altera o estilo para o mesmo estilo de planod e fundo do header (onde está a logomarca) da aplicação
         container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
-        #self.check[0] = True
         # para destruir os itens posteriormente em cancel()
         self.garbage_collector.append(container)
         self.garbage_collector.append(label)
@@ -876,8 +886,6 @@ class Sidebar(QWidget, QObject):
         self.garbage_collector.append(layout)
         self.garbage_collector.append(object_proxy)
         #necessario pra posicionar os botoes
-        #self.coord_last_widget[0] = container.x()
-        #self.coord_last_widget[1] = container.y() + 25
         self.coord_last_widget[1] =  container.y() + 100
         
 
@@ -946,7 +954,7 @@ class Sidebar(QWidget, QObject):
         print(f"\n{self.recursos.CORES.VERMELHO}*******************************{self.recursos.CORES.RESET}")
         print(f"{self.recursos.CORES.VERMELHO}Ocorreu um erro! {self.recursos.CORES.RESET}")
         print(f"{self.recursos.CORES.VERMELHO}*******************************{self.recursos.CORES.RESET}\n")
-        print("Detalhes: ",e,"\n*******************************")
+        print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]:Detalhes: ",e,"\n*******************************")
         QMessageBox.warning(self.main_window, "Atenção", "Ocorreu um erro no tratamento dos dados. Verifique o console.")
 
 
@@ -983,14 +991,17 @@ class Sidebar(QWidget, QObject):
         grupo.start()
     '''
 
-    def destacar_campo(self, line_edit):
+    def destacar_campo(self, line_edit, extra_color=None):
+        if(extra_color is None): extra_color = self.recursos.ESTILOS.status_vaga_white_default
+
         anim = QVariantAnimation(line_edit)
         anim.setDuration(600)
-        anim.setStartValue(QColor(255, 165, 0, 180))
-        anim.setEndValue(QColor(0, 0, 0, 0))
+        anim.setStartValue(QColor(255, 165, 0, 180)) # [v1.0.0.03]: laranja
+        anim.setEndValue(QColor(0, 0, 0)) # [v1.0.0.03]: preto
         anim.valueChanged.connect(lambda cor: line_edit.setStyleSheet(
-            f"background-color: rgba({cor.red()}, {cor.green()}, {cor.blue()}, {cor.alpha()});"
+            f"background-color: rgba({cor.red()}, {cor.green()}, {cor.blue()}, {cor.alpha()}); {extra_color}"
         ))
         anim.start()
-        line_edit._highlight_anim = anim  # mantém referência viva
+        #anim.finished.connect(line_edit.setStyleSheet(f"background-color: rgba(0, 0, 0, 0);")) # [v1.0.0.03]: corrige o problema do fundo nao voltar a ser preto
+        line_edit._highlight_anim = anim  # [v1.0.0.03]: mantém referência viva
 

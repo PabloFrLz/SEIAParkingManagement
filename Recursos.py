@@ -10,6 +10,8 @@ class Constantes:
         self.LARGURA_FORMULARIO = 400 # largura dos formularios como o de leitura de nomes na etapa de registro de entrada de servidor e visitante
         self.LARGURA_FORMULARIO_BUTTON = self.LARGURA_FORMULARIO * 0.125
 
+        self.MINIMUN_CHARACTER_TO_NAME = 10
+
 
 
 class Textos:
@@ -46,6 +48,7 @@ class Fontes:
         self.fonte_copyright = QFont("Segoe UI Condensed", 10) # [v1.0.0.03]: Fonte do texto de copyright
 
         self.fonte_texto_desc_infoboxes_2 = QFont("Consolas", 12)
+        self.fonte_texto_placa = QFont("Consolas", 16, QFont.Bold)
 
 
 
@@ -222,6 +225,7 @@ class Estilos:
         self.status_vaga_green = "color: green; font-weight: bold;"
         self.status_vaga_red = "color: red; font-weight: bold;"
         self.status_vaga_orange = "color: orange; font-weight: bold;"
+        self.status_vaga_white_default = "color: white;"
 
         # estilo da tabela com os dados da vaga no arquivo de relatorio.pdf
         self.estilo_tabela = [

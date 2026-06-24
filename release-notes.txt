@@ -28,5 +28,8 @@
 #   9.  Alterado REGISTRO DE ENTRADA e CADASTRO DE SERVIDOR para permitir que o na etapa de cadastro o 
 #       sevidor seja vinculado a um dos veículos na base de dados da aplicação - isso agilizaria os 
 #       registros de entrada já que nao precisaria mais colocar manualmente a placa do carro.
+#   10. Implementado um campo de busca global que permitirá consultar placas do banco para informar
+#       a qual vaga ela pertence, bem como animações de destque pros campos atualizados na sidebar
+#   
 #       
 #
