@@ -308,6 +308,8 @@ class Recursos:   # [v1.0.0.03]: classe principal que instancia as outras - cria
         self.CORES = Cores() # [v1.0.0.03]: instancia das cores
         self.TEXTOS = Textos() # [v1.0.0.03]: instancia os textos da interface
         self.CONST = Constantes() # [v1.0.0.03]: instancia as contantes da aplicação como dimensões em pixels dos objetos
+        #self.main_window = main_window 
 
-
+    '''def getMainWindow(self):
+        return self.main_window # [v1.0.0.03]: retorna a referencia pra janela principal da aplicação'''
     

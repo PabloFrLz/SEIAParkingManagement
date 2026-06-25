@@ -875,8 +875,8 @@ class SEIAParkingManagement(QGraphicsView):
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga[0][0]}")
             self.selecionarVagaPorID(num_vaga[0][0]) # [v1.0.0.03]: seleciona a vaga na GUI
             # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
-            self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
-            self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
+            state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
+            if(state_exec): self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
 
 
 

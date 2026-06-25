@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QLabel, QComboBox, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QComboBox, QMessageBox, QWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 
 import Recursos
@@ -56,7 +56,7 @@ class Formulario(QWidget):
     def opcaoSelecionada(self, text):
         # metodo para lidar com a opção selecionada
         #self.combo.setCurrentIndex(int(text))
-        print(f"[{self.recursos.CORES.AMARELO}Formulario.py{self.recursos.CORES.RESET}]: Opção selecionada: {text}") # debug
+        print(f"[{self.recursos.CORES.AMARELO}Formulario.py{self.recursos.CORES.RESET}]: Opção selecionada: ({text})") # debug
         self.result_to_return = text # armazena a opção selecionada para ser retornada posteriormente
         if self.onComplete: # executa a função fornecida via parâmetro
             self.onComplete()

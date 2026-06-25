@@ -317,6 +317,8 @@ class Sidebar(QWidget, QObject):
                 
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga está OCUPADA/RESERVADA.")
+            return False
+        return True # [v1.0.0.03]: definindo retorno só pra verificar erros e evitar executar metodos especificos em SEIAParkingManagement.py -> processarVagaBuscada() 
 
 
 
@@ -424,6 +426,11 @@ class Sidebar(QWidget, QObject):
             self.check[0] = True #desabilita esse bloco condicional na proxima iteração
 
         elif (self.check[1] is None): 
+            if (self.form1.getResult() == ""): # [v1.0.0.03]: Corrige o problema do usuario não selecionar orgão
+                QMessageBox.warning(self.main_window, "Erro", "Opção selecionada é inválida.")
+                self.cancel()
+                return
+            
             self.form1.setDisabled(True)
             self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
             self.check[1] = True
@@ -496,9 +503,9 @@ class Sidebar(QWidget, QObject):
             if(len(texto) >= self.recursos.CONST.MINIMUN_CHARACTER_TO_NAME): # Evita não inserir nada no formulario
                 self.nome = texto
             else:
-                QMessageBox.warning(self.main_window, "Erro", "insira um nome válido meu considerado.")
+                QMessageBox.warning(self.main_window, "Erro", "insira um nome válido.")
                 self.cancel()
-                return;
+                return
         
         func_call_recursivamente()
 
@@ -580,7 +587,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"INSERT INTO Servidor VALUES('{self.cpf}', '{self.nome}', '{self.form1.getResult()}')")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERDE}Servidor '{self.nome}' registrado com sucesso!{self.recursos.CORES.RESET}")
+            print(f"{self.recursos.CORES.VERDE}Servidor [{self.nome}] registrado com sucesso!{self.recursos.CORES.RESET}")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
 
             # [v1.0.0.03]: a partir dessa versão o servidor tem que selecionar o carro no cadastro para linkar o veiculo ao seu cpf
@@ -588,7 +595,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"UPDATE Carro SET proprietario_cpf = '{self.cpf}' WHERE placa = '{placa}'") # [v1.0.0.03]: atualiza o campo proprietario_cpf da tabela carro com o CPF do servidor
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERDE}Carro {modelo} de placa {placa} atualizado com CPF {self.cpf} do Servidor {self.nome} com sucesso!{self.recursos.CORES.RESET}")
+            print(f"{self.recursos.CORES.VERDE}Carro [{modelo}] de placa [{placa}] atualizado com CPF [{self.cpf}] do Servidor [{self.nome}] com sucesso!{self.recursos.CORES.RESET}")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
             
             QMessageBox.information(self.main_window, "Sucesso", "Servidor cadastrado com sucesso!")
@@ -605,7 +612,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"delete from servidor where nome='{self.nome}'")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERMELHO}Servidor deletado com sucesso!{self.recursos.CORES.RESET}")
+            print(f"{self.recursos.CORES.VERMELHO}Servidor [{self.nome}] deletado com sucesso!{self.recursos.CORES.RESET}")
             print(f"{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}\n")
 
             QMessageBox.information(self.main_window, "Sucesso", "Servidor removido com sucesso!")
