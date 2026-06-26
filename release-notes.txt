@@ -29,7 +29,10 @@
 #       sevidor seja vinculado a um dos veículos na base de dados da aplicação - isso agilizaria os 
 #       registros de entrada já que nao precisaria mais colocar manualmente a placa do carro.
 #   10. Implementado um campo de busca global que permitirá consultar placas do banco para informar
-#       a qual vaga ela pertence, bem como animações de destque pros campos atualizados na sidebar
+#       a qual vaga ela pertence, bem como animações de destaque pros campos atualizados na sidebar
+#       10.1.  adicionado uma placa mercosul que atualiza seu valor conforme seleção do usuário;
+#   11. [OCR] Implementado recurso de identificação de placas via Reconhecimento Óptico de Caracteres(OCR).
+#       O modelo escolhido foi o 'PP-OCRv5' do PaddleOCR - esse recurso é acionado via Button 'CAPTURAR PLACA'.
 #   
 #       
 #

@@ -31,7 +31,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QHBoxLayout, QLabel, QMessageBox, QVBoxLayout, QWidget
+    QGraphicsProxyWidget, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
@@ -41,6 +41,7 @@ import sys
 import Vaga as vg
 import Sidebar as sb
 import Recursos
+#import ModelPaddleOCR
 import qdarktheme
 import pymysql
 from colorama import init
@@ -92,7 +93,8 @@ class SEIAParkingManagement(QGraphicsView):
         self.setScene(self.scene)
         self.turnRound = True
         self.anim = None
-        self.recursos = Recursos.Recursos()
+        self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
+        #self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
 
         
 
@@ -670,9 +672,25 @@ class SEIAParkingManagement(QGraphicsView):
         timer.start(180) # tempo de 180ms entre as chamadas
         self.next_frame(arrow_images, label) # chama a função na primeira vez - as demais serão o Timer
         
-        #self.conteiner_search = QHBoxLayout()
-        #self.conteiner_search.addWidget(self.search_box)
-        #self.scene.addLayout(self.conteiner_search)
+        
+
+        #==============================================================================================
+        # [PaddleOCR] Identificação da placa via ESP32-S3-CAM WROOM (v1.0.0.03)
+        #==============================================================================================
+
+        btn_identify_placa = QPushButton("CAPTURAR\n PLACA?")
+        btn_identify_placa.setCheckable(True)
+        btn_identify_placa.clicked.connect(self.identifyPlaca)
+        btn_identify_placa.setStyleSheet(self.recursos.ESTILOS.button_style_8)
+        btn_identify_placa.setAttribute(Qt.WA_TranslucentBackground)
+
+        proxy_btn_identify = QGraphicsProxyWidget()
+        proxy_btn_identify.setWidget(btn_identify_placa)
+        proxy_btn_identify.setPos((WIDTH+K-240)/1.21, 0)
+        proxy_btn_identify.setZValue(999)
+        self.scene.addItem(proxy_btn_identify)
+
+
 
     
     """
@@ -904,6 +922,24 @@ class SEIAParkingManagement(QGraphicsView):
         pixmap = QPixmap(arrow_images[self.current_index])
         label.setPixmap(pixmap)  # Ajuste o tamanho
         self.current_index = (self.current_index + 1) % len(arrow_images)
+
+
+
+    def identifyPlaca(self):
+        img = self.model_ocr.getImage()
+        if img:
+            img.show()        # [v1.0.0.03]: abre a imagem
+            img.save(self.model_ocr.SAVE_PATH)  # [v1.0.0.03]: salva
+        
+        self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
+
+        print("PLACA IDENTIFICADA:\n")
+        print(" ___________________________\n")
+        print(f"|    PLACA: {self.model_ocr.placa[0]}       |\n")
+        print(f"|    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |\n")
+        print("|___________________________|\n")
+        
+        QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!")
 
 app = QApplication(sys.argv)
 app.setStyleSheet(

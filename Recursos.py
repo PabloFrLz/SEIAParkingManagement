@@ -43,6 +43,7 @@ class Fontes:
         self.fonte_texto_pergunta = QFont("Segoe UI", 14) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
         self.fonte_tabela = "font-size: 14px" # [v1.0.0.03]: tamanho da fonte da tabela de registros da sidebar
         self.fonte_texto_buttons = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte do texto dos botões da interface
+        self.fonte_texto_buttons_2 = "font-size: 12px"
         #self.fonte_title_header = "<font size='6'>" # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
         self.fonte_title_header = QFont("Segoe UI", 20) # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
         self.fonte_copyright = QFont("Segoe UI Condensed", 10) # [v1.0.0.03]: Fonte do texto de copyright
@@ -202,6 +203,93 @@ class Estilos:
                 background-color: rgba(255, 18, 70, 160);
                 color: white;
             }} 
+        """
+
+        self.button_style_5 = f"""
+            QPushButton {{
+                color: #ffffff;
+                background-color: #004b51;
+                border: 1px solid rgba(255, 165, 0, 90); /* borda laranja suave */
+                text-align: center;
+                {self.FONTES.fonte_texto_buttons_2};
+                border-radius: 6px;
+                margin: 4px 8px;
+            }}
+            
+            QPushButton:hover {{
+                background-color: rgba(0, 255, 155, 80); 
+            }}
+            
+            QPushButton:pressed {{
+                background-color: rgba(0, 255, 0, 160);
+                color: white;
+            }}
+        """
+
+        self.button_style_6 = f"""
+            QPushButton{{
+                background-color:#0d5d45;
+                color:white;
+                border:1px solid #18c77d;
+                border-radius:6px;
+                {self.FONTES.fonte_texto_buttons_2};
+                padding:4px 12px;
+            }}
+
+            QPushButton:hover{{
+                background-color:#14855f;
+            }}
+
+            QPushButton:pressed{{
+                background-color:#0b4d38;
+            }}
+        """
+
+        self.button_style_7 = f"""
+            QPushButton{{
+                background:#262626;
+                border:1px solid #ff9800;
+                color:#ffd180;
+                border-radius:6px;
+                {self.FONTES.fonte_texto_buttons_2};
+            }}
+
+            QPushButton:hover{{
+                background:#ff9800;
+                color:black;
+            }}
+
+            QPushButton:pressed{{
+                background:#ffb74d;
+            }}
+        """
+
+        self.button_style_8 = f"""
+            QPushButton{{
+
+                background:qlineargradient(
+                    x1:0,y1:0,
+                    x2:0,y2:1,
+                    stop:0 #177f62,
+                    stop:1 #0f5c47);
+
+                border:1px solid #2cffae;
+                color:white;
+
+                font-weight:700;
+                border-radius:6px;
+
+                padding:5px 12px;
+            }}
+
+            QPushButton:hover{{
+                background-color:#14855f;
+            }}
+
+            QPushButton:pressed{{
+                background-color:#0b4d38;
+            }}
+            
         """
 
         self.estilo_toggle_switch = f"""

@@ -1,14 +1,14 @@
 
-# SEIA Parking Management v1.0.0.02
+# SEIA Parking Management v1.0.0.03
 **Software de Controle de Estacionamento Institucional**  
 Desenvolvido pela Diretoria de Inovação (DIN), vinculado à Secretaria da Inovação em Inteligência Artificial (SEIA)
 
-## Preparando o Ambiente
+## CONFIGURANDO O AMBIENTE
 
-### Dependências Necessárias
+### DEPENDÊNCIAS NECESSÁRIAS:
 
 ```bash
-winget install Python.Python.3.13
+winget install Python.Python.3.12
 pip install pyside6
 pip install pyqtdarktheme
 pip install pymysql
@@ -28,14 +28,20 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\autarquia.sql
 source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
 source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql
 ```
-	 
+
+ ## PREDIÇÃO DE PLACAS:
+```bash
+pip install requests
+pip install pillow
+python312 -m pip install paddlepaddle==3.2.0 paddleocr==3.3.3
+```	 
  
  ## CONFIGURAÇÕES COMPLEMENTARES:
 ```bash
 pip install --upgrade PySide6 pyqtdarktheme"
 ```
 
- ## CRIAÇÃO DO EXECUTÁVEL PYTHON
+ ## CRIAÇÃO DO EXECUTÁVEL PYTHON:
 ```bash
 pip install pyinstaller
 
@@ -45,6 +51,7 @@ pyinstaller --onefile --windowed --clean ^
     --add-data "imagens;imagens" ^
     SEIAParkingManagement.py
 ```
+
 ### Caso dê problemas de conflito entre PyQt5 e PySide6 com o erro "ERROR: Aborting build process due to attempt to collect multiple Qt bindings packages: attempting to run hook for 'PyQt5', while hook for 'PySide6' has already been run!". Execute o comando: 
 ```bash
 pyinstaller --onefile --windowed --clean ^
