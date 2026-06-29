@@ -41,7 +41,7 @@ import sys
 import Vaga as vg
 import Sidebar as sb
 import Recursos
-#import ModelPaddleOCR
+import ModelPaddleOCR
 import qdarktheme
 import pymysql
 from colorama import init
@@ -94,7 +94,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
-        #self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
+        self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
 
         
 
@@ -933,13 +933,16 @@ class SEIAParkingManagement(QGraphicsView):
         
         self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
 
-        print("PLACA IDENTIFICADA:\n")
-        print(" ___________________________\n")
-        print(f"|    PLACA: {self.model_ocr.placa[0]}       |\n")
-        print(f"|    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |\n")
-        print("|___________________________|\n")
-        
-        QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!")
+        if self.model_ocr.placa is not None:
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:     PLACA IDENTIFICADA:\n")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:   ___________________________\n")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    PLACA: {self.model_ocr.placa[0]}       |\n")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |\n")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |___________________________|\n")
+            
+            QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!")
+        else:
+            QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
 
 app = QApplication(sys.argv)
 app.setStyleSheet(

@@ -3,13 +3,14 @@ from PIL import Image, ImageEnhance, ImageFilter
 import io
 from paddleocr import PaddleOCR
 import cv2
-
+import Recursos
 
 class ModelPaddleOCR:
     def __init__(self):
         super().__init__()
+        self.recursos = Recursos.Recursos()
         #url = "http://esp32cam.local/capture"   # insira o IP do servidor do ESP32
-        self.url = "http://192.168.0.109/capture" # [v1.0.0.03]: URL onde o ESP32-S3-CAM WROOM conversa com a aplicação - o '/capture' força ele salvar o frame atual (bater uma foto)
+        self.url = "http://esp32cam.local/capture" # [v1.0.0.03]: URL onde o ESP32-S3-CAM WROOM conversa com a aplicação - o '/capture' força ele salvar o frame atual (bater uma foto)
         self.SAVE_PATH = "img_placas/placa.png" # [v1.0.0.03]: Diretório de armazenamento da imagem
         self.placa = [None, None] # [v1.0.0.03]: Armazena o número da placa e o percentual de confiança na predição (o quão confiante o modelo acredita estar)
         self.ocr = None # [v1.0.0.03]: Modelo usado para OCR (Reconhecimento Óptico de Caracter)    
@@ -29,11 +30,11 @@ class ModelPaddleOCR:
             
             # Carrega direto na memória (para processamento)
             image = Image.open(io.BytesIO(response.content))
-            print(f"✅ Foto recebida! Tamanho: {image.size}")
+            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ✅ Foto recebida! Tamanho: {image.size}")
             image = image.rotate(angle=270)
             return image
         else:
-            print("❌ Erro ao tirar foto")
+            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ❌ Erro ao tirar foto.")
             return None
         
         #  ___________________________
@@ -50,12 +51,12 @@ class ModelPaddleOCR:
             use_textline_orientation=False
         )
         result = self.ocr.predict(self.SAVE_PATH)
-        print("CARACTERES IDENTIFICADOS:\n")
+        print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: CARACTERES IDENTIFICADOS:\n")
         for res in result:
             texts = res["rec_texts"]
             scores = res["rec_scores"]
             for texto, score in zip(texts, scores):
-                print(f"{texto}  (confiança: {score:.2f})")
+                print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: {texto}  (confiança: {score:.2f})")
                 if len(texto) >= 7:
                     self.placa[0] = texto
                     self.placa[1] = f"{score:.2f}"
