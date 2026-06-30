@@ -29,7 +29,7 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
 source C:(caminho_para_projeto)\SEIAParkingManagement\database\carros.sql
 ```
 
- ## PREDIÇÃO DE PLACAS:
+ ## PREDIÇÃO DE PLACAS (OCR):
 ```bash
 pip install requests
 pip install pillow

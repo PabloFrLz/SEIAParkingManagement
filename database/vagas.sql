@@ -11,9 +11,9 @@ insert into Vaga values (10, "SESP");
 insert into Vaga values (11, "SESP");
 insert into Vaga values (12, "SESP");
 
-insert into Vaga values (13, "deficiente");
-insert into Vaga values (14, "deficiente");
-insert into Vaga values (15, "deficiente");
+insert into Vaga values (13, NULL);
+insert into Vaga values (14, NULL);
+insert into Vaga values (15, NULL);
 
 insert into Vaga values (16, "SEIA");
 insert into Vaga values (17, "SEIA");
@@ -145,7 +145,7 @@ insert into Vaga values (136, "COHAPAR");
 insert into Vaga values (137, "COHAPAR");
 insert into Vaga values (138, "COHAPAR");
 
-insert into Vaga values (142, "deficiente");
+insert into Vaga values (142, NULL);
 insert into Vaga values (143, "SEIA");
 
 insert into Vaga values (196, "SESP");

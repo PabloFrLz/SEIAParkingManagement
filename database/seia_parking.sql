@@ -7,7 +7,7 @@ create table if not exists Autarquia(
 
 create table if not exists Vaga(
     num_vaga INT PRIMARY KEY,
-    autarquia CHAR(16) not null,
+    autarquia CHAR(16),
     foreign key (autarquia) references Autarquia(nome) on delete cascade
 );
 
@@ -45,13 +45,13 @@ create table if not exists Registro(
 );
 
 -- [ORDEM DE INSERÇÃO]
--- autarquia.sql
--- vagas.sql
--- servidor.sql (caso tenha os dados dos servidores de antemão)
--- carros.sql
+-- Autarquia
+-- Vaga
+-- Servidor
+-- Carro
+-- Registro
 
-source C:\SEIA\nucleo_administrativo_setorial\SEIAParkingManagement\database\autarquia.sql
-source C:\SEIA\nucleo_administrativo_setorial\SEIAParkingManagement\database\vagas.sql
-source C:\SEIA\nucleo_administrativo_setorial\SEIAParkingManagement\database\carros2.sql
+source C:\Users\Usuario\Documents\SEIAParkingManagement\database\autarquia.sql
+source C:\Users\Usuario\Documents\SEIAParkingManagement\database\vagas.sql
+source C:\Users\Usuario\Documents\SEIAParkingManagement\database\carros2.sql
 
---SELECT * FROM carro c WHERE c.autarquia = 'seia' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.tipo = 'SAIDA');

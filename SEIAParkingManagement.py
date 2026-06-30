@@ -41,7 +41,7 @@ import sys
 import Vaga as vg
 import Sidebar as sb
 import Recursos
-import ModelPaddleOCR
+#import ModelPaddleOCR
 import qdarktheme
 import pymysql
 from colorama import init
@@ -94,7 +94,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
-        self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
+        #self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
 
         
 
@@ -587,21 +587,7 @@ class SEIAParkingManagement(QGraphicsView):
 
         self.search_box = QComboBox()
         self.search_box.setEditable(True)
-        self.search_box.editTextChanged.connect(self.processarVagaBuscada)
-
-        # [v1.0.0.03]: completer pra sugestões de busca em tempo real
-        self.completer = self.search_box.completer()
-        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
-        self.completer.setFilterMode(Qt.MatchContains)   # [v1.0.0.03]: busca em qualquer parte
-        self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
-        
-        # [v1.0.0.03]: proxy pra determinar a posição do elemento na interface
-        proxy_search = QGraphicsProxyWidget()
-        proxy_search.setWidget(self.search_box)
-        proxy_search.setPos((WIDTH+K-240)/2.5, 0)  # [v1.0.0.03]: Ajuste as coordenadas conforme necessário
-        proxy_search.setZValue(999) # [v1.0.0.03]: necessario pra janela das palcas se sobrepor ao predio do Hauer e carros
-        self.scene.addItem(proxy_search)
-
+        self.search_box.editTextChanged.connect(self.onCompleterActivated)
         # [v1.0.0.03]: estilos e formatos
         self.search_box.setStyleSheet(self.recursos.ESTILOS.estilo_search_box)
         self.search_box.setFixedWidth(400)
@@ -610,9 +596,25 @@ class SEIAParkingManagement(QGraphicsView):
         carros = self.getAllCarros() # [v1.0.0.03]: pega todos os carros/placas do banco
         #self.search_box.addItem("Digite os dados da placa no formato ABC-XXXX...")
         #self.search_box.addItem(" . . .")
-        self.search_box.addItem("Selecione uma placa . . .")
+        #self.search_box.addItem("Selecione uma placa . . .") # 
+        self.search_box.addItem("") # 
         for i, carro in enumerate(carros):
             self.search_box.addItem(carros[i][0]+" - "+carros[i][3]) # insere no formato "PLACA - MODELO"
+
+        # [v1.0.0.03]: completer pra sugestões de busca em tempo real
+        self.completer = self.search_box.completer()
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setFilterMode(Qt.MatchContains)   # [v1.0.0.03]: busca em qualquer parte
+        self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        self.completer.activated.connect(self.onCompleterActivated)
+        
+        # [v1.0.0.03]: proxy pra determinar a posição do elemento na interface
+        proxy_search = QGraphicsProxyWidget()
+        proxy_search.setWidget(self.search_box)
+        proxy_search.setPos((WIDTH+K-240)/2.5, 0)  # [v1.0.0.03]: Ajuste as coordenadas conforme necessário
+        proxy_search.setZValue(999) # [v1.0.0.03]: necessario pra janela das palcas se sobrepor ao predio do Hauer e carros
+        self.scene.addItem(proxy_search)
+
 
 
 
@@ -883,18 +885,18 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
-    def processarVagaBuscada(self, text): # [v1.0.0.03]: metodo para processar a palca selecionada no buscador principal de placas da aplicação 'self.search_box'
-        if (text != "Selecione uma placa . . ." and self.sidebar.vaga_processada):
-            self.sidebar.vaga_processada = False  # [v1.0.0.03]: desabilita esse bloco if momentaneamente até cocnlusão do registro de ENTRADA
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa e modelo selecionados: {text}")
-            placa, modelo = text.split(" - ") # [v1.0.0.03]: Extrai a placa e modelo
-            self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
-            num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga[0][0]}")
-            self.selecionarVagaPorID(num_vaga[0][0]) # [v1.0.0.03]: seleciona a vaga na GUI
-            # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
-            state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
-            if(state_exec): self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
+    def processarVagaBuscada(self, text): # [v1.0.0.03]: metodo para processar a placa selecionada no buscador principal de placas da aplicação 'self.search_box'
+        self.sidebar.cancel() # [v1.0.0.03]: Antes de tudo dá um cancel pra retroceder formularios caso estejam abertos
+        self.sidebar.vaga_processada = False  # [v1.0.0.03]: desabilita esse bloco if momentaneamente até cocnlusão do registro de ENTRADA
+        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa e modelo selecionados: {text}")
+        placa, modelo = text.split(" - ") # [v1.0.0.03]: Extrai a placa e modelo
+        self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
+        num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco
+        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga[0][0]}")
+        self.selecionarVagaPorID(num_vaga[0][0]) # [v1.0.0.03]: seleciona a vaga na GUI
+        # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
+        state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
+        if(state_exec): self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
 
 
 
@@ -922,6 +924,12 @@ class SEIAParkingManagement(QGraphicsView):
         pixmap = QPixmap(arrow_images[self.current_index])
         label.setPixmap(pixmap)  # Ajuste o tamanho
         self.current_index = (self.current_index + 1) % len(arrow_images)
+
+
+
+    def onCompleterActivated(self, text): # [v1.0.0.03]: método complementar para garantir a captura do texto digitado pelo usuário
+        if text != self.search_box.itemText(0) and len(text) >= 7 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder "Selecione uma vaga ..." e o numero 7 é a quantidade de caracteres de uma placa
+            self.processarVagaBuscada(text)
 
 
 

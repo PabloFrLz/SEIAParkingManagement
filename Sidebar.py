@@ -382,7 +382,13 @@ class Sidebar(QWidget, QObject):
     def registroEntrada(self):
         if (self.check[0] is None): 
             # [v1.0.0.03]: Em conversas com guardas da guarita, fui informado que a abordagem melhor seria o fluxo começar com a placa do veiculo
-            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.orgao_vinculado.displayText()}' AND proprietario_cpf IS NOT NULL" # [v1.0.0.03]: selecione todos os carros que sejam vinculados ao orgão da vaga e que tenha um cpf de proprietario válido
+            #consulta = f"SELECT * FROM carro WHERE autarquia = '{self.orgao_vinculado.displayText()}' AND proprietario_cpf IS NOT NULL" # [v1.0.0.03]: selecione todos os carros que sejam vinculados ao orgão da vaga e que tenha um cpf de proprietario válido
+
+            # [DESCRIÇÃO DA CONSULTA]: 
+            #       Selecione todos os carros da tabela carro onde a autarquia seja igual ao valor informado,
+            #       e onde o CPF do proprietario nao esteja vazio, e cuja placa não apareça em nenhum registro 
+            #       da tabela Registro que tenha tipo = 'ENTRADA' (considerando apenas registros onde a placa não é nula)."
+            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.proprietario_cpf IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')"
             self.categoria = 2 # [v1.0.0.03]: informa a classe Formulario() que se trata de um carro
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
             self.check[0] = True
@@ -708,21 +714,27 @@ class Sidebar(QWidget, QObject):
             self.check[i] = None # atribuindo None pra habilitar novamente os forms
 
         self.vaga_processada = True # [v1.0.0.03]: habilita novas chamadas ao processo de ENTRADA via campo de busca global de placas
-    
+
+        print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]:  Operação cancelada.")
+
 
 
     def consultaDisponibilidadeFrota(self, valor):
         cursor = self.conn.cursor()
-        #cursor.execute(f"SELECT * FROM carro WHERE autarquia='{valor}' AND placa NOT IN (SELECT placa FROM registro WHERE placa IS NOT NULL)")
-        # descrição da consulta: selecione todos os carros onde a autarquia for X e a placa não esteja inclusa no registro e não seja NULL.
-        #cursor.execute(f"SELECT * FROM carro c WHERE autarquia = '{valor}' AND NOT EXISTS (SELECT 1 FROM registro r WHERE r.placa = c.placa)")
-        cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')")
-        result = cursor.fetchall()
 
-        if len(result) == 0:
+        # [DESCRIÇÃO DA CONSULTA]: 
+        #       Selecione todos os carros da tabela carro onde a autarquia seja igual ao valor informado,
+        #       e onde o CPF do proprietario nao esteja vazio, e cuja placa não apareça em nenhum registro 
+        #       da tabela Registro que tenha tipo = 'ENTRADA' (considerando apenas registros onde a placa não é nula)."
+
+        cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.proprietario_cpf IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')")
+        carros_disponiveis = cursor.fetchall()
+        return carros_disponiveis
+
+        '''if len(result) == 0:
             return [False, result] # não há frota disponível
         else:
-            return [True, result]
+            return [True, result]'''
         
 
     
