@@ -233,22 +233,20 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def controlActions(self, info):
+    def controlActions(self, vaga):
         self.cancel() # destroi formularios caso esteja em andamento - isso permite interagir com outras vagas na interface enquanto em outras etapas do fluxo dos formularios de ENTRADA, CADASTRO, etc.
-        self.atualizar_info(info) 
+        self.atualizar_info(vaga) 
     
 
 
-    def atualizar_info(self, info): # variavel info contem os dados definidos em Vaga.py, como self.id, self.tipo_carro, self.status, self.status_name, self.press_button_status
-        #consulta pra pegar a ultima entrada registrada na tabela registro para o numero de vaga atual
-        ultimo_registro_da_vaga = self.getEntradaOnRegistro(info.id) # pega a ultima entrada registrada pra uma vaga especifica
-        self.lista_registro.clear() # limpa entradas de outra vagas na tabela de registros da vaga especifica
+    def atualizar_info(self, vaga): # variavel info contem os dados definidos em Vaga.py, como self.id, self.tipo_carro, self.status, self.status_name, self.press_button_status
+        ultimo_registro_da_vaga = self.getUltimaEntradaRegistroDaVaga(vaga.id) # pega a ultima entrada registrada para esse numero de vaga em vaga.id
         self.lista_registro.setRowCount(0) # reseta o contador de linhas da tabela
 
         #atualizando informações principais
-        self.orgao_vinculado.setText(str(info.autarquia))
-        self.num_vaga.setText(str(info.id))
-        self.status_vaga.setText(info.status_name)
+        self.orgao_vinculado.setText(str(vaga.autarquia))
+        self.num_vaga.setText(str(vaga.id))
+        self.status_vaga.setText(vaga.status_name)
 
 
         #atualizando informações secundárias
@@ -286,26 +284,24 @@ class Sidebar(QWidget, QObject):
         self.destacar_campo(self.nome_servidor)
 
         #atualizando a cor do campo "Status da vaga"
-        if info.status == 0: # disponivel
-            #self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_green)
-            self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_green)
-        elif info.status == 1: # ocupada
-            #self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_red)
+        if vaga.status == 0: # disponivel
+            self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_green) 
+        elif vaga.status == 1: # ocupada
             self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_red)
-        elif info.status == 2: # reservada
-            #self.status_vaga.setStyleSheet(self.recursos.ESTILOS.status_vaga_orange)
+        elif vaga.status == 2: # reservada
             self.destacar_campo(self.status_vaga, self.recursos.ESTILOS.status_vaga_orange)
-        self.sentinel = info
+        self.sentinel = vaga
 
 
     
     def acaoButtonEntrada(self, ignoredMessageBox=None): 
-        if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() != "OCUPADA" and self.status_vaga.displayText() != "RESERVADA"):
+        if self.status_vaga.displayText() != "OCUPADA":
             self.transitToFormulario() # animação que empurra pro lado direito as infos
-            #self.titulo = self.insertHeader("REGISTRAR ENTRADA")#gera logo no topo e titulo da seção 
             self.titulo.setText("REGISTRO DE ENTRADA") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
+            
             if (ignoredMessageBox):
                 resposta = QMessageBox.StandardButton.No # [v1.0.0.03]: Define manualmente "Não" ao invés de solicitar ao usuario - necessário pra direcionar o fluxo automaticamente sem solicitar nada ao usuário
+                #verificaEntradaServidor() # [v1.0.0.03]: verifica se tem registro de 'ENTRADA' em andamento pra esse servidor - se tiver, questiona-o se ele quer registrar 'SAIDA'
             else:
                 resposta = QMessageBox.question(self.main_window, "Questão", "Registro de VISITANTE ?") # [v1.0.0.03]: questiona o usuário se será um registro de um visitante ou de um servidor.
             
@@ -316,17 +312,28 @@ class Sidebar(QWidget, QObject):
                 self.registroEntrada() # inicializa os formularios pra registro da ENTRADA de servidores
                 
         else:
-            QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga está OCUPADA/RESERVADA.")
+            resposta = QMessageBox.question(self.main_window, "Atenção", "A vaga selecionada está OCUPADA! \nDeseja registrar a SAÍDA do servidor ?")
+            if resposta == QMessageBox.StandardButton.Yes:
+                self.acaoButtonSaida()
+                return False # [v1.0.0.03]: define retorno falso pra evitar continuidade do fluxo de registro de ENTRADA para quando o fluxo vier do buscador global de placas (self.search_box)
             return False
+        
         return True # [v1.0.0.03]: definindo retorno só pra verificar erros e evitar executar metodos especificos em SEIAParkingManagement.py -> processarVagaBuscada() 
 
 
 
     def acaoButtonSaida(self):
         dados = None
-        if self.num_vaga.displayText() != "-" and (self.status_vaga.displayText() == "OCUPADA" or self.status_vaga.displayText() == "RESERVADA"):
-            dados = self.getEntradaOnRegistro(self.num_vaga.displayText()) #obtem a ultima entrada registrada pra uma vaga especifica
+        if self.status_vaga.displayText() == "OCUPADA":
+            '''if self.vaga_processada:
+                dados = self.getUltimaEntradaRegistroDaVaga(self.num_vaga.displayText()) #obtem a ultima entrada registrada pra uma vaga especifica
+            else:
+                dados = self.getUltimaEntradaRegistroDaVagaByPlaca(self.placa_carro.displayText()) #obtem a ultima entrada registrada pra uma vaga especifica
+            '''
+            dados = self.getUltimaEntradaRegistroDaVaga(self.num_vaga.displayText()) #obtem a ultima entrada no registro para esse numero de vaga
             self.insertRegistro(dados=dados)
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]:  Iniciando registro de SAIDA para a vaga de nº {dados[0][3]}")
+
         else:
             QMessageBox.warning(self.main_window, "Atenção", "Vaga selecionada é inválida ou a vaga ainda está DISPONÍVEL.")
 
@@ -518,7 +525,7 @@ class Sidebar(QWidget, QObject):
 
 
     def insertRegistro(self, dados=None):
-        print(f"\n\n {self.recursos.CORES.AMARELO}***************** ( DATABASE INSERT) *****************{self.recursos.CORES.RESET}\n")
+        print(f"\n\n ***************** ({self.recursos.CORES.AMARELO} DATABASE INSERT {self.recursos.CORES.RESET}) *****************\n")
         num_vaga = self.num_vaga.displayText()
         if dados is not None:
             #obtem os dados direto do banco
@@ -552,7 +559,7 @@ class Sidebar(QWidget, QObject):
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Modelo: {modelo}")
             
         print(f"\n{self.recursos.CORES.AMARELO}================================{self.recursos.CORES.RESET}")
-        print(f"{self.recursos.CORES.AMARELO}Dados extraídos! {self.recursos.CORES.RESET}")
+        print("Dados extraídos!")
         print(f"{self.recursos.CORES.AMARELO}================================{self.recursos.CORES.RESET}\n")
         #inserção no banco
         try:
@@ -564,7 +571,7 @@ class Sidebar(QWidget, QObject):
                 cursor.execute(sql)
             self.conn.commit() # commit - pra persistir no banco
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERDE}Dados inseridos no Registro com sucesso!{self.recursos.CORES.RESET}")
+            print("Dados inseridos no Registro com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
             QMessageBox.information(self.main_window, "Sucesso", "Registro efetuado com sucesso!")
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
@@ -593,7 +600,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"INSERT INTO Servidor VALUES('{self.cpf}', '{self.nome}', '{self.form1.getResult()}')")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERDE}Servidor [{self.nome}] registrado com sucesso!{self.recursos.CORES.RESET}")
+            print("Servidor [{self.nome}] registrado com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
 
             # [v1.0.0.03]: a partir dessa versão o servidor tem que selecionar o carro no cadastro para linkar o veiculo ao seu cpf
@@ -601,7 +608,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"UPDATE Carro SET proprietario_cpf = '{self.cpf}' WHERE placa = '{placa}'") # [v1.0.0.03]: atualiza o campo proprietario_cpf da tabela carro com o CPF do servidor
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERDE}Carro [{modelo}] de placa [{placa}] atualizado com CPF [{self.cpf}] do Servidor [{self.nome}] com sucesso!{self.recursos.CORES.RESET}")
+            print("Carro [{modelo}] de placa [{placa}] atualizado com CPF [{self.cpf}] do Servidor [{self.nome}] com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
             
             QMessageBox.information(self.main_window, "Sucesso", "Servidor cadastrado com sucesso!")
@@ -618,7 +625,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"delete from servidor where nome='{self.nome}'")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
-            print(f"{self.recursos.CORES.VERMELHO}Servidor [{self.nome}] deletado com sucesso!{self.recursos.CORES.RESET}")
+            print("Servidor [{self.nome}] deletado com sucesso!")
             print(f"{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}\n")
 
             QMessageBox.information(self.main_window, "Sucesso", "Servidor removido com sucesso!")
@@ -743,10 +750,20 @@ class Sidebar(QWidget, QObject):
     
 
 
-    def getEntradaOnRegistro(self, num_vaga):
+    def getUltimaEntradaRegistroDaVaga(self, num_vaga):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE num_vaga='{num_vaga}' ORDER BY id DESC LIMIT 1")
-        return cursor.fetchall() # retorna uma unica tupla e nao uma lista de tuplas
+        return cursor.fetchall()
+
+
+
+    def getUltimaEntradaRegistroDaVagaByPlaca(self, placa): 
+        # [v1.0.0.03]: foi identificado um problema quando selecionava placa via self.search_box, onde a ultima entrada do carro 
+        #              no registro nem sempre era a mesma da vaga selecionada, então foi criado esse metodo que busca a ultima 
+        #              entrada do registro a partir da placa do carro.
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM registro WHERE placa='{placa}' ORDER BY id DESC LIMIT 1")
+        return cursor.fetchall() 
 
 
 
@@ -796,6 +813,16 @@ class Sidebar(QWidget, QObject):
         servidor = cursor.fetchall()
         return servidor
     
+
+
+    def getCarroByPlaca(self, placa):  # [v1.0.0.03]: função para obter os dados do carro vinculado à placa
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM Carro WHERE placa = '{placa}'")
+        carro = cursor.fetchall()
+        return carro
+    
+
+
     def getCPFbyPlaca(self, placa):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM Carro WHERE placa = '{placa}'")
@@ -971,7 +998,7 @@ class Sidebar(QWidget, QObject):
 
     def error_message(self, e):
         print(f"\n{self.recursos.CORES.VERMELHO}*******************************{self.recursos.CORES.RESET}")
-        print(f"{self.recursos.CORES.VERMELHO}Ocorreu um erro! {self.recursos.CORES.RESET}")
+        print("Ocorreu um erro!")
         print(f"{self.recursos.CORES.VERMELHO}*******************************{self.recursos.CORES.RESET}\n")
         print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]:Detalhes: ",e,"\n*******************************")
         QMessageBox.warning(self.main_window, "Atenção", "Ocorreu um erro no tratamento dos dados. Verifique o console.")

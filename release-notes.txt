@@ -33,6 +33,8 @@
 #       10.1.  adicionado uma placa mercosul que atualiza seu valor conforme seleção do usuário;
 #   11. [OCR] Implementado recurso de identificação de placas via Reconhecimento Óptico de Caracteres(OCR).
 #       O modelo escolhido foi o 'PP-OCRv5' do PaddleOCR - esse recurso é acionado via Button 'CAPTURAR PLACA'.
+#   12. Implementado recurso que ao pesquisar placa no buscador global de placas ou tentar registrar uma 
+#       'ENTRADA' para uma vaga com status 'OCUPADO', a aplicação vai solicitar ao usuario registrar a 'SAIDA'.
 #   
 #       
 #

@@ -57,9 +57,13 @@ class ModelPaddleOCR:
             scores = res["rec_scores"]
             for texto, score in zip(texts, scores):
                 print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: {texto}  (confiança: {score:.2f})")
-                if len(texto) >= 7:
-                    self.placa[0] = texto
-                    self.placa[1] = f"{score:.2f}"
+                if texto.replace('-', '').isalnum() :  # [v1.0.0.03]: verifica se o texto é alfanumérico - o replace é pra tirar o traço pra nao dar erro na validação do isalnum()
+                    if "-" not in texto: # [v1.0.0.03]: verifica se o texto contém um traço, que é comum em placas de veículos
+                        self.placa[0] = f"{texto[:3]}-{texto[3:]}" # [v1.0.0.03]: salva a possível placa identificada com a adição do hífen '-' [P/ PLACAS MERCOSUL]
+                    else:
+                        self.placa[0] = texto # [v1.0.0.03]: salva a possível placa identificada [P/ PLACAS PADRÃO ANTIGO]
+                        
+                    self.placa[1] = f"{score:.2f}" # [v1.0.0.03]: salva a probabilidade para a predição da placa
 
 
 

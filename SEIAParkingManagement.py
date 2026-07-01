@@ -41,7 +41,7 @@ import sys
 import Vaga as vg
 import Sidebar as sb
 import Recursos
-#import ModelPaddleOCR
+import ModelPaddleOCR
 import qdarktheme
 import pymysql
 from colorama import init
@@ -94,7 +94,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
-        #self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
+        self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
 
         
 
@@ -577,6 +577,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.scale(0.85, 0.85)
         #self.delayApresentacao(10.0) # alterna a view de blocos geometricos para edificio com o delay especificado de 10 segundos
         self.alternar_view() # chama de imediato pra chamar a view principal (a que tem o predio do Hauer)
+        self.selecionarVagaPorID(1) # [v1.0.0.03]: seleciona a primeira vaga por padrão
 
         # Ajusta a visão inicial
         #self.fitInView(self.bg, Qt.KeepAspectRatio)
@@ -587,7 +588,7 @@ class SEIAParkingManagement(QGraphicsView):
 
         self.search_box = QComboBox()
         self.search_box.setEditable(True)
-        self.search_box.editTextChanged.connect(self.onCompleterActivated)
+        self.search_box.lineEdit().selectionChanged.connect(self.onCompleterActivated)
         # [v1.0.0.03]: estilos e formatos
         self.search_box.setStyleSheet(self.recursos.ESTILOS.estilo_search_box)
         self.search_box.setFixedWidth(400)
@@ -730,14 +731,14 @@ class SEIAParkingManagement(QGraphicsView):
                     elif tupla[6] == "RESERVA":
                         vaga.setStatus(2) # reserva
                     
-                    vaga.ligar_led() # liga o led pra refletir o estado atual davaga
+                    vaga.ligar_led() # liga o led pra refletir o estado atual da vaga
 
     
     def show_message(self, titulo, texto):
-        msg = QMessageBox(self)                    # importante passar o parent
+        msg = QMessageBox(self)      
         msg.setWindowTitle(titulo)
         msg.setText(texto)
-        msg.setIcon(QMessageBox.Icon.Warning)     # ou Information, Critical...
+        msg.setIcon(QMessageBox.Icon.Warning) 
         # Força não usar diálogo nativo (deve ser antes do exec/show)
         msg.setOption(QMessageBox.Option.DontUseNativeDialog, True)
         msg.exec()   
@@ -891,9 +892,11 @@ class SEIAParkingManagement(QGraphicsView):
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa e modelo selecionados: {text}")
         placa, modelo = text.split(" - ") # [v1.0.0.03]: Extrai a placa e modelo
         self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
-        num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco
-        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga[0][0]}")
-        self.selecionarVagaPorID(num_vaga[0][0]) # [v1.0.0.03]: seleciona a vaga na GUI
+        #num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco
+        registro_with_num_vaga = self.sidebar.getUltimaEntradaRegistroDaVagaByPlaca(placa) # [v1.0.0.03]: obtendo a ultima tupla do registro com ocorrencia dessa placa de carro 
+        num_vaga = registro_with_num_vaga[0][3] # [v1.0.0.03]: pega o numero da placa 
+        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga}")
+        self.selecionarVagaPorID(num_vaga) # [v1.0.0.03]: seleciona a vaga na GUI
         # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
         state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
         if(state_exec): self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
@@ -913,7 +916,7 @@ class SEIAParkingManagement(QGraphicsView):
         if vaga is not None: # [v1.0.0.03]: o codigo dentro desse if é o mesmo presente dentro do metodo mousePressEvent() de Vaga()
             vaga.press_button_status = True
             vaga.checkStatus()
-            vaga.habilitar_sidebar.emit(vaga)
+            vaga.habilitar_sidebar.emit(vaga) # dá um cancel() e atualiza as informações da sidebar e 
             vaga.press_button_status = False
         else:
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Vaga de nº {vaga_id} não encontrada.")
@@ -928,9 +931,9 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def onCompleterActivated(self, text): # [v1.0.0.03]: método complementar para garantir a captura do texto digitado pelo usuário
-        if text != self.search_box.itemText(0) and len(text) >= 7 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder "Selecione uma vaga ..." e o numero 7 é a quantidade de caracteres de uma placa
+        if text != self.search_box.itemText(0) and len(text) >= 15 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder (1º item) e o numero 15 é a quantidade de caracteres minimas de uma 'placa - modelo'
             self.processarVagaBuscada(text)
-
+        #self.search_box.lineEdit().selectAll()
 
 
     def identifyPlaca(self):
@@ -941,14 +944,24 @@ class SEIAParkingManagement(QGraphicsView):
         
         self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
 
-        if self.model_ocr.placa is not None:
+        if self.model_ocr.placa[0] is not None:
+            if self.model_ocr.placa[1] is None:
+                self.model_ocr.placa[1] = 0.0 # [v1.0.0.03]: caso a confiabilidade seja None, define como 0.0 pra evitar erro de conversão
+
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:     PLACA IDENTIFICADA:\n")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:   ___________________________\n")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    PLACA: {self.model_ocr.placa[0]}       |\n")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |\n")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:   ___________________________")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    PLACA: {self.model_ocr.placa[0]}       |")
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |")
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |___________________________|\n")
             
-            QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!")
+            QMessageBox.question(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!\nDeseja buscar essa placa no sistema?")
+            if QMessageBox.StandardButton.Yes:
+                carro = self.sidebar.getCarroByPlaca(self.model_ocr.placa[0]) # [v1.0.0.03]: chama o metodo que busca a placa no banco de dados pra verificar se é uma placa cadastrada no banco ou nao
+                if len(carro) == 0:
+                    QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' não está cadastrada no banco de dados!")
+                else:
+                    self.processarVagaBuscada(self.model_ocr.placa[0]+" - "+"modelo") # [v1.0.0.03]: chama a função que processa a placa - a string "modelo" é apenas porque o metodo processarVagaBuscada() espera receber uma string no formato "PLACA - MODELO". O que importa mesmo é a placa.
+                
         else:
             QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
 
