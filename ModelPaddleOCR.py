@@ -51,19 +51,27 @@ class ModelPaddleOCR:
             use_textline_orientation=False
         )
         result = self.ocr.predict(self.SAVE_PATH)
+        placa_moto = None
         print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: CARACTERES IDENTIFICADOS:\n")
         for res in result:
             texts = res["rec_texts"]
             scores = res["rec_scores"]
             for texto, score in zip(texts, scores):
                 print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: {texto}  (confiança: {score:.2f})")
-                if texto.replace('-', '').isalnum() :  # [v1.0.0.03]: verifica se o texto é alfanumérico - o replace é pra tirar o traço pra nao dar erro na validação do isalnum()
-                    if "-" not in texto: # [v1.0.0.03]: verifica se o texto contém um traço, que é comum em placas de veículos
+                if len(texto) == 3: # [v1.0.0.03]: extrai os 3 primeiros digitos da placa de moto (que não possuem o traço '-')
+                    self.placa[0] = texto
+                elif len(texto) == 4: # [v1.0.0.03]: extrai os 4 últimos digitos da placa de moto
+                    self.placa[0] += f"-{texto}" # [v1.0.0.03]: concatena com os 3 digitos anteriores 
+                elif (len(texto) == 7 or len(texto) == 8) and texto.replace('-', '').isalnum():  # [v1.0.0.03]: verifica se tem a quantidade de caracteres da placa MERCOSUL = depois verifica se tem a quantidade de caracteres da placa ANTIGA - por ultimo verifica se o texto é alfanumérico (o replace é pra tirar o traço pra nao dar erro na validação do isalnum()).
+                    if "-" not in texto: # [v1.0.0.03]: verifica se o texto contém um traço, que é comum em placas de veículos ANTIGAS
                         self.placa[0] = f"{texto[:3]}-{texto[3:]}" # [v1.0.0.03]: salva a possível placa identificada com a adição do hífen '-' [P/ PLACAS MERCOSUL]
                     else:
-                        self.placa[0] = texto # [v1.0.0.03]: salva a possível placa identificada [P/ PLACAS PADRÃO ANTIGO]
+                        self.placa[0] = texto # [v1.0.0.03]: salva a possível placa identificada (P/ PLACAS PADRÃO ANTIGO)
                         
-                    self.placa[1] = f"{score:.2f}" # [v1.0.0.03]: salva a probabilidade para a predição da placa
+                else:
+                    self.placa[0] = f"|PLACA FORA DOS PADRÕES ESPERADOS: '{texto}' |" # [v1.0.0.03]: caso o texto identificado não se encaixe nos padrões de placas, ele é armazenado como uma possível placa inválida
+                
+                self.placa[1] = f"{score:.2f}" # [v1.0.0.03]: salva a probabilidade para a predição da placa
 
 
 

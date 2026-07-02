@@ -167,7 +167,7 @@ class Sidebar(QWidget, QObject):
         self.btn_registrar_entrada = QPushButton("ENTRADA")
         self.btn_registrar_entrada.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_registrar_entrada)
-        self.btn_registrar_entrada.clicked.connect(self.acaoButtonEntrada)
+        self.btn_registrar_entrada.clicked.connect(lambda: self.acaoButtonEntrada(False))
 
         self.btn_registrar_saida = QPushButton("SAIDA") # cria
         self.btn_registrar_saida.setCheckable(True)
@@ -294,7 +294,7 @@ class Sidebar(QWidget, QObject):
 
 
     
-    def acaoButtonEntrada(self, ignoredMessageBox=None): 
+    def acaoButtonEntrada(self, ignoredMessageBox=False): 
         if self.status_vaga.displayText() != "OCUPADA":
             self.transitToFormulario() # animação que empurra pro lado direito as infos
             self.titulo.setText("REGISTRO DE ENTRADA") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
@@ -600,7 +600,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"INSERT INTO Servidor VALUES('{self.cpf}', '{self.nome}', '{self.form1.getResult()}')")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print("Servidor [{self.nome}] registrado com sucesso!")
+            print(f"Servidor [{self.nome}] registrado com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
 
             # [v1.0.0.03]: a partir dessa versão o servidor tem que selecionar o carro no cadastro para linkar o veiculo ao seu cpf
@@ -608,7 +608,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"UPDATE Carro SET proprietario_cpf = '{self.cpf}' WHERE placa = '{placa}'") # [v1.0.0.03]: atualiza o campo proprietario_cpf da tabela carro com o CPF do servidor
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print("Carro [{modelo}] de placa [{placa}] atualizado com CPF [{self.cpf}] do Servidor [{self.nome}] com sucesso!")
+            print(f"Carro [{modelo}] de placa [{placa}] atualizado com CPF [{self.cpf}] do Servidor [{self.nome}] com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
             
             QMessageBox.information(self.main_window, "Sucesso", "Servidor cadastrado com sucesso!")
@@ -770,6 +770,16 @@ class Sidebar(QWidget, QObject):
     def getRegistroByVaga(self, num_vaga): # retorna todas as tuplas do registro onde tenha dados do nº da vaga informada
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE num_vaga='{num_vaga}'")
+        '''SELECT * FROM registro 
+        WHERE num_vaga = '{num_vaga}'
+        AND data_entrada >= CURDATE()          -- Hoje a partir de 00:00:00
+        AND data_entrada < CURDATE() + INTERVAL 1 DAY  -- Até amanhã 00:00:00
+        ORDER BY data_entrada DESC;   -- Recomendado (mais recentes primeiro)'''
+        #    *************
+        #      [CRITICO]
+        #    *************
+        # descomentar o trecho abaixo quando for testar na guarita.
+        #cursor.execute(f"SELECT * FROM registro WHERE num_vaga = '{num_vaga}' AND data_entrada >= CURDATE() AND data_entrada < CURDATE() + INTERVAL 1 DAY ORDER BY data_entrada DESC")
         tuplas_tabela = cursor.fetchall()
         return tuplas_tabela
     
@@ -834,7 +844,7 @@ class Sidebar(QWidget, QObject):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT num_vaga FROM Carro WHERE placa = '{placa}'")
         num_vaga = cursor.fetchall()
-        return num_vaga # retorna apenas o numero da vaga e nao a tupla inteira
+        return num_vaga[0][0] # retorna apenas o numero da vaga e nao a tupla inteira
 
     def updateHistoricoRegistro(self):
         tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
@@ -994,6 +1004,9 @@ class Sidebar(QWidget, QObject):
             writer.write(f)
 
         os.remove("conteudo.pdf") # deleta do diretorio o documento temporario "conteudo.pdf" 
+        print(f"\n{self.recursos.CORES.ROXO}================================{self.recursos.CORES.RESET}")
+        print(f"Relatório gerado com sucesso!\nVeja o arquivo {relatorio_pdf}.")
+        print(f"{self.recursos.CORES.ROXO}================================{self.recursos.CORES.RESET}\n")
         QMessageBox.information(self.main_window, "Sucesso", f"Relatório gerado com sucesso!\nConsulte o arquivo '{relatorio_pdf}'.")
 
     def error_message(self, e):

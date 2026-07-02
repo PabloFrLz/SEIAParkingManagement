@@ -41,7 +41,7 @@ import sys
 import Vaga as vg
 import Sidebar as sb
 import Recursos
-import ModelPaddleOCR
+#import ModelPaddleOCR
 import qdarktheme
 import pymysql
 from colorama import init
@@ -94,7 +94,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
-        self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
+        #self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
 
         
 
@@ -892,9 +892,17 @@ class SEIAParkingManagement(QGraphicsView):
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa e modelo selecionados: {text}")
         placa, modelo = text.split(" - ") # [v1.0.0.03]: Extrai a placa e modelo
         self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
-        #num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco
         registro_with_num_vaga = self.sidebar.getUltimaEntradaRegistroDaVagaByPlaca(placa) # [v1.0.0.03]: obtendo a ultima tupla do registro com ocorrencia dessa placa de carro 
-        num_vaga = registro_with_num_vaga[0][3] # [v1.0.0.03]: pega o numero da placa 
+        if len(registro_with_num_vaga) == 0: # [v1.0.0.03]: caso nao encontre nenhum registro com essa placa
+            reply = QMessageBox.question(self, "Atenção", f"Não foi encontrado no registro nenhuma ocorrência dessa placa de carro '{placa}'.\nDeseja registrar uma entrada para essa placa ?")
+            if reply == QMessageBox.StandardButton.Yes:
+                num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco com a placa
+            else:
+                self.sidebar.vaga_processada = True # [v1.0.0.03]: reseta
+                return # [v1.0.0.03]: retorna sem ação
+        else:
+            num_vaga = registro_with_num_vaga[0][3] # [v1.0.0.03]: pega o numero da placa 
+
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga}")
         self.selecionarVagaPorID(num_vaga) # [v1.0.0.03]: seleciona a vaga na GUI
         # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
@@ -931,8 +939,10 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def onCompleterActivated(self, text): # [v1.0.0.03]: método complementar para garantir a captura do texto digitado pelo usuário
-        if text != self.search_box.itemText(0) and len(text) >= 15 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder (1º item) e o numero 15 é a quantidade de caracteres minimas de uma 'placa - modelo'
+        if text != self.search_box.itemText(0) and len(text) >= 13 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder (1º item) e o numero 15 é a quantidade de caracteres minimas de uma 'placa - modelo'
             self.processarVagaBuscada(text)
+        else:
+            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nenhuma placa foi selecionada ou o texto digitado não é válido (menos de 13 caracteres).")
         #self.search_box.lineEdit().selectAll()
 
 
