@@ -11,6 +11,13 @@ create table if not exists Vaga(
     foreign key (autarquia) references Autarquia(nome) on delete cascade
 );
 
+create table if not exists Servidor(
+    cpf_cnpj CHAR(14) PRIMARY KEY,
+    nome CHAR(100) not null,
+    autarquia CHAR(16) not null,
+    foreign key (autarquia) references Autarquia(nome) on delete cascade
+);
+
 create table if not exists Carro(
     placa CHAR(8) PRIMARY KEY,
     num_vaga INT not null,
@@ -21,13 +28,6 @@ create table if not exists Carro(
     foreign key (num_vaga) references Vaga(num_vaga) on delete cascade,
     foreign key (autarquia) references Autarquia(nome) on delete cascade,
     foreign key (proprietario_cpf) references Servidor(cpf_cnpj) on delete set null
-);
-
-create table if not exists Servidor(
-    cpf_cnpj CHAR(14) PRIMARY KEY,
-    nome CHAR(100) not null,
-    autarquia CHAR(16) not null,
-    foreign key (autarquia) references Autarquia(nome) on delete cascade
 );
 
 create table if not exists Registro(
@@ -53,5 +53,5 @@ create table if not exists Registro(
 
 source C:\Users\Usuario\Documents\SEIAParkingManagement\database\autarquia.sql
 source C:\Users\Usuario\Documents\SEIAParkingManagement\database\vagas.sql
-source C:\Users\Usuario\Documents\SEIAParkingManagement\database\carros2.sql
+-- ...
 
