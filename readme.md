@@ -2,9 +2,11 @@
  # SEIA Parking Management v1.0.0.03
 **Software de Controle de Estacionamento Institucional**  
 Desenvolvido para o Núcleo Administrativo Setorial (NAS), vinculado à Secretaria da Inovação em Inteligência 
-Artificial (SEIA), do estado do Paraná. **Arquivos com dados restritos da Secretaria foram omitidos, atendendo**
-**ao que determina a LGPD.**
-
+Artificial (SEIA), do estado do Paraná. O objetivo era o gerenciamento das entradas e saidas de veículos nas
+dependencias do prédio onde está situado as Secretarias de Estado do Paraná, no bairro Hauer em Curitiba.
+```
+**Arquivos com dados restritos da Secretaria foram omitidos, atendendo ao que determina a LGPD.**
+```
 
  ## Interfaces da Aplicação
 
