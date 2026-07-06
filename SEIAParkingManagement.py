@@ -17,7 +17,7 @@
             |      Dados para acesso ao banco de dados MySQL:                                         |                                                                                   |
             |      Comando: mysql -u "user" -p                                                        |             
             |      user: seia                                                                         |
-            |      Senha: 5452                                                                        |                                                                                 |             
+            |      Senha: 5452  (senha de exemplo - não condiz com a real)                            |                                                                                 |             
             |_________________________________________________________________________________________|
 
 
@@ -51,7 +51,7 @@ ver = "v1.0.0.03" # versão do software
 
 #variaveis de autenticação do banco de dados
 USER = 'root'
-PASSWORD = '5452'
+PASSWORD = '5452' #senha de exemplo - não condiz com a real
 
 global WIDTH, HEIGHT, K, J
 WIDTH = 1300
