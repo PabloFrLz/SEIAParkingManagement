@@ -588,7 +588,9 @@ class SEIAParkingManagement(QGraphicsView):
 
         self.search_box = QComboBox()
         self.search_box.setEditable(True)
-        self.search_box.lineEdit().selectionChanged.connect(self.onCompleterActivated)
+        #self.search_box.lineEdit().textChanged.connect(self.onCompleterActivated)
+        #self.search_box.lineEdit().selectionChanged.connect(self.onCompleterActivated)
+        self.search_box.textActivated.connect(self.onCompleterActivated)
         # [v1.0.0.03]: estilos e formatos
         self.search_box.setStyleSheet(self.recursos.ESTILOS.estilo_search_box)
         self.search_box.setFixedWidth(400)
@@ -939,6 +941,7 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def onCompleterActivated(self, text): # [v1.0.0.03]: método complementar para garantir a captura do texto digitado pelo usuário
+        print('im here ???')
         if text != self.search_box.itemText(0) and len(text) >= 13 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder (1º item) e o numero 15 é a quantidade de caracteres minimas de uma 'placa - modelo'
             self.processarVagaBuscada(text)
         else:

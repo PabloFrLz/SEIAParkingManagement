@@ -525,7 +525,9 @@ class Sidebar(QWidget, QObject):
 
 
     def insertRegistro(self, dados=None):
-        print(f"\n\n ***************** ({self.recursos.CORES.AMARELO} DATABASE INSERT {self.recursos.CORES.RESET}) *****************\n")
+        print(f"\n{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}")
+        print(f"  ***************** ({self.recursos.CORES.AMARELO} {self.titulo.text()} {self.recursos.CORES.RESET}) *****************")
+        print(f"{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}\n")
         num_vaga = self.num_vaga.displayText()
         if dados is not None:
             #obtem os dados direto do banco
