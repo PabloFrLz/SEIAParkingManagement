@@ -894,16 +894,33 @@ class SEIAParkingManagement(QGraphicsView):
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Placa e modelo selecionados: {text}")
         placa, modelo = text.split(" - ") # [v1.0.0.03]: Extrai a placa e modelo
         self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
-        registro_with_num_vaga = self.sidebar.getUltimaEntradaRegistroDaVagaByPlaca(placa) # [v1.0.0.03]: obtendo a ultima tupla do registro com ocorrencia dessa placa de carro 
-        if len(registro_with_num_vaga) == 0: # [v1.0.0.03]: caso nao encontre nenhum registro com essa placa
+        ultimo_registro_para_placa_informada = self.sidebar.getUltimaEntradaRegistroDaVagaByPlaca(placa) # [v1.0.0.03]: obtendo a ultima tupla do registro com ocorrencia dessa placa de carro 
+        if len(ultimo_registro_para_placa_informada) == 0: # [v1.0.0.03]: caso nao encontre nenhum registro com essa placa
             reply = QMessageBox.question(self, "Atenção", f"Não foi encontrado no registro nenhuma ocorrência dessa placa de carro '{placa}'.\nDeseja registrar uma entrada para essa placa ?")
             if reply == QMessageBox.StandardButton.Yes:
-                num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga no banco com a placa
+                num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga vinculado ao carro no banco e insere nesse numero de vaga, independente da vaga selecionada.
             else:
                 self.sidebar.vaga_processada = True # [v1.0.0.03]: reseta
                 return # [v1.0.0.03]: retorna sem ação
         else:
-            num_vaga = registro_with_num_vaga[0][3] # [v1.0.0.03]: pega o numero da placa 
+            # [v1.0.0.03]: caso a ultima entrada do registro dessa placa seja uma ENTRADA, então o 
+            #              carro está no estacionamento e precisa ser registrado uma SAIDA - nesses 
+            #              termos, é preciso pegar o num_vaga onde consta essa pendencia pra atualizar
+            #              nela a SAIDA.
+            num_vaga = ultimo_registro_para_placa_informada[0][3] # [v1.0.0.03]: pega o numero da vaga (num_vaga) da ultima entrada do registro dessa placa de carro
+
+             
+            possui_entrada = self.sidebar.verificaSAIDA(num_vaga) # [v1.0.0.03]: verifica se tem SAIDA pendente na vaga do carro - se tiver, então o carro está dentro do estacionamento e precisa ser registrado uma SAIDA
+            if len(possui_entrada) == 0: # [v1.0.0.03]: não identificou nenhuma SAIDA em pendencia
+                # [v1.0.0.03]: insere na vaga vinculada ao carro, e nao na ultima informada - o guarda tem a opção de inserir 
+                #              carros em vagas diferentes da que o carro está vinculado, caso a ultima ENTRADA seja de uma vaga 
+                #              assim, esse fluxo de codigo obriga a inserir no numero de vaga vinculado e desconsidera o 'num_vaga'
+                #              da ultima ENTRADA do registro.
+                # [v1.0.0.03]: se a ultima entrada do registro dessa placa é uma SAIDA, então o carro está fora do estacionamento 
+                #              e pode ser registrado uma nova ENTRADA.
+                num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: pega o num_vaga vinculado ao carro no banco
+                
+
 
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  Nº da vaga identificado: {num_vaga}")
         self.selecionarVagaPorID(num_vaga) # [v1.0.0.03]: seleciona a vaga na GUI
@@ -941,7 +958,6 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def onCompleterActivated(self, text): # [v1.0.0.03]: método complementar para garantir a captura do texto digitado pelo usuário
-        print('im here ???')
         if text != self.search_box.itemText(0) and len(text) >= 13 and self.sidebar.vaga_processada: # [v1.0.0.03]: ignora o placeholder (1º item) e o numero 15 é a quantidade de caracteres minimas de uma 'placa - modelo'
             self.processarVagaBuscada(text)
         else:

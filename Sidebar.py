@@ -848,6 +848,16 @@ class Sidebar(QWidget, QObject):
         num_vaga = cursor.fetchall()
         return num_vaga[0][0] # retorna apenas o numero da vaga e nao a tupla inteira
 
+
+
+    def verificaSAIDA(self, num_vaga):# [v1.0.0.03]: função para verificar se o carro já possui uma entrada no registro e ainda não possui uma saída registrada, ou seja, se o carro está dentro do estacionamento]
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM registro WHERE num_vaga = '{num_vaga}' AND tipo = 'ENTRADA'")
+        result = cursor.fetchall()
+        return result 
+    
+
+
     def updateHistoricoRegistro(self):
         tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
 
