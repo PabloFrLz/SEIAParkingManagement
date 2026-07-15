@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QLabel, QComboBox, QMessageBox, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QComboBox, QWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 
 import Recursos

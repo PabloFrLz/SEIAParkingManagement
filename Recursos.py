@@ -1,5 +1,3 @@
-from PySide6.QtWidgets import QGraphicsDropShadowEffect
-from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QSequentialAnimationGroup
 from PySide6.QtGui import QBrush, QColor, QFont
 from reportlab.lib import colors
 import os, sys
@@ -102,10 +100,11 @@ class Estilos:
                 opacity: 0.5;
                 }
             """
+        
 
         # estilos de botões 
         self.button_style = f"""
-            QLineEdit, QComboBox {{
+            QLineEdit, QComboBox, QTextEdit {{
                 background-color: #000000;     /* fundo que destoa */
                 color: #ffffff;
                 border: 1px solid #555555;
@@ -308,6 +307,22 @@ class Estilos:
             QCheckBox::indicator:checked {{
                 /* image: url("{self.PATH.togle_switch_on}"); */
 
+            }}
+        """
+
+        self.qtextedit_estilo = f"""
+            QTextEdit{{
+                background-color: #000000;     /* fundo que destoa */
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 8px;            /* bordas arredondadas */
+                padding: 8px 12px;
+                {self.FONTES.fonte_texto_buttons};
+                min-height: 24px;
+            }}
+            QTextEdit:focus {{
+                border: 1px solid #ffaa00;     /* destaque laranja quando focado */
+                background-color: #080808;     /* fundo mais escuro quando focado */
             }}
         """
         self.status_vaga_green = "color: green; font-weight: bold;"

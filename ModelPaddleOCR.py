@@ -1,8 +1,8 @@
 import requests
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image #, ImageEnhance, ImageFilter
 import io
-from paddleocr import PaddleOCR
-import cv2
+#from paddleocr import PaddleOCR
+#import cv2
 import Recursos
 
 class ModelPaddleOCR:

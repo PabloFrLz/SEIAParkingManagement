@@ -1,0 +1,64 @@
+pyside6-android-deploy --name "SEIA Parking Management" \
+  --wheel-pyside=/mnt/c/Users/Usuario/Desktop/SEIA/Android/wheels_for_qt/pyside6-6.11.1-6.11.1-cp311-cp311-android_aarch64.whl \
+  --wheel-shiboken=/mnt/c/Users/Usuario/Desktop/SEIA/Android/wheels_for_qt/shiboken6-6.11.1-6.11.1-cp311-cp311-android_aarch64.whl \
+  --ndk-path=$HOME/.pyside6_android_deploy/android-sdk/ndk/26.1.10909125 \
+  --sdk-path=$HOME/.pyside6_android_deploy/android-sdk \
+  --requirements=python3,shiboken6,PySide6,pymysql,pyqtdarktheme,colorama,pypdf,reportlab,requests,Pillow
+
+*   **   **   **   **   **   **   **   **   **   **   **   **  
+*   _____________________________________________________   *
+*  |    DESCONSIDERAR CODIGO ACIMA E FAZER VIA SCRIPT    |  *
+*  |_____________________________________________________|  *
+*                                                           *
+*   **   **   **   **   **   **   **   **   **   **   **   **
+
+Executar o scrip build_manual.sh na pasta do projeto no wsl Ubuntu
+Recomendado usar ambiente venv com python 3.11.15 e todas as demais dependencias. 
+É preciso conceder permissões extras com:
+    sudo chmod +x build_manual.sh 
+
+
+*   **   **   **   **   **   **   **   **   **   **   **   **  
+*   _____________________________________________________   *
+*  |         INSTALAÇÃO NO DISPOSITIVO ANDROID           |  *
+*  |_____________________________________________________|  *
+*                                                           *
+*   **   **   **   **   **   **   **   **   **   **   **   **
+
+Abrir o PowerShell no diretorio onde esta o adb.exe: 
+    Diretório: C:\Users\Usuario\Downloads\platform-tools
+
+Depois copiar o arquivo.apk do ubuntu para o windows:
+PS C:\Users\Usuario\Downloads\platform-tools> copy \\wsl$\Ubuntu\home\seia\SEIAParkingManagement\SEIAParkingManagement-0.1-arm64-v8a-debug.apk C:\Users\Usuario\Downloads\platform-tools
+
+Verificar se o dispositivo android foi reconhecido (ativar DEPURAÇÃO USB)
+PS C:\Users\Usuario\Downloads\platform-tools> ./adb.exe devices
+List of devices attached
+R9XT3030F9T     device
+
+Instalar o APK (Verifique se o nome do APK está correto pois quando é feito via script o nome final muda):
+PS C:\Users\Usuario\Downloads\platform-tools> .\adb.exe install SEIAParkingManagement-0.1-arm64-v8a-debug.apk
+Performing Streamed Install
+adb.exe: failed to install SEIAParkingManagement-0.1-arm64-v8a-debug.apk: Failure [INSTALL_FAILED_VERIFICATION_FAILURE: Install not allowed for file:///data/app/vmdl834578893.tmp]
+
+Caso dê o erro informado acima, desative a verificação de apps oficiais do android:
+PS C:\Users\Usuario\Downloads\platform-tools> .\adb.exe shell settings put global verifier_verify_adb_installs 0
+
+Instale:
+PS C:\Users\Usuario\Downloads\platform-tools> .\adb.exe install SEIAParkingManagement-0.1-arm64-v8a-debug.apk
+Performing Streamed Install
+Success
+
+
+*   **   **   **   **   **   **   **   **   **   **   **   **  
+*   _____________________________________________________   *
+*  |                      DEBUG                          |  *
+*  |_____________________________________________________|  *
+*                                                           *
+*   **   **   **   **   **   **   **   **   **   **   **   **
+
+Caso dê erros, execute o logcat abaixo e depois abra o app no dispostivo android:
+PS C:\Users\Usuario\Downloads\platform-tools> .\adb.exe logcat -c
+
+Depois salve o log completo do android:
+PS C:\Users\Usuario\Downloads\platform-tools> .\adb.exe logcat -d > log_completo.txt

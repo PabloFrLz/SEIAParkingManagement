@@ -24,18 +24,15 @@
 
 """
 
-
-import threading
-
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
+    QGraphicsProxyWidget, QLabel, QMessageBox, QPushButton
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
-from PySide6.QtCore import qInstallMessageHandler, QtMsgType
+from PySide6.QtCore import qInstallMessageHandler
 import traceback
 import sys
 import Vaga as vg
@@ -557,13 +554,13 @@ class SEIAParkingManagement(QGraphicsView):
         #copyright = QGraphicsTextItem("                                                                                                                                                  © 2026 SEIA Parking Management "+ver+".\n Todos os direitos reservados ao Supervisor Especialista em Governança Digital & Transformação Digital André Luis Costa Batistela - um dos nomes mais proeminentes da Diretoria de Inovação e um dos pilares da Inovação no Estado do Paraná.")
         copyright = QGraphicsTextItem(
             "      © 2026 SEIA Parking Management " + ver + ". Todos os direitos reservados.\n"
-            "               Secretaria de Inovação e Inteligência Artificial (SEIA)\n"
-            "                             Diretoria de Inovação (DIN)\n"
-            "               Desenvolvido por Pablo F. L. (github.com/PabloFrLz)" 
+            "                    Secretaria de Inovação e Inteligência Artificial (SEIA)\n"
+            "                                  Diretoria de Inovação (DIN)\n"
+            "                    Desenvolvido por Pablo F. L. (github.com/PabloFrLz)" 
         )        
         copyright.setFont(self.recursos.FONTES.fonte_copyright)
         copyright.setDefaultTextColor(QColor("gray"))
-        copyright.setPos(WIDTH+230, HEIGHT+J-120)
+        copyright.setPos(WIDTH+230, HEIGHT+J-100)
         copyright.setZValue(10)
         self.scene.addItem(copyright)
 
@@ -683,14 +680,14 @@ class SEIAParkingManagement(QGraphicsView):
         # [PaddleOCR] Identificação da placa via ESP32-S3-CAM WROOM (v1.0.0.03)
         #==============================================================================================
 
-        btn_identify_placa = QPushButton("CAPTURAR\n PLACA?")
-        btn_identify_placa.setCheckable(True)
-        btn_identify_placa.clicked.connect(self.identifyPlaca)
-        btn_identify_placa.setStyleSheet(self.recursos.ESTILOS.button_style_8)
-        btn_identify_placa.setAttribute(Qt.WA_TranslucentBackground)
+        btn_captura_placa = QPushButton("CAPTURAR\n PLACA?")
+        btn_captura_placa.setCheckable(True)
+        btn_captura_placa.clicked.connect(self.capturaPlaca)
+        btn_captura_placa.setStyleSheet(self.recursos.ESTILOS.button_style_8)
+        btn_captura_placa.setAttribute(Qt.WA_TranslucentBackground)
 
         proxy_btn_identify = QGraphicsProxyWidget()
-        proxy_btn_identify.setWidget(btn_identify_placa)
+        proxy_btn_identify.setWidget(btn_captura_placa)
         proxy_btn_identify.setPos((WIDTH+K-240)/1.21, 0)
         proxy_btn_identify.setZValue(999)
         self.scene.addItem(proxy_btn_identify)
@@ -926,7 +923,10 @@ class SEIAParkingManagement(QGraphicsView):
         self.selecionarVagaPorID(num_vaga) # [v1.0.0.03]: seleciona a vaga na GUI
         # [v1.0.0.03]: Chamando manualmente o fluxo de formularios que deveria ser preenchido manualmente - dessa forma, já serão preenchido os dados na açõ do button REGISTRAR ENTRADA, não precisando inserir manualmente 
         state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.03]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
-        if(state_exec): self.sidebar.form2.opcaoSelecionada(text) # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO
+        if(state_exec): self.sidebar.form2.opcaoSelecionada(text) 
+        # [v1.0.0.03]: Define manualmente a opção selecionada pelo usuario - normalmente o metodo "opcaoSelecionada()" 
+        # é chamado automaticamente após o usuário selecionar uma PLACA - MODELO_CARRO. Ao chamar ele explicitamente, 
+        # desencadeia a execução do método enviado anteriormente para form2 em onComplete (sidebar.registroEntrada())
 
 
 
@@ -965,7 +965,7 @@ class SEIAParkingManagement(QGraphicsView):
         #self.search_box.lineEdit().selectAll()
 
 
-    def identifyPlaca(self):
+    def capturaPlaca(self):
         img = self.model_ocr.getImage()
         if img:
             img.show()        # [v1.0.0.03]: abre a imagem

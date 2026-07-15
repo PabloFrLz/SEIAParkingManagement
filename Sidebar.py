@@ -1,5 +1,5 @@
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation, QEasingCurve, QSequentialAnimationGroup
-from PySide6.QtWidgets import QGraphicsDropShadowEffect, QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QVBoxLayout, QPushButton, QStackedWidget
+from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation
+from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QTextEdit, QWidget, QVBoxLayout, QVBoxLayout, QPushButton
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator, QColor
 
 from pymysql import Error
@@ -8,8 +8,6 @@ from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
 import os
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
 from reportlab.lib.units import mm
 
 import Formulario, Recursos # classes próprias da aplicação
@@ -77,9 +75,9 @@ class Sidebar(QWidget, QObject):
         self.num_vaga = QLineEdit("-")
         self.orgao_vinculado = QLineEdit("-")
         self.orgao_vinculado.setStyleSheet(self.recursos.CORES.cor_orgao_vinculado_box) #definindo cor pro nome do orgao
-        self.modelo_carro = QLineEdit("-")
+        self.modelo_carro = QTextEdit("-") # esse objeto será QTextEdit pra mostrar nomes maiores.
         self.placa_carro = QLineEdit("-")
-        self.nome_servidor = QLineEdit("-")
+        self.nome_servidor = QTextEdit("-") # esse objeto será QTextEdit pra mostrar nomes maiores.
         self.status_vaga = QLineEdit("-")
         # [v1.0.0.03]: inserindo todos os objetos numa lista pra melhor manipulação posterior
         self.lista_info_fields_interface = [self.num_vaga, self.orgao_vinculado, self.modelo_carro, self.placa_carro, self.nome_servidor, self.status_vaga, None]
@@ -90,6 +88,9 @@ class Sidebar(QWidget, QObject):
         self.placa_carro.setReadOnly(True)
         self.nome_servidor.setReadOnly(True)
         self.status_vaga.setReadOnly(True)
+
+        self.modelo_carro.setMaximumHeight(60) # equivalente a 1,5 ou 2,5 linhas com a largura fixa do QTextEdit
+        self.nome_servidor.setMaximumHeight(80) # equivalente a 2 ou 3 linhas com a largura fixa do QTextEdit
 
         #======================================
         # tabela de registro da sidebar
@@ -548,7 +549,7 @@ class Sidebar(QWidget, QObject):
             #obtem os dados apartir dos formularios de ENTRADA
             tipo = "ENTRADA"
             sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_entrada, tipo) VALUES (%s, %s, %s, NOW(), %s)"
-            placa, modelo = self.placa_carro.displayText(), self.modelo_carro.displayText()
+            placa, modelo = self.placa_carro.displayText(), self.modelo_carro.toPlainText()
             cpf_cnpj = self.getCPFbyPlaca(placa)
             #servidor = self.getServidorByCPF(cpf_cnpj)
             #nome_servidor = servidor[0][1]
