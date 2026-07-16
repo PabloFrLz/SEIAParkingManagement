@@ -50,9 +50,15 @@ ver = "v1.0.0.03" # versão do software
 USER = 'root'
 PASSWORD = '5452' #senha de exemplo - não condiz com a real
 
+# _______________________________________
+#                                        |
+SCALE_APP = 0.70 # ESCALA DA APLICAÇÃO   |
+#________________________________________|
+
+
 global WIDTH, HEIGHT, K, J
 WIDTH = 1300
-HEIGHT = 860
+HEIGHT = 990
 K = 400 #variavel de ajuste para expansão da propriedade na HORIZONTAL 
 J = 530 ##variavel de ajuste para expansão da propriedade na VERTICAL 
 D = 30 #variavel de deslocamento dos carros na horizontal
@@ -560,7 +566,7 @@ class SEIAParkingManagement(QGraphicsView):
         )        
         copyright.setFont(self.recursos.FONTES.fonte_copyright)
         copyright.setDefaultTextColor(QColor("gray"))
-        copyright.setPos(WIDTH+230, HEIGHT+J-100)
+        copyright.setPos(WIDTH+230, HEIGHT+320)
         copyright.setZValue(10)
         self.scene.addItem(copyright)
 
@@ -571,13 +577,12 @@ class SEIAParkingManagement(QGraphicsView):
         proxy.setWidget(self.sidebar)
         proxy.setPos(POS_X_SIDEBAR, 0)
         self.scene.addItem(proxy) # insere a sidebar no cenário
-        self.scale(0.85, 0.85)
         #self.delayApresentacao(10.0) # alterna a view de blocos geometricos para edificio com o delay especificado de 10 segundos
         self.alternar_view() # chama de imediato pra chamar a view principal (a que tem o predio do Hauer)
         self.selecionarVagaPorID(1) # [v1.0.0.03]: seleciona a primeira vaga por padrão
 
         # Ajusta a visão inicial
-        #self.fitInView(self.bg, Qt.KeepAspectRatio)
+        #self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
 
         #==============================================================================================
         # Caixa de busca de placas (v1.0.0.03)
@@ -587,7 +592,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.search_box.setEditable(True)
         #self.search_box.lineEdit().textChanged.connect(self.onCompleterActivated)
         #self.search_box.lineEdit().selectionChanged.connect(self.onCompleterActivated)
-        self.search_box.textActivated.connect(self.onCompleterActivated)
+        #self.search_box.textActivated.connect(self.onCompleterActivated)
         # [v1.0.0.03]: estilos e formatos
         self.search_box.setStyleSheet(self.recursos.ESTILOS.estilo_search_box)
         self.search_box.setFixedWidth(400)
@@ -607,6 +612,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.completer.setFilterMode(Qt.MatchContains)   # [v1.0.0.03]: busca em qualquer parte
         self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
         self.completer.activated.connect(self.onCompleterActivated)
+
         
         # [v1.0.0.03]: proxy pra determinar a posição do elemento na interface
         proxy_search = QGraphicsProxyWidget()
@@ -616,6 +622,14 @@ class SEIAParkingManagement(QGraphicsView):
         self.scene.addItem(proxy_search)
 
 
+        # [v1.0.0.03]: setando a posição manualmente do popup do QCompleter pra ver se soluciona o problema da janela deslizante nascer em posição errada
+        viewport_pos = self.mapFromScene(proxy_search.pos())
+        #viewport_pos.setX(viewport_pos.x() - 200) # move ele 200px pra esquerda
+        global_pos = self.viewport().mapToGlobal(viewport_pos)
+
+        self.popup = self.completer.popup() 
+        self.popup.move(global_pos)
+        self.popup.show()
 
 
 
@@ -691,6 +705,8 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_btn_identify.setPos((WIDTH+K-240)/1.21, 0)
         proxy_btn_identify.setZValue(999)
         self.scene.addItem(proxy_btn_identify)
+
+
 
 
 
@@ -983,8 +999,8 @@ class SEIAParkingManagement(QGraphicsView):
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |")
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |___________________________|\n")
             
-            QMessageBox.question(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!\nDeseja buscar essa placa no sistema?")
-            if QMessageBox.StandardButton.Yes:
+            resposta = QMessageBox.question(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!\nDeseja buscar essa placa no sistema?")
+            if resposta == QMessageBox.StandardButton.Yes:
                 carro = self.sidebar.getCarroByPlaca(self.model_ocr.placa[0]) # [v1.0.0.03]: chama o metodo que busca a placa no banco de dados pra verificar se é uma placa cadastrada no banco ou nao
                 if len(carro) == 0:
                     QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' não está cadastrada no banco de dados!")
@@ -1008,10 +1024,12 @@ app.setStyleSheet(
     }
     """
 ) # [v1.0.0.03]: adaptado pra estilizar a Qtooltip dos objetos Vaga()
-viewer = SEIAParkingManagement()
+viewer = SEIAParkingManagement() 
 viewer.setWindowTitle("SEIA Parking Management - "+ver)
-viewer.setFixedSize(WIDTH+K-240, HEIGHT+150)
-viewer.scale(0.85, 0.85)
+viewer.setFixedSize(WIDTH+K-240, HEIGHT)
+viewer.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # remove a scrollbar vertical que ficava descendo pra uma região da aplicação que nao deveria ser mostrada
+viewer.setDragMode(QGraphicsView.NoDrag) # impede que o usuário consiga arrastar a cena
+viewer.scale(SCALE_APP, SCALE_APP)
 viewer.show()
 sys.exit(app.exec())
 
