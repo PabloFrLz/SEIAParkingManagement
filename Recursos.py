@@ -413,6 +413,13 @@ class Recursos:   # [v1.0.0.03]: classe principal que instancia as outras - cria
         self.CONST = Constantes() # [v1.0.0.03]: instancia as contantes da aplicação como dimensões em pixels dos objetos
         #self.main_window = main_window 
 
+        #    ___________________________________________________________________________
+        #   |                                                                           |        
+        #   |           VARIAVEIS AUXILIARES PARA OBTER CONTEXTO DOS PROXYS             |                      
+        #   |___________________________________________________________________________|
+
+        self.proxy_form_ref = None
+
     '''def getMainWindow(self):
         return self.main_window # [v1.0.0.03]: retorna a referencia pra janela principal da aplicação'''
     

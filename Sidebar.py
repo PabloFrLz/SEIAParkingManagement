@@ -10,7 +10,7 @@ import os
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import mm
 
-import Formulario, Recursos # classes próprias da aplicação
+import Formulario # classes próprias da aplicação
 
 class Sidebar(QWidget, QObject):
     
@@ -25,8 +25,8 @@ class Sidebar(QWidget, QObject):
         #======================================
         # Vars
         #======================================
-        self.recursos = Recursos.Recursos()
-        self.main_window = janela_principal
+        self.main_window = janela_principal # [v1.0.0.03]: janela_principal faz referencia a SEIAParkingManagement, a classe de mais alto nivel
+        self.recursos = self.main_window.recursos # [v1.0.0.03]: obtem a instancia da classe recursos
         self.conn = janela_principal.conn
         self.scene = janela_principal.scene
         self.check = [None, None, None, None, None]
@@ -378,9 +378,10 @@ class Sidebar(QWidget, QObject):
             cursor = self.conn.cursor()
             cursor.execute(consulta)
             resultado_pesquisa = cursor.fetchall()
-            form = Formulario.Formulario(texto, resultado_pesquisa, self.categoria, onComplete=func) 
+            form = Formulario.Formulario(self.main_window, texto, resultado_pesquisa, self.categoria, onComplete=func) 
             object_proxy = self.insertOnGUI(form, 25)#inserção na GUI
             self.garbage_collector.append(object_proxy)
+            self.recursos.proxy_form_ref = object_proxy # [v1.0.0.03]: pega uma referencia ao proxy do objeto do formulario pra corrigir um problema de posicionamento no QCompleter dos Formularios
             return form
         except Error as e:
             self.error_message(e)  
@@ -527,7 +528,7 @@ class Sidebar(QWidget, QObject):
 
     def insertRegistro(self, dados=None):
         print(f"\n{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}")
-        print(f"  ***************** ({self.recursos.CORES.AMARELO} {self.titulo.text()} {self.recursos.CORES.RESET}) *****************")
+        print(f"  ***************** ({self.recursos.CORES.CIANO} {self.titulo.text()} {self.recursos.CORES.RESET}) *****************")
         print(f"{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}\n")
         num_vaga = self.num_vaga.displayText()
         if dados is not None:
@@ -677,6 +678,9 @@ class Sidebar(QWidget, QObject):
         formularios = [self.form1, self.form2, self.form3] 
         for form in formularios:
             if form is not None and isValid(form):
+                popup = form.combo.completer().popup()
+                popup.setParent(None)          # devolve a "posse" antes de destruir
+                popup.hide()
                 form.deleteLater()
                 form = None
 
@@ -773,19 +777,21 @@ class Sidebar(QWidget, QObject):
     def getRegistroByVaga(self, num_vaga): # retorna todas as tuplas do registro onde tenha dados do nº da vaga informada
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE num_vaga='{num_vaga}'")
-        '''SELECT * FROM registro 
-        WHERE num_vaga = '{num_vaga}'
-        AND data_entrada >= CURDATE()          -- Hoje a partir de 00:00:00
-        AND data_entrada < CURDATE() + INTERVAL 1 DAY  -- Até amanhã 00:00:00
-        ORDER BY data_entrada DESC;   -- Recomendado (mais recentes primeiro)'''
-        #    *************
-        #      [CRITICO]
-        #    *************
-        # descomentar o trecho abaixo quando for testar na guarita.
-        #cursor.execute(f"SELECT * FROM registro WHERE num_vaga = '{num_vaga}' AND data_entrada >= CURDATE() AND data_entrada < CURDATE() + INTERVAL 1 DAY ORDER BY data_entrada DESC")
         tuplas_tabela = cursor.fetchall()
         return tuplas_tabela
     
+
+    def getRegistroByVagaAtDay(self, num_vaga): # [v1.0.0.03]: retorna todas as tuplas do registro onde tenha dados do nº da vaga informada só que apenas do dia informado pra evitar quebrar o objeto QTableWidget
+        '''SELECT * FROM registro 
+        WHERE num_vaga = '{num_vaga}'
+        AND data_entrada >= CURDATE()                   -- Hoje a partir de 00:00:00
+        AND data_entrada < CURDATE() + INTERVAL 1 DAY   -- Até amanhã 00:00:00
+        ORDER BY data_entrada DESC;                     -- (mais recentes primeiro)
+        '''
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM registro WHERE num_vaga = '{num_vaga}' AND data_entrada >= CURDATE() AND data_entrada < CURDATE() + INTERVAL 1 DAY ORDER BY data_entrada DESC")
+        tuplas_tabela = cursor.fetchall()
+        return tuplas_tabela
 
 
     def getAllFromRegistro(self): # retorna todas as tuplas do registro onde tenha dados do nº da vaga informada
@@ -859,9 +865,8 @@ class Sidebar(QWidget, QObject):
     
 
 
-    def updateHistoricoRegistro(self):
-        tuplas_tabela = self.getRegistroByVaga(self.num_vaga.displayText())
-
+    def updateHistoricoRegistro(self): # Função que mostra um preview de entradas no registro para a vaga selecionada
+        tuplas_tabela = self.getRegistroByVagaAtDay(self.num_vaga.displayText()) # [v1.0.0.03]: retorna apenas os registros do dia
         linha = 0
         self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤷)", "Data/Hora(⤶)", "CPF/CNPJ"])
         for tupla in tuplas_tabela:

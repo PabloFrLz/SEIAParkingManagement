@@ -1,7 +1,7 @@
 import requests
 from PIL import Image #, ImageEnhance, ImageFilter
 import io
-#from paddleocr import PaddleOCR
+from paddleocr import PaddleOCR
 #import cv2
 import Recursos
 
@@ -51,7 +51,7 @@ class ModelPaddleOCR:
             use_textline_orientation=False
         )
         result = self.ocr.predict(self.SAVE_PATH)
-        placa_moto = None
+
         print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: CARACTERES IDENTIFICADOS:\n")
         for res in result:
             texts = res["rec_texts"]

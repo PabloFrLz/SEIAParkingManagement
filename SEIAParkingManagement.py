@@ -38,7 +38,7 @@ import sys
 import Vaga as vg
 import Sidebar as sb
 import Recursos
-#import ModelPaddleOCR
+import ModelPaddleOCR
 import qdarktheme
 import pymysql
 from colorama import init
@@ -97,7 +97,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
-        #self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
+        self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
 
         
 

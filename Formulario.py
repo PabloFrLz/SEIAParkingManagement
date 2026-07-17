@@ -2,13 +2,13 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QLabel, QComboBox, QWidget, QVBoxLayout
 from PySide6.QtCore import Qt
 
-import Recursos
 
 class Formulario(QWidget):
 
-    def __init__(self, texto, items, categoria, onComplete=None):
+    def __init__(self, janela_principal, texto, items, categoria, onComplete=None):
         super().__init__()
-        self.recursos = Recursos.Recursos()
+        self.main_window = janela_principal # [v1.0.0.03]: janela_principal faz referencia a SEIAParkingManagement, a classe de mais alto nivel
+        self.recursos = self.main_window.recursos # [v1.0.0.03]: obtem a instancia da classe recursos
         self.onComplete = onComplete
         self.result_to_return = None # variável para armazenar o resultado a ser retornado
         self.select = QVBoxLayout()
@@ -40,12 +40,13 @@ class Formulario(QWidget):
         #completer.setCompletionMode(QtWidgets.QCompleter.UnfilteredPopupCompletion)
         
         
-        # Solução mais curta e que resolve na maioria dos casos difíceis:
         popup = self.completer.popup()
-        popup.setParent(self.combo.window())        # ← linha principal
-        popup.setWindowFlags(Qt.Popup)
+        '''popup.setParent(self.combo.window())        # ← linha principal
+        popup.setWindowFlags(Qt.Popup)'''
+        
+        
 
-        self.combo.lineEdit().textEdited.connect(lambda: self.show_completer_popup(self.completer))
+        self.combo.lineEdit().textEdited.connect(lambda: self.fix_pos_popup(popup))
         self.select.addWidget(self.combo)
         
         self.combo.activated.connect(lambda: self.opcaoSelecionada(self.combo.currentText())) # conecta signal pra capturar escolha do usuario 
@@ -74,11 +75,21 @@ class Formulario(QWidget):
     def getCoordY(self):
         return self.y()
 
-    def show_completer_popup(self, completer):
+    '''def fix_pos_popup(self):
         # Rect que define onde o popup deve aparecer (abaixo do combo)
-        rect = self.combo.rect()
+        rect = self.combo.rect() # QRect é um objeto que possui as coord. xy e a altura e largura do objeto (x, y, width, height)
         rect.setTop(rect.bottom() + 2)   # força aparecer logo abaixo
-        completer.complete(rect)         # ← Isso é o que realmente controla a posição
+        self.completer.complete(rect)         # atualiza o objeto completer
+        self.combo.setFocus()
+    '''
+
+    def fix_pos_popup(self, popup): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
+        if not popup.isVisible():
+            return  # nada pra reposicionar se a lista não esta aberta
+        
+        viewport_pos = self.main_window.mapFromScene(self.recursos.proxy_form_ref.pos())
+        global_pos = self.main_window.viewport().mapToGlobal(viewport_pos) 
+        popup.move(global_pos)
         self.combo.setFocus()
     
     
