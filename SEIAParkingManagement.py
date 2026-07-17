@@ -119,7 +119,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.pixmap_edificios = QPixmap(self.recursos.PATH.edificio_hauer) # imagem do edificio do prédio Hauer da SEIA
         self.bg3 = QGraphicsPixmapItem(self.pixmap_edificios)
         self.bg3.setOpacity(0.01) 
-        self.bg3.setPos(WIDTH/11, HEIGHT/5.5) 
+        self.bg3.setPos(WIDTH/12, HEIGHT/6.2) 
         self.bg3.setZValue(999) # coloca proximo do topo da pilha de renderização
         self.scene.addItem(self.bg3)
     
@@ -613,23 +613,21 @@ class SEIAParkingManagement(QGraphicsView):
         self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
         self.completer.activated.connect(self.onCompleterActivated)
 
+        self.completer.popup().setStyleSheet(self.recursos.ESTILOS.estilo_search_box) # [v1.0.0.03]: aplica o mesmo estilo do QcomboBox no QCompleter
+
+
+        # NOVO: reposiciona o popup toda vez que o texto mudar (a cada tecla)
+        self.search_box.lineEdit().textEdited.connect(
+            lambda: QTimer.singleShot(0, self.reposicionar_popup_completer)
+        )
+
         
         # [v1.0.0.03]: proxy pra determinar a posição do elemento na interface
-        proxy_search = QGraphicsProxyWidget()
-        proxy_search.setWidget(self.search_box)
-        proxy_search.setPos((WIDTH+K-240)/2.5, 0)  # [v1.0.0.03]: Ajuste as coordenadas conforme necessário
-        proxy_search.setZValue(999) # [v1.0.0.03]: necessario pra janela das palcas se sobrepor ao predio do Hauer e carros
-        self.scene.addItem(proxy_search)
-
-
-        # [v1.0.0.03]: setando a posição manualmente do popup do QCompleter pra ver se soluciona o problema da janela deslizante nascer em posição errada
-        viewport_pos = self.mapFromScene(proxy_search.pos())
-        #viewport_pos.setX(viewport_pos.x() - 200) # move ele 200px pra esquerda
-        global_pos = self.viewport().mapToGlobal(viewport_pos)
-
-        self.popup = self.completer.popup() 
-        self.popup.move(global_pos)
-        self.popup.show()
+        self.proxy_search = QGraphicsProxyWidget()
+        self.proxy_search.setWidget(self.search_box)
+        self.proxy_search.setPos((WIDTH+K-240)/2.5, 0)  # [v1.0.0.03]: Ajuste as coordenadas conforme necessário
+        self.proxy_search.setZValue(999) # [v1.0.0.03]: necessario pra janela das palcas se sobrepor ao predio do Hauer e carros
+        self.scene.addItem(self.proxy_search)
 
 
 
@@ -1009,6 +1007,21 @@ class SEIAParkingManagement(QGraphicsView):
                 
         else:
             QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
+    
+
+    def reposicionar_popup_completer(self): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
+        popup = self.completer.popup()
+        if not popup.isVisible():
+            return  # nada pra reposicionar se a lista não esta aberta
+        
+        viewport_pos = self.mapFromScene(self.proxy_search.pos())
+        global_pos = self.viewport().mapToGlobal(viewport_pos)
+        global_pos.setY(global_pos.y() + 36) # necessario ter esse deslocamento de 50px pra baixo pois a janela do completer aparece em cima da QComboBox
+        popup.move(global_pos)
+               
+
+
+
 
 app = QApplication(sys.argv)
 app.setStyleSheet(
@@ -1028,8 +1041,8 @@ viewer = SEIAParkingManagement()
 viewer.setWindowTitle("SEIA Parking Management - "+ver)
 viewer.setFixedSize(WIDTH+K-240, HEIGHT)
 viewer.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # remove a scrollbar vertical que ficava descendo pra uma região da aplicação que nao deveria ser mostrada
-viewer.setDragMode(QGraphicsView.NoDrag) # impede que o usuário consiga arrastar a cena
 viewer.scale(SCALE_APP, SCALE_APP)
+viewer.setDragMode(QGraphicsView.NoDrag) # impede que o usuário consiga arrastar a cena
 viewer.show()
 sys.exit(app.exec())
 
