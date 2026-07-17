@@ -393,6 +393,8 @@ class Paths:
             self.resource_path("imagens/3-arrows.png")
         ]
 
+        self.img_banner_ip_esp = self.resource_path("imagens/BANNER-LEITURA-IP.png")
+
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:
             base_path = sys._MEIPASS

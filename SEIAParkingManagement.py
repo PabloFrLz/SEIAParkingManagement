@@ -28,7 +28,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QLabel, QMessageBox, QPushButton
+    QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 )
 from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
@@ -704,9 +704,9 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_btn_identify.setZValue(999)
         self.scene.addItem(proxy_btn_identify)
 
-
-
-
+        #adicionando caixa de leitura de texto pra ler o IP do ESP32-S3-CAM Wroom pois o mDNS do ESP nao é muito estável
+        
+        
 
     
     """
@@ -1009,6 +1009,7 @@ class SEIAParkingManagement(QGraphicsView):
             QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
     
 
+
     def reposicionar_popup_completer(self): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
         popup = self.completer.popup()
         if not popup.isVisible():
@@ -1018,8 +1019,39 @@ class SEIAParkingManagement(QGraphicsView):
         global_pos = self.viewport().mapToGlobal(viewport_pos)
         global_pos.setY(global_pos.y() + 36) # necessario ter esse deslocamento de 50px pra baixo pois a janela do completer aparece em cima da QComboBox
         popup.move(global_pos)
-               
 
+
+
+    def FormularioLeituraDados(self, pergunta, instrucao_in_box, regex_validacao, func): # [v1.0.0.03]: metodo pra ler nomes e etc
+        container = QWidget()
+        label = QLabel(container)
+        label.setPixmap(self.recursos.PATH.img_banner_ip_esp)
+        line_edit = QLineEdit()
+        line_edit.setFont(self.recursos.FONTES.fonte_texto_pergunta)
+        line_edit.setValidator(regex_validacao) # cria restrição para a entrada ser apenas letras maiusculas, minusculas e espaços
+        line_edit.setPlaceholderText(instrucao_in_box)
+        line_edit.setContentsMargins(5,0,0,0) # remove margens adicionais
+        btn_confirmar = QPushButton("OK")
+        btn_confirmar.setFixedHeight(self.recursos.CONST.LARGURA_FORMULARIO_BUTTON)
+        btn_confirmar.clicked.connect(lambda: self.sidebar.capturar_nome_cpf(line_edit, func)) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
+        layout = QStackedWidget(container) # conteiner vertical pro nome da pergunta ficar acima da caixa/box de leitura de nome
+        #layout_2 = QHBoxLayout() # conteiner horizontal pro button ficar de lado nesses tipos de formulario que requisitam entrada
+        layout.addWidget(label) # insere a imagem de fundo
+        #layout_2.addWidget(line_edit) # insere a caixa de leitura de texto à esquerda
+        #layout_2.addWidget(btn_confirmar, stretch=0.2) # insere o botão 'OK' comprimido ao lado da caixa de leitura de texto
+        layout.addLayout(layout_2) # insere a box de leitura + botão
+        
+        object_proxy = self.insertOnGUI(container, 30)
+        container.setStyleSheet(self.recursos.ESTILOS.button_style) # define o estilo 
+        container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
+        # para destruir os itens posteriormente em cancel()
+        self.garbage_collector.append(container)
+        self.garbage_collector.append(label)
+        self.garbage_collector.append(line_edit)
+        self.garbage_collector.append(btn_confirmar)
+        self.garbage_collector.append(layout)
+        self.garbage_collector.append(layout_2)
+        self.garbage_collector.append(object_proxy)
 
 
 
