@@ -75,14 +75,6 @@ class Formulario(QWidget):
     def getCoordY(self):
         return self.y()
 
-    '''def fix_pos_popup(self):
-        # Rect que define onde o popup deve aparecer (abaixo do combo)
-        rect = self.combo.rect() # QRect é um objeto que possui as coord. xy e a altura e largura do objeto (x, y, width, height)
-        rect.setTop(rect.bottom() + 2)   # força aparecer logo abaixo
-        self.completer.complete(rect)         # atualiza o objeto completer
-        self.combo.setFocus()
-    '''
-
     def fix_pos_popup(self, popup): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
         if not popup.isVisible():
             return  # nada pra reposicionar se a lista não esta aberta

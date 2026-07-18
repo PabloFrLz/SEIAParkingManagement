@@ -34,6 +34,7 @@ pip install reportlab
 	• Modificar as variaveis globais USER e PASSWORD do arquivo SEIAParkingManagement.py 
 	  com as credenciais do seu banco de dados;
  	• Entrar no banco via cmd e executar os códigos:
+
 ```bash
 source C:(caminho_para_projeto)\SEIAParkingManagement\database\seia_parking.sql
 source C:(caminho_para_projeto)\SEIAParkingManagement\database\autarquia.sql
@@ -48,20 +49,35 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
 
 
  ## PREDIÇÃO DE PLACAS (OCR):
+
+![Tela do sistema 5](interface_da_aplicacao/img5.png)
+
 Para predição de placas, foi usado a biblioteca PaddleOCR v3.3.3 e PaddlePaddle v3.2.0.
 O modelo de visão computacional usado é o **PP-OCRv5_server**. O modelo se saiu muito 
 bem nos testes, principalmente quando a resolução da imagem era pequena, como 320x240p.
+
 ```bash
 pip install requests
 pip install pillow
 python312 -m pip install paddlepaddle==3.2.0 paddleocr==3.3.3
 ```	 
-A captura da imagem das placas se deu com a placa ESP32-S3-CAM Wroom em conjunto com a
+
+A captura da imagem das placas é feita com a placa ESP32-S3-CAM Wroom em conjunto com a
 câmera OV5640 de 5MP. Foi utilizado o CameraWebServer da própria biblioteca **'ESP32 by** 
 **Espressif System'** do Arduino IDE para fazer as capturas. 
+É preciso ler manualmente o endereço IP do servidor do ESP32-S3-CAM Wroom ao iniciar a
+aplicação. Caso não leia um endereço, o endereço padrão será o ```http://esp32cam.local/capture```.
+Para escutar no endereço padrão, é preciso implementar o mDNS do ESP32 que nao vem implementado
+no exemplo do CameraWebServer do ArduinoIDE. Mas será disponibilizado no repositório a
+pasta CameraWebServer, que terá o código para ser gravado no ESP32 que já vem com mDNS 
+implementado.
 
-![Tela do sistema 5](interface_da_aplicacao/img5.png)
+
+![Tela do sistema 6](interface_da_aplicacao/img6.png)
  
+```
+**NOTA: mDNS do ESP32 é instável em redes corporativas com proxy. Recomenda-se ler o endereço IP nesse cenário**
+```
 
  ## CONFIGURAÇÕES COMPLEMENTARES:
 ```bash

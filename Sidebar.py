@@ -643,8 +643,6 @@ class Sidebar(QWidget, QObject):
         #inserção na GUI
         proxy = QGraphicsProxyWidget()
         proxy.setWidget(object)
-        #self.eixo_y_form += 90 + deslocamento_mais_profundo
-        #proxy.setPos(self.POS_X_SIDEBAR + self.eixo_x_form, self.eixo_y_form)
         self.coord_last_widget[1] += 75 + deslocamento_mais_profundo
         proxy.setPos(self.coord_last_widget[0], self.coord_last_widget[1])
         self.scene.addItem(proxy)
@@ -678,9 +676,6 @@ class Sidebar(QWidget, QObject):
         formularios = [self.form1, self.form2, self.form3] 
         for form in formularios:
             if form is not None and isValid(form):
-                popup = form.combo.completer().popup()
-                popup.setParent(None)          # devolve a "posse" antes de destruir
-                popup.hide()
                 form.deleteLater()
                 form = None
 
@@ -690,14 +685,6 @@ class Sidebar(QWidget, QObject):
             if btn is not None and isValid(btn):
                 btn.deleteLater()
                 btn = None
-
-        #destruindo a logomarca e o texto titulo
-        
-        '''
-        if self.titulo is not None and isValid(self.titulo):
-            self.titulo.deleteLater()
-            self.titulo = None
-        '''
         
         # destruindo os formularios de leitura pra cadastro de servidor
         if self.garbage_collector is not None:
@@ -712,16 +699,7 @@ class Sidebar(QWidget, QObject):
         if param1 is not None:
             self.atualizar_info(self.sentinel)
 
-        #self.ctrl_forms_visitante = False # [v1.0.0.03]: reseta a variavel de controle do formulario de visitante
-
-        '''
-        for btn in self.list_buttons:
-            btn.setCheckable(False) # desabilita o efeito de checked do CSS 
-            btn.setCheckable(True) # habilita novamente pra habilitar o efeito pra futuras interações do usuário.
-        '''
-
         self.titulo.setText("DESCRIÇÃO") # [v1.0.0.03]: Altera o nome de volta pro titulo inicial
-
         self.coord_last_widget[1] = self.CONST_DESLOCAMENTO # [v1.0.0.03]: variavel que desloca verticalmente os formularios
 
         for i in range(len(self.check)):
@@ -744,11 +722,6 @@ class Sidebar(QWidget, QObject):
         cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.proprietario_cpf IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')")
         carros_disponiveis = cursor.fetchall()
         return carros_disponiveis
-
-        '''if len(result) == 0:
-            return [False, result] # não há frota disponível
-        else:
-            return [True, result]'''
         
 
     

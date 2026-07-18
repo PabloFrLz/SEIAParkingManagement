@@ -11,6 +11,8 @@ class ModelPaddleOCR:
         self.recursos = Recursos.Recursos()
         #url = "http://esp32cam.local/capture"   # insira o IP do servidor do ESP32
         self.url = "http://esp32cam.local/capture" # [v1.0.0.03]: URL onde o ESP32-S3-CAM WROOM conversa com a aplicação - o '/capture' força ele salvar o frame atual (bater uma foto)
+        # mDNS do ESP32 se mostrou instável em redes corporativas com proxy
+        # portanto, foi adicionado recurso que lê do usuário o IP do servidor do ESP32 que é mais estável
         self.SAVE_PATH = "img_placas/placa.png" # [v1.0.0.03]: Diretório de armazenamento da imagem
         self.placa = [None, None] # [v1.0.0.03]: Armazena o número da placa e o percentual de confiança na predição (o quão confiante o modelo acredita estar)
         self.ocr = None # [v1.0.0.03]: Modelo usado para OCR (Reconhecimento Óptico de Caracter)    
@@ -18,8 +20,6 @@ class ModelPaddleOCR:
 
 
     def getImage(self, save_path='placa.png'):
-        #url = "http://esp32cam.local/capture"   # insira o IP do servidor do ESP32
-        #url = "http://192.168.0.109/capture"
         
         response = requests.get(self.url, timeout=10)
         

@@ -11,7 +11,7 @@
     Director: Thiago Rodrigo da Silva (Thiago Marcelino)
     Version: 1.0.0.03
     Start: 31/03/2026 - 08:16PM
-    End: 21/06/2026 - 20:52PM
+    End: 18/07/2026 - 15:42PM
     Notas:
         1.   _________________________________________________________________________________________
             |      Dados para acesso ao banco de dados MySQL:                                         |                                                                                   |
@@ -30,11 +30,13 @@ from PySide6.QtWidgets import (
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
     QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 )
-from PySide6.QtGui import QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
+from PySide6.QtGui import QIntValidator, QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
 from PySide6.QtCore import qInstallMessageHandler
 import traceback
 import sys
+
+from shiboken6 import isValid
 import Vaga as vg
 import Sidebar as sb
 import Recursos
@@ -98,7 +100,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
         self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
-
+        self.ip_server_esp32 = [] # variavel pra armazenar o IP do ESP32
         
 
         #==============================================================================================
@@ -704,11 +706,12 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_btn_identify.setZValue(999)
         self.scene.addItem(proxy_btn_identify)
 
-        #adicionando caixa de leitura de texto pra ler o IP do ESP32-S3-CAM Wroom pois o mDNS do ESP nao é muito estável
-        
+        # [v1.0.0.03]: adicionando caixa de leitura de texto pra ler o IP do ESP32-S3-CAM Wroom pois o mDNS do ESP nao é muito estável
+        self.garbage_collector = [] # [v1.0.0.03]: para deletar os widgets gerados no processo
+        self.FormularioLeituraDados() # [v1.0.0.03]: chamar a função que lê o IP do usuario
         
 
-    
+     
     """
     def wheelEvent(self, event):
         # Zoom com roda do mouse
@@ -1022,36 +1025,93 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
-    def FormularioLeituraDados(self, pergunta, instrucao_in_box, regex_validacao, func): # [v1.0.0.03]: metodo pra ler nomes e etc
+    def processaIPSERVER(self, number=None): # [v1.0.0.03]: metodo pra capturar e formatar o IP do servidor do ESP32
+        if number is not None:
+            ip1 = number[0].text().strip() # [v1.0.0.03]: strip remove espaços em branco, tabulações, quebra de linha e etc..
+            ip2 = number[1].text().strip() 
+            ip3 = number[2].text().strip() 
+            ip4 = number[3].text().strip() 
+            if(ip1.isdigit() and ip2.isdigit() and ip3.isdigit() and ip4.isdigit()): # verifica se é digito pra direcionar o fluxo pra etapa de CPF
+                self.ip_server_esp32 = ip1+"."+ip2+"."+ip3+"."+ip4 # [v1.0.0.03]: obtem o endereço IP
+                self.model_ocr.url = "http://"+self.ip_server_esp32+"/capture" # [v1.0.0.03]: monta a url onde o CameraWebServer do ESP32-S3-CAM captura imagens
+            else:
+                QMessageBox.warning(self, "Warning", "Digite apenas números")
+                self.FormularioLeituraDados() # [v1.0.0.03]: chamar a função que lê o IP do usuario novamente
+                return
+            
+        #[v1.0.0.03]: destrói os objetos relacionados a essa etapa de leitura de ip do server
+        if self.garbage_collector is not None:
+            for item in self.garbage_collector:
+                if isValid(item):
+                    item.deleteLater()
+                    item = None
+        QMessageBox.warning(self, "Sucesso", f"O endereço de capturas foi definido como: '{self.model_ocr.url}'")
+
+
+    def FormularioLeituraDados(self): # [v1.0.0.03]: metodo pra ler nomes e etc
         container = QWidget()
-        label = QLabel(container)
-        label.setPixmap(self.recursos.PATH.img_banner_ip_esp)
-        line_edit = QLineEdit()
-        line_edit.setFont(self.recursos.FONTES.fonte_texto_pergunta)
-        line_edit.setValidator(regex_validacao) # cria restrição para a entrada ser apenas letras maiusculas, minusculas e espaços
-        line_edit.setPlaceholderText(instrucao_in_box)
-        line_edit.setContentsMargins(5,0,0,0) # remove margens adicionais
-        btn_confirmar = QPushButton("OK")
-        btn_confirmar.setFixedHeight(self.recursos.CONST.LARGURA_FORMULARIO_BUTTON)
-        btn_confirmar.clicked.connect(lambda: self.sidebar.capturar_nome_cpf(line_edit, func)) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
-        layout = QStackedWidget(container) # conteiner vertical pro nome da pergunta ficar acima da caixa/box de leitura de nome
-        #layout_2 = QHBoxLayout() # conteiner horizontal pro button ficar de lado nesses tipos de formulario que requisitam entrada
-        layout.addWidget(label) # insere a imagem de fundo
-        #layout_2.addWidget(line_edit) # insere a caixa de leitura de texto à esquerda
-        #layout_2.addWidget(btn_confirmar, stretch=0.2) # insere o botão 'OK' comprimido ao lado da caixa de leitura de texto
-        layout.addLayout(layout_2) # insere a box de leitura + botão
         
-        object_proxy = self.insertOnGUI(container, 30)
-        container.setStyleSheet(self.recursos.ESTILOS.button_style) # define o estilo 
-        container.setFixedWidth(self.recursos.CONST.LARGURA_FORMULARIO) # define a largura na horizontal do formulário
-        # para destruir os itens posteriormente em cancel()
+        pixmap = QPixmap(self.recursos.PATH.img_banner_ip_esp)
+        container.setFixedSize(pixmap.size())  # [v1.0.0.03]: container do tamanho exato da imagem
+
+        # LABEL DE FUNDO — fora do layout, posicionado manualmente
+        label = QLabel(container)
+        label.setPixmap(pixmap)
+        label.setGeometry(0, 0, container.width(), container.height())
+        label.lower()  # [v1.0.0.03]: manda o label pro fundo da pilha de widgets (z-order)
+
+
+        layout_ips = QHBoxLayout()  # [v1.0.0.03]: conteiner vertical pros campos de ip ficarem um do lado do outro
+        number = [None, None, None, None] # [v1.0.0.03]: 4 campos do endereço IP
+        for n in range(4):
+            number[n] = QLineEdit()
+            number[n].setFont(self.recursos.FONTES.fonte_texto_pergunta)
+            number[n].setMaxLength(3) # # [v1.0.0.03]: Máximo de 3 caracteres para um numero de 8 bits do IP
+            number[n].setValidator(QIntValidator(0, 255)) # [v1.0.0.03]: lê valores entre 0 e 255, isto é, 2^8 o valor maximo de representação
+            number[n].setAlignment(Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: faz o texto ser lido no centro do QLineEdit
+            layout_ips.addWidget(number[n], stretch=0.25) # [v1.0.0.03]: insere as caixas de leitura de texto
+            self.garbage_collector.append(number[n]) # [v1.0.0.03]: salva pra exclusão posterior
+        #layout.addWidget(btn_confirmar, stretch=0.25) # [v1.0.0.03]: insere o botão 'OK'
+        layout_ips.setContentsMargins(320,660,465,0) # [v1.0.0.03]: corrigindo manualmente a posição das caixas de leitura de IP
+
+        layout_btn = QHBoxLayout() # [v1.0.0.03]: 3º layout só pra configurar a posição de um Button - é por essas e outras que PySide6 não é a melhor escolha pra interfaces - esse será o último trabalho usando essa dependencia
+        btn_ok = QPushButton("OK")
+        btn_ok.clicked.connect(lambda: self.processaIPSERVER(number)) # [v1.0.0.03]: metodo que tratará de processar e formatar o IP do server do ESP32
+        btn_cancel = QPushButton("CANCEL")
+        btn_cancel.clicked.connect(lambda: self.processaIPSERVER(number=None)) # [v1.0.0.03]: para o button CANCEL, o parametro number será None forçando a usar o endereço padrão do mDNS do ESP32
+        layout_btn.addWidget(btn_ok) 
+        layout_btn.addWidget(btn_cancel)
+        layout_btn.setContentsMargins(400,0,550,200)
+        #layout_btn.addSpacing(50) # [v1.0.0.03]: adicionando espaço entre os Buttons
+        btn_ok.setFixedHeight(50) # [v1.0.0.03]: definindo a altura manualmente
+        btn_cancel.setFixedHeight(50)
+
+        layout_vertical = QVBoxLayout(container)
+        layout_vertical.addLayout(layout_ips, stretch=1) # [v1.0.0.03]: Insere os campos de leitura de IP em cima
+        layout_vertical.addLayout(layout_btn, stretch=0.5) # [v1.0.0.03]: Insere os button em baixo
+        #layout_vertical.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        #layout_vertical.setContentsMargins(0,0,0,0)
+
+        # [v1.0.0.03]: inserindo na interface
+        container.setStyleSheet(self.recursos.ESTILOS.estilo_esp32_IP_banner) # [v1.0.0.03]: remove a cor de fundo pra ficar com cor de background transparente.
+        proxy = QGraphicsProxyWidget()
+        proxy.setWidget(container)
+        proxy.setPos((WIDTH/2) - 240, (HEIGHT/2) - 500)
+        self.scene.addItem(proxy)
+        proxy.setZValue(1000)
+
+        # [v1.0.0.03]: para deletar posteriormente
         self.garbage_collector.append(container)
+        #self.garbage_collector.append(pixmap)
         self.garbage_collector.append(label)
-        self.garbage_collector.append(line_edit)
-        self.garbage_collector.append(btn_confirmar)
-        self.garbage_collector.append(layout)
-        self.garbage_collector.append(layout_2)
-        self.garbage_collector.append(object_proxy)
+        self.garbage_collector.append(btn_ok)
+        self.garbage_collector.append(btn_cancel)
+        self.garbage_collector.append(layout_ips)
+        self.garbage_collector.append(layout_vertical)
+        self.garbage_collector.append(proxy)
+
+
+
 
 
 
@@ -1072,8 +1132,8 @@ app.setStyleSheet(
 viewer = SEIAParkingManagement() 
 viewer.setWindowTitle("SEIA Parking Management - "+ver)
 viewer.setFixedSize(WIDTH+K-240, HEIGHT)
-viewer.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # remove a scrollbar vertical que ficava descendo pra uma região da aplicação que nao deveria ser mostrada
 viewer.scale(SCALE_APP, SCALE_APP)
+viewer.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # remove a scrollbar vertical que ficava descendo pra uma região da aplicação que nao deveria ser mostrada
 viewer.setDragMode(QGraphicsView.NoDrag) # impede que o usuário consiga arrastar a cena
 viewer.show()
 sys.exit(app.exec())

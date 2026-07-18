@@ -366,6 +366,34 @@ class Estilos:
             font-size: 16px;
         """
 
+        self.estilo_esp32_IP_banner = f"""
+            QWidget {{
+                background-color: transparent;
+                border: none;
+            }}
+            QLineEdit:focus {{
+                border: none;
+                background-color: #080808;     /* fundo mais escuro quando focado */
+            }}
+            QPushButton {{
+                color: #ffffff;
+                background-color: #000000;
+                border: 1px solid rgba(255, 165, 0, 80); /* borda laranja suave */
+                text-align: center;
+                {self.FONTES.fonte_texto_buttons};
+                border-radius: 6px;
+            }}
+            
+            QPushButton:hover {{
+                background-color: rgba(255, 165, 0, 80);   /* laranja suave */
+            }}
+            
+            QPushButton:pressed {{
+                background-color: rgba(0, 255, 155, 80);
+                color: white;
+            }}
+        """
+
 
 
 class Paths:
@@ -393,7 +421,7 @@ class Paths:
             self.resource_path("imagens/3-arrows.png")
         ]
 
-        self.img_banner_ip_esp = self.resource_path("imagens/BANNER-LEITURA-IP.png")
+        self.img_banner_ip_esp = self.resource_path("imagens/BANNER_LEITURA_IP.png")
 
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:
