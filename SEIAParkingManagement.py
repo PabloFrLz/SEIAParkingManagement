@@ -26,7 +26,7 @@
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
+    QApplication, QCheckBox, QComboBox, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
     QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 )
@@ -1059,7 +1059,17 @@ class SEIAParkingManagement(QGraphicsView):
         label.setPixmap(pixmap)
         label.setGeometry(0, 0, container.width(), container.height())
         label.lower()  # [v1.0.0.03]: manda o label pro fundo da pilha de widgets (z-order)
+        
+        '''
+        #insere dombra projetada
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)        # quanto mais alto, mais borrado
+        shadow.setColor(QColor(0, 0, 0, 180))  # cor da sombra (preto com transparência)
+        #shadow.setOffset(4, 4)          # deslocamento (x, y)
 
+        # Aplica no widget
+        label.setGraphicsEffect(shadow)
+        '''
 
         layout_ips = QHBoxLayout()  # [v1.0.0.03]: conteiner vertical pros campos de ip ficarem um do lado do outro
         number = [None, None, None, None] # [v1.0.0.03]: 4 campos do endereço IP

@@ -35,6 +35,6 @@
 #       O modelo escolhido foi o 'PP-OCRv5' do PaddleOCR - esse recurso é acionado via Button 'CAPTURAR PLACA'.
 #   12. Implementado recurso que ao pesquisar placa no buscador global de placas ou tentar registrar uma 
 #       'ENTRADA' para uma vaga com status 'OCUPADO', a aplicação vai solicitar ao usuario registrar a 'SAIDA'.
-#   
+#   13. Implementado tela pra ler IP Server do ESP32 manualmente do usuario
 #       
 #

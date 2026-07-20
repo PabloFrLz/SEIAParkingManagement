@@ -31,7 +31,13 @@ class ModelPaddleOCR:
             # Carrega direto na memória (para processamento)
             image = Image.open(io.BytesIO(response.content))
             print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ✅ Foto recebida! Tamanho: {image.size}")
-            image = image.rotate(angle=270)
+            
+            #  ________________________________
+            # |        ROTAÇÃO DA IMAGEM       |
+            # |________________________________|
+            # [v1.0.0.03]: rotaciona a imagem em 270ºC
+            image = image.rotate(angle=270) 
+
             return image
         else:
             print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ❌ Erro ao tirar foto.")
