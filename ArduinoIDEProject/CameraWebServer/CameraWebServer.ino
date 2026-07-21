@@ -4,22 +4,89 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include "globals.h"
+#include "driver/ledc.h"
 
 // ===========================
 // Selecione o modelo de câmera em board_config.h
 // ===========================
 #include "board_config.h"
 
+
 // ===========================
 // Entre com as credenciais de WiFI
 // ===========================
+//const char *ssid = "VIVOFIBRA-WIFI6-6E18";
+//const char *password = "Pensao776";
 const char *ssid = "SEIMT";
 const char *password = "Ligga@2407852";
 
 camera_config_t config;
+bool camera_active = false; // variavel de controle da camera
+
+extern "C" {
+  esp_err_t camera_enable_out_clock(camera_config_t *config);
+  void camera_disable_out_clock();
+}
 
 void startCameraServer();
 void setupLedFlash();
+
+bool camera_start(){ // metodo responsável por iniciar a camerar
+  // camera init
+  esp_err_t err = esp_camera_init(&config);
+  if (err != ESP_OK) {
+    Serial.printf("Camera falhou ao inicializar com o erro: 0x%x\n", err);
+    return false;
+  }
+
+  sensor_t *s = esp_camera_sensor_get();
+  // initial sensors are flipped vertically and colors are a bit saturated
+  if (s->id.PID == OV3660_PID) {
+    s->set_vflip(s, 1);        // flip it back
+    s->set_brightness(s, 1);   // up the brightness just a bit
+    s->set_saturation(s, -2);  // lower the saturation
+  }
+
+  // drop down frame size for higher initial frame rate
+  if (config.pixel_format == PIXFORMAT_JPEG) {
+    s->set_framesize(s, FRAMESIZE_QVGA);
+  }
+
+  #if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM)
+    s->set_vflip(s, 1);
+    s->set_hmirror(s, 1);
+  #endif
+
+  #if defined(CAMERA_MODEL_ESP32S3_EYE)
+    s->set_vflip(s, 1);
+  #endif
+  Serial.printf("Camera inicializada!\n");
+  return true;
+}
+
+
+bool camera_stop(){
+  esp_err_t err = esp_camera_deinit();
+  if (err != ESP_OK) {
+    Serial.printf("Camera falhou ao desligar com o erro: 0x%x\n", err);
+    return true;
+  }
+
+  // Para o clock XCLK com mais força
+  if (config.pin_xclk >= 0) {
+    ledc_stop(LEDC_LOW_SPEED_MODE, (ledc_channel_t)config.ledc_channel, 0);
+    pinMode(config.pin_xclk, OUTPUT);
+    digitalWrite(config.pin_xclk, LOW);
+  }
+
+  // Reforça o power-down via PWDN, se o pino estiver mapeado (não for -1)
+  if (config.pin_pwdn >= 0) {
+    pinMode(config.pin_pwdn, OUTPUT);
+    digitalWrite(config.pin_pwdn, HIGH);
+  }
+  Serial.printf("Camera OFF!\n");
+  return false;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -78,14 +145,15 @@ void setup() {
   pinMode(14, INPUT_PULLUP);
 #endif
 
-  // camera init
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
+  if (!camera_active) {
+    // _________________________
+    //|     INICIA A CAMERA     |
+    //|_________________________|
+    //camera_active = camera_start();
+    //vTaskDelay(400 / portTICK_PERIOD_MS); // dá um tempinho para estabilizar
   }
 
-  sensor_t *s = esp_camera_sensor_get();
+  /*sensor_t *s = esp_camera_sensor_get();
   // initial sensors are flipped vertically and colors are a bit saturated
   if (s->id.PID == OV3660_PID) {
     s->set_vflip(s, 1);        // flip it back
@@ -105,7 +173,7 @@ void setup() {
 #if defined(CAMERA_MODEL_ESP32S3_EYE)
   s->set_vflip(s, 1);
 #endif
-
+*/
 // Setup LED FLash if LED pin is defined in camera_pins.h
 #if defined(LED_GPIO_NUM)
   setupLedFlash();
@@ -136,5 +204,5 @@ void loop() {
   Serial.printf("Heap: %d | PSRAM: %d | RSSI: %d | Uptime: %lus\n",
                 ESP.getFreeHeap(), ESP.getFreePsram(), WiFi.RSSI(), millis()/1000);
   // Do nothing. Everything is done in another task by the web server
-  delay(10000);
+  delay(10000); //10 segundos
 }

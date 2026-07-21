@@ -157,13 +157,14 @@ static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_
 
 static esp_err_t capture_handler(httpd_req_t *req) {
 
-  // camera init
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return ESP_OK;
+  // _________________________
+  //|     INICIA A CAMERA     |
+  //|_________________________|
+  if(!camera_active){
+    camera_active = camera_start(); // inicia a camera
+    vTaskDelay(400 / portTICK_PERIOD_MS); // tempinho extra pra estabilizar
   }
-
+  
   camera_fb_t *fb = NULL;
   esp_err_t res = ESP_OK;
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
@@ -216,10 +217,12 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 #endif
   log_i("JPG: %" PRIu32 "B %" PRId32 " ms", (uint32_t)fb_len, (int32_t)((fr_end - fr_start) / 1000));
 
-  esp_err_t err2 = esp_camera_deinit();
-  if (err2 != ESP_OK) {
-    Serial.printf("Camera desinit failed with error 0x%x", err);
-    return ESP_FAIL;
+
+  // __________________________
+  //|     DESLIGA A CAMERA     |
+  //|__________________________|
+  if(camera_active){
+    camera_active = camera_stop();
   }
 
   return res;
@@ -435,6 +438,16 @@ static int print_reg(char *p, char *end, sensor_t *s, uint16_t reg, uint32_t mas
 }
 
 static esp_err_t status_handler(httpd_req_t *req) {
+
+  // _________________________
+  //|     INICIA A CAMERA     |
+  //|_________________________|
+
+  if (!camera_active) {
+    camera_active = camera_start();
+    vTaskDelay(400 / portTICK_PERIOD_MS);
+  }
+
   static char json_response[1024];
 
   sensor_t *s = esp_camera_sensor_get();
@@ -671,6 +684,15 @@ static esp_err_t win_handler(httpd_req_t *req) {
 }
 
 static esp_err_t index_handler(httpd_req_t *req) {
+
+  if (!camera_active) {
+    // _________________________
+    //|     INICIA A CAMERA     |
+    //|_________________________|
+    camera_active = camera_start();
+    vTaskDelay(400 / portTICK_PERIOD_MS); // dá um tempinho para estabilizar
+  }
+
   httpd_resp_set_type(req, "text/html");
   httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
   sensor_t *s = esp_camera_sensor_get();
