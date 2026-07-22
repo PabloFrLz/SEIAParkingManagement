@@ -17,8 +17,7 @@
 // ===========================
 //const char *ssid = "VIVOFIBRA-WIFI6-6E18";
 //const char *password = "Pensao776";
-const char *ssid = "SEIMT";
-const char *password = "Ligga@2407852";
+
 
 camera_config_t config;
 bool camera_active = false; // variavel de controle da camera
