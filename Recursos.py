@@ -366,7 +366,7 @@ class Estilos:
             font-size: 16px;
         """
 
-        self.estilo_esp32_IP_banner = f"""
+        self.estilo_IP_banner = f"""
             QWidget {{
                 background-color: transparent;
                 border: none;
@@ -421,7 +421,7 @@ class Paths:
             self.resource_path("imagens/3-arrows.png")
         ]
 
-        self.img_banner_ip_esp = self.resource_path("imagens/BANNER_LEITURA_IP.png")
+        self.img_banner_ip = self.resource_path("imagens/BANNER_LEITURA_IP_CAM_IP.png")
 
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:

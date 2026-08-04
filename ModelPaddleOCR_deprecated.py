@@ -2,8 +2,7 @@ import requests
 from PIL import Image #, ImageEnhance, ImageFilter
 import io
 from paddleocr import PaddleOCR
-import cv2
-import subprocess
+#import cv2
 import Recursos
 
 class ModelPaddleOCR:
@@ -11,55 +10,43 @@ class ModelPaddleOCR:
         super().__init__()
         self.recursos = Recursos.Recursos()
         #url = "http://esp32cam.local/capture"   # insira o IP do servidor do ESP32
-        self.url = "rtsp://admin:password@192.168.0.1:554/onvif1" # [v1.0.0.03]: URL onde o ESP32-S3-CAM WROOM conversa com a aplicação - o '/capture' força ele salvar o frame atual (bater uma foto)
+        self.url = "http://esp32cam.local/capture" # [v1.0.0.03]: URL onde o ESP32-S3-CAM WROOM conversa com a aplicação - o '/capture' força ele salvar o frame atual (bater uma foto)
         # mDNS do ESP32 se mostrou instável em redes corporativas com proxy
         # portanto, foi adicionado recurso que lê do usuário o IP do servidor do ESP32 que é mais estável
-        self.SAVE_PATH = "img_placas/frame_capture.jpg" # [v1.0.0.03]: Diretório de armazenamento da imagem
+        self.SAVE_PATH = "img_placas/placa.png" # [v1.0.0.03]: Diretório de armazenamento da imagem
         self.placa = [None, None] # [v1.0.0.03]: Armazena o número da placa e o percentual de confiança na predição (o quão confiante o modelo acredita estar)
         self.ocr = None # [v1.0.0.03]: Modelo usado para OCR (Reconhecimento Óptico de Caracter)    
         #SAVE_PATH_PROCESSED = "img_placas/processed_for_ocr.jpg"
 
 
-    #  _____________________________________
-    # |         Capturando um frame         |
-    # |_____________________________________|
-
-    def getImage(self):
-
-        try:
-            # Carrega imagem
-            subprocess.run([
-                "ffmpeg", "-y",
-                "-i", self.url,
-                "-frames:v", "1",
-                "-q:v", "2",
-                "frame_capture.jpg"
-            ], check=True)
-
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ❌ Falha ao capturar frame via ffmpeg: {e}")
-            return None
+    def getImage(self, save_path='placa.png'):
         
-        # Carrega imagem
-        image = Image.open("frame_capture.jpg")
-
-        if image is not None:
-            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ✅ Imagem carregada! Tamanho: {image.size}")
+        response = requests.get(self.url, timeout=10)
+        
+        if response.status_code == 200:
+            # Salva a imagem
+            with open(save_path, "wb") as f:
+                f.write(response.content)
+            
+            # Carrega direto na memória (para processamento)
+            image = Image.open(io.BytesIO(response.content))
+            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ✅ Foto recebida! Tamanho: {image.size}")
+            
             #  ________________________________
             # |        ROTAÇÃO DA IMAGEM       |
             # |________________________________|
             # [v1.0.0.03]: rotaciona a imagem em 270ºC
-            #image = image.rotate(angle=270) 
+            image = image.rotate(angle=270) 
 
             return image
         else:
-            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ❌ Erro ao carregar imagem.")
+            print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ❌ Erro ao tirar foto.")
             return None
         
-    
-    #  ___________________________
-    # |         PaddleOCR         |
-    # |___________________________|
+        #  ___________________________
+        # |         PaddleOCR         |
+        # |___________________________|
+
 
     def identificar_caracteres_com_paddleOCR(self):
         self.ocr = PaddleOCR(
@@ -95,9 +82,9 @@ class ModelPaddleOCR:
 
 
 
-    #  ___________________________
-    # |         EasyOCR           |
-    # |___________________________|
+        #  ___________________________
+        # |         EasyOCR           |
+        # |___________________________|
 
     # Pré-processamento
     '''def preprocess_image(image_path):
@@ -129,3 +116,22 @@ class ModelPaddleOCR:
     print("CARACTERES IDENTIFICADOS:\n")
     print(result)'''
 
+
+
+# Uso
+'''if __name__ == "__main__":
+    model_ocr = ModelPaddleOCR()
+    img = model_ocr.getImage()
+    if img:
+        img.show()        # [v1.0.0.03]: abre a imagem
+        img.save(model_ocr.SAVE_PATH)  # [v1.0.0.03]: salva
+    
+    model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
+
+    print("PLACA IDENTIFICADA:\n")
+    print(" ___________________________\n")
+    print(f"|    PLACA: {model_ocr.placa[0]}       |\n")
+    print(f"|    CONFIANÇA: {str(float(model_ocr.placa[1])*100)}%       |\n")
+    print("|___________________________|\n")
+'''
+    #identificar_caracteres_com_easyOCR()

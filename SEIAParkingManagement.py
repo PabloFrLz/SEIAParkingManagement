@@ -100,7 +100,8 @@ class SEIAParkingManagement(QGraphicsView):
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
         self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
-        self.ip_server_esp32 = [] # variavel pra armazenar o IP do ESP32
+        self.ip_cam = [] # variavel pra armazenar o IP da camera
+        self.ip_cam_pass = "" # armazena a senha de Conexão NVR da Camera WiFi
         
 
         #==============================================================================================
@@ -691,7 +692,7 @@ class SEIAParkingManagement(QGraphicsView):
         
 
         #==============================================================================================
-        # [PaddleOCR] Identificação da placa via ESP32-S3-CAM WROOM (v1.0.0.03)
+        # [PaddleOCR] Identificação da placa via Camera IP WiFi (v1.0.0.03)
         #==============================================================================================
 
         btn_captura_placa = QPushButton("CAPTURAR\n PLACA?")
@@ -706,7 +707,7 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_btn_identify.setZValue(999)
         self.scene.addItem(proxy_btn_identify)
 
-        # [v1.0.0.03]: adicionando caixa de leitura de texto pra ler o IP do ESP32-S3-CAM Wroom pois o mDNS do ESP nao é muito estável
+        # [v1.0.0.03]: adicionando caixa de leitura de texto pra ler o IP da Camera IP WiFi.
         self.garbage_collector = [] # [v1.0.0.03]: para deletar os widgets gerados no processo
         self.FormularioLeituraDados() # [v1.0.0.03]: chamar a função que lê o IP do usuario
         
@@ -986,7 +987,7 @@ class SEIAParkingManagement(QGraphicsView):
         img = self.model_ocr.getImage()
         if img:
             img.show()        # [v1.0.0.03]: abre a imagem
-            img.save(self.model_ocr.SAVE_PATH)  # [v1.0.0.03]: salva
+            #img.save(self.model_ocr.SAVE_PATH)  # [v1.0.0.03]: salva
         
         self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
 
@@ -1025,15 +1026,17 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
-    def processaIPSERVER(self, number=None): # [v1.0.0.03]: metodo pra capturar e formatar o IP do servidor do ESP32
-        if number is not None:
-            ip1 = number[0].text().strip() # [v1.0.0.03]: strip remove espaços em branco, tabulações, quebra de linha e etc..
-            ip2 = number[1].text().strip() 
-            ip3 = number[2].text().strip() 
-            ip4 = number[3].text().strip() 
-            if(ip1.isdigit() and ip2.isdigit() and ip3.isdigit() and ip4.isdigit()): # verifica se é digito pra direcionar o fluxo pra etapa de CPF
-                self.ip_server_esp32 = ip1+"."+ip2+"."+ip3+"."+ip4 # [v1.0.0.03]: obtem o endereço IP
-                self.model_ocr.url = "http://"+self.ip_server_esp32+"/capture" # [v1.0.0.03]: monta a url onde o CameraWebServer do ESP32-S3-CAM captura imagens
+
+    def processaIPCAM(self, ip=None, password=None): # [v1.0.0.03]: metodo pra capturar e formatar o IP da Camera Wifi
+        if ip is not None:
+            ip1 = ip[0].text().strip() # [v1.0.0.03]: strip remove espaços em branco, tabulações, quebra de linha e etc..
+            ip2 = ip[1].text().strip() 
+            ip3 = ip[2].text().strip() 
+            ip4 = ip[3].text().strip() 
+            if(ip1.isdigit() and ip2.isdigit() and ip3.isdigit() and ip4.isdigit()): # verifica se é digito
+                self.ip_cam = ip1+"."+ip2+"."+ip3+"."+ip4 # [v1.0.0.03]: obtem o endereço IP
+                self.ip_cam_pass = password # [v1.0.0.03]: obtem a senha da camera
+                self.model_ocr.url = "rtsp://admin:"+self.ip_cam_pass+"@"+self.ip_cam+":554/onvif1" # [v1.0.0.03]: monta a url da call RTSP da camera Wifi
             else:
                 QMessageBox.warning(self, "Warning", "Digite apenas números")
                 self.FormularioLeituraDados() # [v1.0.0.03]: chamar a função que lê o IP do usuario novamente
@@ -1048,32 +1051,24 @@ class SEIAParkingManagement(QGraphicsView):
         QMessageBox.warning(self, "Sucesso", f"O endereço de capturas foi definido como: '{self.model_ocr.url}'")
 
 
-    def FormularioLeituraDados(self): # [v1.0.0.03]: metodo pra ler nomes e etc
-        container = QWidget()
-        
-        pixmap = QPixmap(self.recursos.PATH.img_banner_ip_esp)
-        container.setFixedSize(pixmap.size())  # [v1.0.0.03]: container do tamanho exato da imagem
 
+
+    def FormularioLeituraDados(self): # [v1.0.0.03]: metodo pra ler nomes e etc
+
+        container = QWidget()
+        pixmap = QPixmap(self.recursos.PATH.img_banner_ip)
+        container.setFixedSize(pixmap.size())  # [v1.0.0.03]: container do tamanho exato da imagem
         # LABEL DE FUNDO — fora do layout, posicionado manualmente
         label = QLabel(container)
         label.setPixmap(pixmap)
         label.setGeometry(0, 0, container.width(), container.height())
         label.lower()  # [v1.0.0.03]: manda o label pro fundo da pilha de widgets (z-order)
-        
-        '''
-        #insere dombra projetada
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)        # quanto mais alto, mais borrado
-        shadow.setColor(QColor(0, 0, 0, 180))  # cor da sombra (preto com transparência)
-        #shadow.setOffset(4, 4)          # deslocamento (x, y)
 
-        # Aplica no widget
-        label.setGraphicsEffect(shadow)
-        '''
 
         layout_ips = QHBoxLayout()  # [v1.0.0.03]: conteiner vertical pros campos de ip ficarem um do lado do outro
         number = [None, None, None, None] # [v1.0.0.03]: 4 campos do endereço IP
         for n in range(4):
+            # [v1.0.0.03]: formularios de leitura do IP
             number[n] = QLineEdit()
             number[n].setFont(self.recursos.FONTES.fonte_texto_pergunta)
             number[n].setMaxLength(3) # # [v1.0.0.03]: Máximo de 3 caracteres para um numero de 8 bits do IP
@@ -1081,14 +1076,21 @@ class SEIAParkingManagement(QGraphicsView):
             number[n].setAlignment(Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: faz o texto ser lido no centro do QLineEdit
             layout_ips.addWidget(number[n], stretch=0.25) # [v1.0.0.03]: insere as caixas de leitura de texto
             self.garbage_collector.append(number[n]) # [v1.0.0.03]: salva pra exclusão posterior
-        #layout.addWidget(btn_confirmar, stretch=0.25) # [v1.0.0.03]: insere o botão 'OK'
+
+        # [v1.0.0.03]: formulario de leitura da senha da camera IP
+        password_label = QLineEdit()
+        password_label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
+        password_label.setMaxLength(20) # [v1.0.0.03]: Máximo de 20 caracteres para a senha da camera IP
+        password_label.setAlignment(Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: faz o texto ser lido no centro do QLineEdit
+        password_label.setEchoMode(QLineEdit.EchoMode.Password) # [v1.0.0.03]: faz o texto ser lido como senha (oculta)
+
         layout_ips.setContentsMargins(320,660,465,0) # [v1.0.0.03]: corrigindo manualmente a posição das caixas de leitura de IP
 
         layout_btn = QHBoxLayout() # [v1.0.0.03]: 3º layout só pra configurar a posição de um Button - é por essas e outras que PySide6 não é a melhor escolha pra interfaces - esse será o último trabalho usando essa dependencia
         btn_ok = QPushButton("OK")
-        btn_ok.clicked.connect(lambda: self.processaIPSERVER(number)) # [v1.0.0.03]: metodo que tratará de processar e formatar o IP do server do ESP32
+        btn_ok.clicked.connect(lambda: self.processaIPCAM(ip=number, password=password_label.text())) # [v1.0.0.03]: metodo que tratará de processar e formatar o IP da camera
         btn_cancel = QPushButton("CANCEL")
-        btn_cancel.clicked.connect(lambda: self.processaIPSERVER(number=None)) # [v1.0.0.03]: para o button CANCEL, o parametro number será None forçando a usar o endereço padrão do mDNS do ESP32
+        btn_cancel.clicked.connect(lambda: self.processaIPCAM(ip=None, password=None)) # [v1.0.0.03]: para o button CANCEL, o parametro ip será None forçando a usar o endereço padrão definido em ModdlePaddleOCR.py
         layout_btn.addWidget(btn_ok) 
         layout_btn.addWidget(btn_cancel)
         layout_btn.setContentsMargins(400,0,550,200)
@@ -1098,12 +1100,13 @@ class SEIAParkingManagement(QGraphicsView):
 
         layout_vertical = QVBoxLayout(container)
         layout_vertical.addLayout(layout_ips, stretch=1) # [v1.0.0.03]: Insere os campos de leitura de IP em cima
-        layout_vertical.addLayout(layout_btn, stretch=0.5) # [v1.0.0.03]: Insere os button em baixo
+        layout_vertical.addWidget(password_label, stretch=1) # [v1.0.0.03]: Insere o campo de leitura da senha em baixo do campo de leitura de IP
+        layout_vertical.addLayout(layout_btn, stretch=0.5) # [v1.0.0.03]: Insere os buttons em baixo
         #layout_vertical.setAlignment(Qt.AlignmentFlag.AlignCenter)
         #layout_vertical.setContentsMargins(0,0,0,0)
 
         # [v1.0.0.03]: inserindo na interface
-        container.setStyleSheet(self.recursos.ESTILOS.estilo_esp32_IP_banner) # [v1.0.0.03]: remove a cor de fundo pra ficar com cor de background transparente.
+        container.setStyleSheet(self.recursos.ESTILOS.estilo_IP_banner) # [v1.0.0.03]: remove a cor de fundo pra ficar com cor de background transparente.
         proxy = QGraphicsProxyWidget()
         proxy.setWidget(container)
         proxy.setPos((WIDTH/2) - 240, (HEIGHT/2) - 500)
@@ -1113,6 +1116,7 @@ class SEIAParkingManagement(QGraphicsView):
         # [v1.0.0.03]: para deletar posteriormente
         self.garbage_collector.append(container)
         #self.garbage_collector.append(pixmap)
+        self.garbage_collector.append(password_label)
         self.garbage_collector.append(label)
         self.garbage_collector.append(btn_ok)
         self.garbage_collector.append(btn_cancel)
