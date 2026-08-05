@@ -10,14 +10,10 @@ class ModelPaddleOCR:
     def __init__(self):
         super().__init__()
         self.recursos = Recursos.Recursos()
-        #url = "http://esp32cam.local/capture"   # insira o IP do servidor do ESP32
-        self.url = "rtsp://admin:password@192.168.0.1:554/onvif1" # [v1.0.0.03]: URL onde o ESP32-S3-CAM WROOM conversa com a aplicação - o '/capture' força ele salvar o frame atual (bater uma foto)
-        # mDNS do ESP32 se mostrou instável em redes corporativas com proxy
-        # portanto, foi adicionado recurso que lê do usuário o IP do servidor do ESP32 que é mais estável
+        self.url = "rtsp://admin:password@127.0.0.1:554/onvif1" # [v1.0.0.03]: URL onde ocorrerá a comunicação entre aplicação e câmera IP
         self.SAVE_PATH = "img_placas/frame_capture.jpg" # [v1.0.0.03]: Diretório de armazenamento da imagem
         self.placa = [None, None] # [v1.0.0.03]: Armazena o número da placa e o percentual de confiança na predição (o quão confiante o modelo acredita estar)
         self.ocr = None # [v1.0.0.03]: Modelo usado para OCR (Reconhecimento Óptico de Caracter)    
-        #SAVE_PATH_PROCESSED = "img_placas/processed_for_ocr.jpg"
 
 
     #  _____________________________________
@@ -27,21 +23,20 @@ class ModelPaddleOCR:
     def getImage(self):
 
         try:
-            # Carrega imagem
+            # [v1.0.0.03]: Captura a imagem usando ffmpeg
             subprocess.run([
                 "ffmpeg", "-y",
                 "-i", self.url,
                 "-frames:v", "1",
                 "-q:v", "2",
-                "frame_capture.jpg"
+                self.SAVE_PATH
             ], check=True)
 
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ❌ Falha ao capturar frame via ffmpeg: {e}")
             return None
         
-        # Carrega imagem
-        image = Image.open("frame_capture.jpg")
+        image = Image.open(self.SAVE_PATH) # [v1.0.0.03]: carrega a imagem
 
         if image is not None:
             print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: ✅ Imagem carregada! Tamanho: {image.size}")
@@ -79,16 +74,18 @@ class ModelPaddleOCR:
                 print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: {texto}  (confiança: {score:.2f})")
                 if len(texto) == 3: # [v1.0.0.03]: extrai os 3 primeiros digitos da placa de moto (que não possuem o traço '-')
                     self.placa[0] = texto
+                    # [v1.0.0.03]: nao da return pois precisa pegar os 4 digitos restantes
                 elif len(texto) == 4: # [v1.0.0.03]: extrai os 4 últimos digitos da placa de moto
                     self.placa[0] += f"-{texto}" # [v1.0.0.03]: concatena com os 3 digitos anteriores 
+                    return # [v1.0.0.03]: da return pois já tem a placa de moto completa
                 elif (len(texto) == 7 or len(texto) == 8) and texto.replace('-', '').isalnum():  # [v1.0.0.03]: verifica se tem a quantidade de caracteres da placa MERCOSUL = depois verifica se tem a quantidade de caracteres da placa ANTIGA - por ultimo verifica se o texto é alfanumérico (o replace é pra tirar o traço pra nao dar erro na validação do isalnum()).
                     if "-" not in texto: # [v1.0.0.03]: verifica se o texto contém um traço, que é comum em placas de veículos ANTIGAS
                         self.placa[0] = f"{texto[:3]}-{texto[3:]}" # [v1.0.0.03]: salva a possível placa identificada com a adição do hífen '-' [P/ PLACAS MERCOSUL]
                     else:
-                        self.placa[0] = texto # [v1.0.0.03]: salva a possível placa identificada (P/ PLACAS PADRÃO ANTIGO)
-                        
+                        self.placa[0] = texto # [v1.0.0.03]: salva a possível placa identificada (P/ PLACAS PADRÃO ANTIGO)     
+                    return # [v1.0.0.03]: retorna a placa   
                 else:
-                    self.placa[0] = f"|PLACA FORA DOS PADRÕES ESPERADOS: '{texto}' |" # [v1.0.0.03]: caso o texto identificado não se encaixe nos padrões de placas, ele é armazenado como uma possível placa inválida
+                    self.placa[0] = f" FORA DOS PADRÕES ESPERADOS: '{texto}' " # [v1.0.0.03]: caso o texto identificado não se encaixe nos padrões de placas, ele é armazenado como uma possível placa inválida
                 
                 self.placa[1] = f"{score:.2f}" # [v1.0.0.03]: salva a probabilidade para a predição da placa
 

@@ -695,14 +695,14 @@ class SEIAParkingManagement(QGraphicsView):
         # [PaddleOCR] Identificação da placa via Camera IP WiFi (v1.0.0.03)
         #==============================================================================================
 
-        btn_captura_placa = QPushButton("CAPTURAR\n PLACA?")
-        btn_captura_placa.setCheckable(True)
-        btn_captura_placa.clicked.connect(self.capturaPlaca)
-        btn_captura_placa.setStyleSheet(self.recursos.ESTILOS.button_style_8)
-        btn_captura_placa.setAttribute(Qt.WA_TranslucentBackground)
+        self.btn_captura_placa = QPushButton("CAPTURAR\n PLACA?")
+        self.btn_captura_placa.setCheckable(True)
+        self.btn_captura_placa.clicked.connect(self.capturaPlaca)
+        self.btn_captura_placa.setStyleSheet(self.recursos.ESTILOS.button_style_8)
+        self.btn_captura_placa.setAttribute(Qt.WA_TranslucentBackground)
 
         proxy_btn_identify = QGraphicsProxyWidget()
-        proxy_btn_identify.setWidget(btn_captura_placa)
+        proxy_btn_identify.setWidget(self.btn_captura_placa)
         proxy_btn_identify.setPos((WIDTH+K-240)/1.21, 0)
         proxy_btn_identify.setZValue(999)
         self.scene.addItem(proxy_btn_identify)
@@ -984,9 +984,10 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def capturaPlaca(self):
+        self.btn_captura_placa.setEnabled(False) # [v1.0.0.03]: desabilita o button enquanto tiver processando a captura da imagem e identificação de caracter
         img = self.model_ocr.getImage()
         if img:
-            img.show()        # [v1.0.0.03]: abre a imagem
+            img.show()        # [v1.0.0.03]: abre a imagem pra fins de DEBUG pro guarda verificar se a imagem foi batida corretamente.
             #img.save(self.model_ocr.SAVE_PATH)  # [v1.0.0.03]: salva
         
         self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
@@ -1011,7 +1012,8 @@ class SEIAParkingManagement(QGraphicsView):
                 
         else:
             QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
-    
+
+        self.btn_captura_placa.setEnabled(True) # [v1.0.0.03]: habilita o button novamente.
 
 
     def reposicionar_popup_completer(self): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
@@ -1048,7 +1050,7 @@ class SEIAParkingManagement(QGraphicsView):
                 if isValid(item):
                     item.deleteLater()
                     item = None
-        QMessageBox.warning(self, "Sucesso", f"O endereço de capturas foi definido como: '{self.model_ocr.url}'")
+        QMessageBox.warning(self, "Sucesso", f"O endereço de capturas foi definido como: \n'{self.model_ocr.url}'")
 
 
 
@@ -1083,8 +1085,10 @@ class SEIAParkingManagement(QGraphicsView):
         password_label.setMaxLength(20) # [v1.0.0.03]: Máximo de 20 caracteres para a senha da camera IP
         password_label.setAlignment(Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: faz o texto ser lido no centro do QLineEdit
         password_label.setEchoMode(QLineEdit.EchoMode.Password) # [v1.0.0.03]: faz o texto ser lido como senha (oculta)
+        password_label.setFixedWidth(400) 
 
-        layout_ips.setContentsMargins(320,660,465,0) # [v1.0.0.03]: corrigindo manualmente a posição das caixas de leitura de IP
+        layout_ips.setContentsMargins(320,570,465,0) # [v1.0.0.03]: corrigindo manualmente a posição das caixas de leitura de IP
+        password_label.setContentsMargins(0,20,140,0) # [v1.0.0.03]: corrige tamanho da box de senha e questões de posicionamento
 
         layout_btn = QHBoxLayout() # [v1.0.0.03]: 3º layout só pra configurar a posição de um Button - é por essas e outras que PySide6 não é a melhor escolha pra interfaces - esse será o último trabalho usando essa dependencia
         btn_ok = QPushButton("OK")
@@ -1093,17 +1097,19 @@ class SEIAParkingManagement(QGraphicsView):
         btn_cancel.clicked.connect(lambda: self.processaIPCAM(ip=None, password=None)) # [v1.0.0.03]: para o button CANCEL, o parametro ip será None forçando a usar o endereço padrão definido em ModdlePaddleOCR.py
         layout_btn.addWidget(btn_ok) 
         layout_btn.addWidget(btn_cancel)
-        layout_btn.setContentsMargins(400,0,550,200)
-        #layout_btn.addSpacing(50) # [v1.0.0.03]: adicionando espaço entre os Buttons
         btn_ok.setFixedHeight(50) # [v1.0.0.03]: definindo a altura manualmente
         btn_cancel.setFixedHeight(50)
 
+        layout_btn.setContentsMargins(420,0,580,320) # [v1.0.0.03]: corrige tamanho dos botoes equestões de posicionamento
+
         layout_vertical = QVBoxLayout(container)
         layout_vertical.addLayout(layout_ips, stretch=1) # [v1.0.0.03]: Insere os campos de leitura de IP em cima
-        layout_vertical.addWidget(password_label, stretch=1) # [v1.0.0.03]: Insere o campo de leitura da senha em baixo do campo de leitura de IP
+        layout_vertical.addWidget(password_label, alignment=Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: Insere o campo de leitura da senha em baixo do campo de leitura de IP
         layout_vertical.addLayout(layout_btn, stretch=0.5) # [v1.0.0.03]: Insere os buttons em baixo
-        #layout_vertical.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        #layout_vertical.setContentsMargins(0,0,0,0)
+
+
+
+
 
         # [v1.0.0.03]: inserindo na interface
         container.setStyleSheet(self.recursos.ESTILOS.estilo_IP_banner) # [v1.0.0.03]: remove a cor de fundo pra ficar com cor de background transparente.
