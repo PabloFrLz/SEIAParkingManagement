@@ -12,8 +12,6 @@ dependencias do prédio onde está situado as Secretarias de Estado do Paraná, 
 
 ![Tela do sistema 1](interface_da_aplicacao/img1.png)
 ![Tela do sistema 2](interface_da_aplicacao/img4.png)
-![Tela do sistema 3](interface_da_aplicacao/img2.png)
-![Tela do sistema 4](interface_da_aplicacao/img3.png)
 
  ## CONFIGURANDO O AMBIENTE
 
@@ -27,6 +25,7 @@ pip install pymysql
 pip install cryptography
 pip install pypdf
 pip install reportlab
+winget install ffmpeg
 ```
 
  ## CONFIGURANDO O BANCO:
@@ -45,45 +44,73 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
 // servidores.sql
 // carros.sql
 ``` 
-    • O ideal é que os dados de servidores sejam inseridos manualmente via aplicação.
-
-
- ## PREDIÇÃO DE PLACAS (OCR):
-
-![Tela do sistema 5](interface_da_aplicacao/img5.png)
-
-Para predição de placas, foi usado a biblioteca PaddleOCR v3.3.3 e PaddlePaddle v3.2.0.
-O modelo de visão computacional usado é o **PP-OCRv5_server**. O modelo se saiu muito 
-bem nos testes, principalmente quando a resolução da imagem era pequena, como 320x240p.
-```bash
-pip install requests
-pip install pillow
-python312 -m pip install paddlepaddle==3.2.0 paddleocr==3.3.3
-```	 
-A captura da imagem das placas é feita com a placa ESP32-S3-CAM Wroom em conjunto com a
-câmera OV5640 de 5MP. Foi utilizado o CameraWebServer da própria biblioteca **'ESP32 by** 
-**Espressif System'** do Arduino IDE para fazer as capturas. 
-É preciso ler manualmente o endereço IP do servidor do ESP32-S3-CAM Wroom ao iniciar a
-aplicação. Caso não leia um endereço, o endereço padrão será o ```http://esp32cam.local/capture```.
-Para escutar no endereço padrão, é preciso implementar o mDNS do ESP32 que nao vem implementado
-no exemplo do CameraWebServer do ArduinoIDE. Mas será disponibilizado no repositório a
-pasta CameraWebServer, que terá o código para ser gravado no ESP32 que já vem com mDNS 
-implementado.
-![Tela do sistema 6](interface_da_aplicacao/img6.png)
-```
-**NOTA: mDNS do ESP32 é instável em redes corporativas com proxy. Recomenda-se ler o endereço IP nesse cenário**
-```
 
  ## CONFIGURAÇÕES COMPLEMENTARES:
 ```bash
 pip install --upgrade PySide6 pyqtdarktheme"
 ```
 
+ ## PREDIÇÃO DE PLACAS (OCR):
+
+![Tela do sistema 3](interface_da_aplicacao/img5.png)
+
+Para predição de placas, foi usado a biblioteca PaddleOCR v3.3.3 e PaddlePaddle v3.2.0.
+O modelo de visão computacional usado é o **PP-OCRv5_server**. 
+```bash
+pip install requests
+pip install pillow
+python312 -m pip install paddlepaddle==3.2.0 paddleocr==3.3.3
+```	 
+Em complemento, uma Câmera IP WiFi (QC:06 HXWS) foi usada como dispositivo auxiliar de captura 
+das imagens das placas dos veículos. Foi utilizado recursos de RTSP da câmera em conjunto com o
+FFMPEG para o envio de comandos para captura das imagens. 
+O app usado para configurar a câmera é o Yoosee ver. 6.44.1.
+É preciso ler manualmente o endereço IP da câmera que o roteador fornece randomicamente ao configurar
+a câmera pela primeira vez.
+```
+O IP está disponível em: Configurações > Informações do dispositivo.
+```
+É preciso também ativar e fornecer a senha de conexões NVR fornecido pelo app:
+```
+A ativação ocorre em: Configurações > Mais Configurações > Conexão NVR.
+A senha também é gerada nessa opção.
+```
+
+![Tela do sistema 4](interface_da_aplicacao/img6.png)
+
+Após configurar, é possível testar com o VLC Media Player em:
+```
+Mídia > Abrir Transmissão de Rede > Rede
+```
+insira a URL **rtsp://admin:PASSWORD@IP_CAMERA:554/onvif** substituindo **PASSWORD** pela senha
+e **IP_CAMERA** pelo o IP da camera que foi atribuído pelo roteador. É possível testar também com o 
+utilitário telnet:
+```
+telnet IP_CAMERA 554
+```
+ou via powershell, com:
+```
+Test-NetConnection -ComputerName IP_CAMERA -Port 554
+```
+Se a câmera não estiver visível na rede, certifique-se de estar conectado na mesma rede Wi-Fi da câmera.
+Se a conexão for bem estabelecida, já será possível fazer uso do recurso de OCR.
+ 
  ## CRIAÇÃO DO EXECUTÁVEL PYTHON:
 ```bash
 pip install pyinstaller
 
-pyinstaller --onefile --windowed --clean ^
+pyinstaller --onedir --console --clean ^
+    --collect-data paddlex --collect-data paddleocr ^
+    --copy-metadata paddlex ^
+    --copy-metadata paddleocr ^
+    --copy-metadata paddlepaddle ^
+    --copy-metadata pyclipper ^
+    --copy-metadata shapely ^
+    --copy-metadata imagesize ^
+    --copy-metadata opencv-contrib-python ^
+    --copy-metadata pypdfium2 ^
+    --copy-metadata python-bidi ^
+    --copy-metadata safetensors ^
     --icon=icone.ico ^
     --version-file version_info.txt ^
     --add-data "imagens;imagens" ^
@@ -92,7 +119,7 @@ pyinstaller --onefile --windowed --clean ^
 
  ### Caso dê problemas de conflito entre PyQt5 e PySide6 com o erro "ERROR: Aborting build process due to attempt to collect multiple Qt bindings packages: attempting to run hook for 'PyQt5', while hook for 'PySide6' has already been run!". Execute o comando: 
 ```bash
-pyinstaller --onefile --windowed --clean ^
+pyinstaller --collect-data paddlex --collect-data paddleocr --onefile --windowed --clean ^
     --icon=icone.ico ^
     --version-file version_info.txt ^
     --add-data "imagens;imagens" ^

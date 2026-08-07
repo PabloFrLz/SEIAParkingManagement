@@ -1,17 +1,19 @@
-import requests
-from PIL import Image #, ImageEnhance, ImageFilter
-import io
+
+from PIL import Image
 from paddleocr import PaddleOCR
-import cv2
 import subprocess
 import Recursos
+import os
+
 
 class ModelPaddleOCR:
     def __init__(self):
         super().__init__()
         self.recursos = Recursos.Recursos()
         self.url = "rtsp://admin:password@127.0.0.1:554/onvif1" # [v1.0.0.03]: URL onde ocorrerá a comunicação entre aplicação e câmera IP
-        self.SAVE_PATH = "img_placas/frame_capture.jpg" # [v1.0.0.03]: Diretório de armazenamento da imagem
+        output_dir = "img_placas"
+        os.makedirs(output_dir, exist_ok=True)  # cria o diretorio "img_placas" caso não exista, e não reclama se já existir
+        self.SAVE_PATH = os.path.join(output_dir, "frame_capture.jpg") # [v1.0.0.03]: Diretório de armazenamento da imagem
         self.placa = [None, None] # [v1.0.0.03]: Armazena o número da placa e o percentual de confiança na predição (o quão confiante o modelo acredita estar)
         self.ocr = None # [v1.0.0.03]: Modelo usado para OCR (Reconhecimento Óptico de Caracter)    
 
@@ -21,7 +23,6 @@ class ModelPaddleOCR:
     # |_____________________________________|
 
     def getImage(self):
-
         try:
             # [v1.0.0.03]: Captura a imagem usando ffmpeg
             subprocess.run([

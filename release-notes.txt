@@ -36,5 +36,11 @@
 #   12. Implementado recurso que ao pesquisar placa no buscador global de placas ou tentar registrar uma 
 #       'ENTRADA' para uma vaga com status 'OCUPADO', a aplicação vai solicitar ao usuario registrar a 'SAIDA'.
 #   13. Implementado tela pra ler IP Server do ESP32 manualmente do usuario
+#   14. Adicionado suporte a dispositivos móveis (Android) - só que é preciso gerar IP fixo na máquina que está
+#       rodando o banco de dados MySQL.
+#   15. Descontinuado o ESP32 por problemas relacionados a superaquecimento das lentes (Câmera OV5640).
+#       Adotado em seu lugar uma câmera IP WiFi com classificação IP66. Além da referida camêra ser própria para
+#       instalações em área externa (suporta chuva e sol), ela atende bem o propósito de ficar funcionando
+#       durante horas sem sobreaquecer já que é uma câmera de monitoramento.
 #       
 #
