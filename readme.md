@@ -147,7 +147,7 @@ pyinstaller --onedir --console --clean ^
 ![Tela do sistema 5](interface_da_aplicacao/img7.png)
 
 É preciso realizar o procedimento dentro do Ubuntu ou WSL.
-É preciso ter o *pyside6-android-deploy*: https://doc.qt.io/qtforpython-6/deployment/deployment-pyside6-android-deploy.html 
+Também é preciso ter o *pyside6-android-deploy*: https://doc.qt.io/qtforpython-6/deployment/deployment-pyside6-android-deploy.html.
 Certifique-se de ter o android SDK 34 e o .JAR do PySide6 nos caminhos especificados abaixo:
 ```bash
 SDK_PATH=~/.pyside6_android_deploy/android-sdk
@@ -155,7 +155,7 @@ NDK_PATH=~/.pyside6_android_deploy/android-sdk/ndk/26.1.10909125
 RECIPE_DIR=$PROJECT_DIR/deployment/recipes
 JARS_DIR=$PROJECT_DIR/deployment/jar/PySide6/jar
 ```
-Execute o scrip ```build_manual.sh``` na pasta do projeto no wsl Ubuntu
+Execute o script ```build_manual.sh``` na pasta do projeto no wsl Ubuntu.
 Recomendado usar ambiente venv com python 3.11.15 e todas as demais dependencias. 
 É preciso conceder permissões extras com:
 ```bash
@@ -174,7 +174,7 @@ Ative a DEPURAÇÃO USB no dispositivo android e depois verifique se o dispositi
 ```bash
     ./adb.exe devices
 
-    # é esperado uma resposta com o nome do dispositivo como esta abaixo:
+    # É esperado uma resposta com o nome do dispositivo:
     # List of devices attached
     # R9XT3030F9T     device
     # 
@@ -185,16 +185,15 @@ Instale o APK com:
 
     # Certifique-se que o nome do arquivo.apk esteja correto.
 ```
-Caso dê um erro do tipo *adb.exe: failed to install SEIAParkingManagement-0.1-arm64-v8a-debug.apk: Failure [INSTALL_FAILED_VERIFICATION_FAILURE: Install not allowed for file:///data/app/vmdl834578893.tmp]*
+Caso dê um erro do tipo ```adb.exe: failed to install SEIAParkingManagement-0.1-arm64-v8a-debug.apk: Failure [INSTALL_FAILED_VERIFICATION_FAILURE: Install not allowed for file:///data/app/vmdl834578893.tmp]```.
 Desative a verificação de apps oficiais do android com:
 ```bash
     .\adb.exe shell settings put global verifier_verify_adb_installs 0
 ```
  ### Configuração de IP Fixo
-Para se comunicar com o banco de dados MySQL que esta rodando em um PC apartir do dispositivo android,
-é preciso fazer ele (MySQL) responder a requisições de fora da rede local. Veja como fazer isso diretamente
-com alguma IA.
-Depois de configurar o MySQL, é preciso configurar um IP Fixo. No Windows, basta ir em: 
+Para se comunicar com o banco de dados MySQL que esta rodando em um PC a partir do dispositivo android,
+é preciso fazer ele (MySQL) responder a requisições de fora da rede local. Veja como configurar isso diretamente
+com alguma IA. Depois de configurar o MySQL, é preciso configurar um IP Fixo. No Windows, basta ir em: 
 ```bash
 Adaptador de rede > Propriedades > Protocolo IPV4:
     Usar o seguinte endereço IP:
@@ -213,13 +212,15 @@ Depois de obter o ip fixo, basta inserir manualmente em *SEIAParkingManagement.p
         database='seia_parking'
     )
 ```
+Caso já tenha criado um arquivo.apk, execute apenas o ```build_manual_etapa_2.sh``` para gerar outro arquivo.apk.
+
  ### Debug
-Caso dê erros durante o processo, execute o logcat e depois abra o app no dispostivo android:
+Para debug durante o processo, recomenda usar o logcat:
 ```bash
     .\adb.exe logcat -c
 ``` 
 
-Depois salve o log completo do android:
+Depois salve o log:
 ```bash
     .\adb.exe logcat -d > log_completo.txt
 ```
