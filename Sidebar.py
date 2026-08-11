@@ -220,6 +220,10 @@ class Sidebar(QWidget, QObject):
 
         self.regex_nome = QRegularExpression("^[A-Za-z ]*$") # Para o nome
         self.validator_nome = QRegularExpressionValidator(self.regex_nome)
+
+        self.regex_placa = QRegularExpression("^[A-Za-z0-9-]*$") # Para a placa (admite apenas letras maiusculas, numeros e hífen)
+        self.validator_placa = QRegularExpressionValidator(self.regex_placa)
+
         
         #======================================
         # Configurações finais
@@ -231,6 +235,9 @@ class Sidebar(QWidget, QObject):
         self.largura = WIDTH
         self.animation = QPropertyAnimation(self.sidebar, b"pos")
         self.animation.setDuration(1200)
+
+
+
 
 
 
@@ -249,13 +256,12 @@ class Sidebar(QWidget, QObject):
         self.num_vaga.setText(str(vaga.id))
         self.status_vaga.setText(vaga.status_name)
 
-
         #atualizando informações secundárias
         if len(ultimo_registro_da_vaga) != 0:
             cpf = ultimo_registro_da_vaga[0][2] # [v1.0.0.03]: cpf será null/none quando for VISITANTE
             if(cpf is None): # [v1.0.0.03]: para quando for atualizar visualmente as informações da vaga registrada para um VISITANTE
                 self.modelo_carro.setText("CARRO PRIVADO (VISITANTE)")
-                self.placa_carro.setText("RESTRITO")
+                #self.placa_carro.setText("RESTRITO")
                 self.nome_servidor.setText(ultimo_registro_da_vaga[0][7]) # o nome do servidor nesse momento de execução vai estar salvo em self.nome
             else: 
                 #consulta pra pegar dados da vaga/carro
@@ -405,7 +411,7 @@ class Sidebar(QWidget, QObject):
         elif (self.check[1] is None):
             self.form2.setDisabled(True)
             placa, modelo = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtendo a PLACA e MODELO do carro
-            self.placa_carro.setText(placa) # [v1.0.0.03]: gambiarra pra pdoer pegar dados de placa e carro no insert
+            self.placa_carro.setText(placa) # [v1.0.0.03]: gambiarra pra poder pegar dados de placa e carro no insert
             self.modelo_carro.setText(modelo)
             cpf = self.getCPFbyPlaca(placa)
             self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", cpf)
@@ -421,12 +427,20 @@ class Sidebar(QWidget, QObject):
 
 
     def registroEntradaVisitante(self): # [v1.0.0.03]: função propria para o registro de visitantes
-        if (self.check[0] is None): # [v1.0.0.03]: para o formulario de registro de visitante só será necessário coletar o nome do visitante.
-            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_visitante, "Digite o nome aqui...", self.validator_nome, self.registroEntradaVisitante)
+        if (self.check[0] is None): # [v1.0.0.03]: coleta NOME do visitante
+            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_visitante, "nome...", self.validator_nome, self.registroEntradaVisitante)
             self.check[0] = True
 
-        elif(self.check[1] is None):
+        elif (self.check[1] is None): # [v1.0.0.03]: coleta PLACA do carro do visitante
+            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_placa, "placa...", self.validator_placa, self.registroEntradaVisitante)
             self.check[1] = True
+
+        elif (self.check[2] is None): # [v1.0.0.03]: coleta CONTATO do visitante
+            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_contato, "contato...", self.validator_cpf, self.registroEntradaVisitante)
+            self.check[2] = True
+
+        elif(self.check[3] is None):
+            self.check[3] = True
             # Button pra confirmar inserção no banco de dados - registro
             self.btn_commit = self.insertButton("CONFIRMAR", self.recursos.ESTILOS.button_style_3, self.insertVisitante) # linka com a função que insere no banco os dados do servidor
             self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
@@ -513,12 +527,17 @@ class Sidebar(QWidget, QObject):
     def capturar_nome_cpf(self, line_edit, func_call_recursivamente):
         texto = line_edit.text().strip() 
         if(texto.isdigit()): # verifica se é digito pra direcionar o fluxo pra etapa de CPF
-            self.cpf = texto
+            self.cpf = texto # CPF
+            self.contato = texto # CONTATO
+            # [v1.0.0.03]: em fluxos normais sem ser de visitante,definir o mesmo valor de cpf para contato nao causaria nenhum tipo de problema já que o fluxo normal (servidores) não usam o campo de contato.
         else:
-            if(len(texto) >= self.recursos.CONST.MINIMUN_CHARACTER_TO_NAME): # Evita não inserir nada no formulario
+            if(texto.replace(" ", "").replace("-", "").isalpha() and len(texto) >= self.recursos.CONST.MINIMUN_CHARACTER_TO_NAME): # aceita apenas NOMES
                 self.nome = texto
+            elif(texto.replace('-', '').isalnum() and (len(texto) >= 7 or len(texto) <= 8)): # aceita apenas PLACAS de carro (alphanumerico com 7 a 8 caracteres)
+                texto = texto.upper() # [v1.0.0.03]: converte pra maiusculo pra caso o usuario insira minusculas e tbm por motivos de padronização de placa
+                self.placa_carro.setText(texto) # [v1.0.0.03]: já define no campo da sidebar referente a placas a placa lida.
             else:
-                QMessageBox.warning(self.main_window, "Erro", "insira um nome válido.")
+                QMessageBox.warning(self.main_window, "Erro", "insira um nome ou placa válido.")
                 self.cancel()
                 return
         
@@ -588,7 +607,7 @@ class Sidebar(QWidget, QObject):
     def insertVisitante(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO Registro(num_vaga, data_entrada, tipo, nome_visitante) VALUES({self.num_vaga.displayText()}, NOW(), 'ENTRADA', '{self.nome}')")
+            cursor.execute(f"INSERT INTO Registro(placa, num_vaga, data_entrada, tipo, nome_visitante, contato) VALUES ('{self.placa_carro.displayText()}', {self.num_vaga.displayText()}, NOW(), 'ENTRADA', '{self.nome}', '{self.contato}')")
             self.conn.commit()
             QMessageBox.information(self.main_window, "Sucesso", "Registro efetuado com sucesso!")
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
@@ -841,7 +860,7 @@ class Sidebar(QWidget, QObject):
     def updateHistoricoRegistro(self): # Função que mostra um preview de entradas no registro para a vaga selecionada
         tuplas_tabela = self.getRegistroByVagaAtDay(self.num_vaga.displayText()) # [v1.0.0.03]: retorna apenas os registros do dia
         linha = 0
-        self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤷)", "Data/Hora(⤶)", "CPF/CNPJ"])
+        self.lista_registro.setHorizontalHeaderLabels(["Placa", "Tipo", "Data/Hora(⤷)", "Data/Hora(⤶)", "Contato"])
         for tupla in tuplas_tabela:
             tipo = QTableWidgetItem(tupla[6])
             if tupla[6] == "ENTRADA":
@@ -856,7 +875,7 @@ class Sidebar(QWidget, QObject):
             self.lista_registro.setItem(linha, 1, tipo) # coluna Tipo
             self.lista_registro.setItem(linha, 2, QTableWidgetItem(str(tupla[4]))) # coluna Data/Hora (Entrada)
             self.lista_registro.setItem(linha, 3, QTableWidgetItem(str(tupla[5]))) # coluna Data/Hora (Saída)
-            self.lista_registro.setItem(linha, 4, QTableWidgetItem(tupla[2])) # coluna CPF/CNPJ
+            self.lista_registro.setItem(linha, 4, QTableWidgetItem(tupla[8])) # coluna Contato 
             linha += 1
 
         self.lista_registro.setStyleSheet(self.recursos.FONTES.fonte_tabela)
@@ -954,18 +973,22 @@ class Sidebar(QWidget, QObject):
                 QMessageBox.warning(self.main_window, "Erro", "Selecione uma vaga para imprimir o relatório da vaga.")
                 return # [v1.0.0.03]: sai da função sem nenhuma ação
 
+        relatorio_pdf = self.recursos.resource_path(relatorio_pdf) # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
+        conteudo_pdf = self.recursos.resource_path("conteudo.pdf") # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
+        capa_pdf = self.recursos.resource_path("capa_periodo_eleitoral.pdf") # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
+        
         # ETAPA 2: Gerando o documento PDF com os dados
-        doc = SimpleDocTemplate("conteudo.pdf")
+        doc = SimpleDocTemplate(conteudo_pdf)
         count = 0
         linhas = []
-        linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado"]) # define as colunas da tabela
+        linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado", "Contato"]) # define as colunas da tabela
         for tupla in tuplas_tabela:
             servidor = self.getServidorByCPF(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
             if len(servidor) == 0:
                 #visitante = self.getVisitante(tupla[7])
-                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], tupla[7].upper(), "[VISITANTE]: "+self.orgao_vinculado.displayText()]
+                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], tupla[7].upper(), "[VISITANTE]: "+self.orgao_vinculado.displayText(), tupla[8]]
             else:
-                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1].upper(), servidor[0][2]]
+                tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], servidor[0][1].upper(), servidor[0][2], tupla[8]]
             linhas.append(tupla_formatada) # insere uma linha no pdf
             #linhas.append(Spacer(1, 10))
             count+=1 # contador de linhas 
@@ -981,8 +1004,8 @@ class Sidebar(QWidget, QObject):
         doc.build(elemento) # cria o pdf com os dados do registro
         
         # ETAPA 3: juntando PDF
-        capa_pdf = PdfReader("capa.pdf")
-        conteudo_pdf = PdfReader("conteudo.pdf")
+        capa_pdf = PdfReader(capa_pdf)
+        conteudo_pdf = PdfReader(conteudo_pdf)
         writer = PdfWriter()
 
         for page in capa_pdf.pages: # primeira página = capa
@@ -994,7 +1017,7 @@ class Sidebar(QWidget, QObject):
         with open(relatorio_pdf, "wb") as f: # salvar resultado
             writer.write(f)
 
-        os.remove("conteudo.pdf") # deleta do diretorio o documento temporario "conteudo.pdf" 
+        os.remove(conteudo_pdf) # deleta do diretorio o documento temporario "conteudo.pdf" 
         print(f"\n{self.recursos.CORES.ROXO}================================{self.recursos.CORES.RESET}")
         print(f"Relatório gerado com sucesso!\nVeja o arquivo {relatorio_pdf}.")
         print(f"{self.recursos.CORES.ROXO}================================{self.recursos.CORES.RESET}\n")

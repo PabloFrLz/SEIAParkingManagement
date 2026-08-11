@@ -12,6 +12,7 @@ class Constantes:
 
 
 
+
 class Textos:
     def __init__(self):
         # [v1.0.0.03]: textos da interface - fica fácil de manipular e modificar centralizando nessa classe todos os textos
@@ -31,6 +32,8 @@ class Textos:
         self.text_insert_nome_servidor = "Digite o nome do servidor:"
         self.text_insert_nome_visitante = "Digite o nome do visitante:"
         self.text_insert_cpf_servidor = "Digite o CPF ou CNPJ do servidor:"
+        self.text_insert_placa = "Digite a placa do carro:"
+        self.text_insert_contato = "Digite o contato do visitante:"
 
 
 
@@ -404,7 +407,7 @@ class Paths:
         self.togle_switch_off = self.resource_path("imagens/off2.png") # [v1.0.0.03]: imagem do switch off
         self.togle_switch_on = self.resource_path("imagens/on2.png") # [v1.0.0.03]: imagem do switch on
 
-        self.img_logo_sidebar = self.resource_path("imagens/nas_logo_3.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
+        self.img_logo_sidebar = self.resource_path("imagens/nas_logo_periodo_eleitoral.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
         self.icon_btn_relatorio = self.resource_path("imagens/relatorio.png") # [v1.0.0.03]: imagem do button de relatorio por vaga
         self.icon_btn_relatorio_completo = self.resource_path("imagens/relatorio_completo.png") # [v1.0.0.03]: imagem do button relatorio completo
 
@@ -422,6 +425,10 @@ class Paths:
         ]
 
         self.img_banner_ip = self.resource_path("imagens/BANNER_LEITURA_IP_CAM_IP.png")
+
+        #self.relatorio_pdf = self.resource_path("relatorio.pdf") # [v1.0.0.03]: caminho do arquivo de relatorio.pdf que é gerado quando o usuário clica no botão de gerar relatório
+        #self.conteudo_pdf = self.resource_path("conteudo.pdf") # [v1.0.0.03]: caminho do arquivo de conteudo.pdf que é gerado quando o usuário clica no botão de gerar relatório
+        #self.capa_pdf = self.resource_path("capa.pdf") # [v1.0.0.03]: caminho do arquivo de capa.pdf que é gerado quando o usuário clica no botão de gerar relatório
 
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:

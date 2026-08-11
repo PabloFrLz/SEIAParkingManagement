@@ -15,7 +15,7 @@ dependências do prédio onde está situado as Secretarias de Estado do Paraná,
 
  ## CONFIGURANDO O AMBIENTE
 
- ### DEPENDÊNCIAS NECESSÁRIAS:
+ ### DEPENDÊNCIAS NECESSÁRIAS
 
 ```bash
 winget install Python.Python.3.12
@@ -28,7 +28,7 @@ pip install reportlab
 winget install ffmpeg
 ```
 
- ## CONFIGURANDO O BANCO:
+ ## CONFIGURANDO O BANCO
 	  NOTA: instalar o mysql server 8.0 e setar as variaveis de ambiente se for necessário.
 	• Modificar as variaveis globais USER e PASSWORD do arquivo SEIAParkingManagement.py 
 	  com as credenciais do banco de dados;
@@ -45,12 +45,12 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
 // carros.sql
 ``` 
 
- ## CONFIGURAÇÕES COMPLEMENTARES:
+ ## CONFIGURAÇÕES COMPLEMENTARES
 ```bash
 pip install --upgrade PySide6 pyqtdarktheme"
 ```
 
- ## PREDIÇÃO DE PLACAS (OCR):
+ ## PREDIÇÃO DE PLACAS (OCR)
 
 ![Tela do sistema 3](interface_da_aplicacao/img5.png)
 
@@ -94,7 +94,7 @@ Test-NetConnection -ComputerName IP_CAMERA -Port 554
 Se a câmera não estiver visível na rede, certifique-se de estar conectado na mesma rede Wi-Fi da câmera.
 Se a conexão for bem estabelecida, já será possível fazer uso do recurso de OCR.
  
- ## CRIAÇÃO DO EXECUTÁVEL PYTHON:
+ ## CRIAÇÃO DO EXECUTÁVEL PYTHON
 ```bash
 pip install pyinstaller
 
@@ -142,7 +142,7 @@ pyinstaller --onedir --console --clean ^
     SEIAParkingManagement.py
 ```
 
- ## INTEGRAÇÃO COM AMBIENTE ANDROID:
+ ## INTEGRAÇÃO COM AMBIENTE ANDROID
 
 ![Tela do sistema 5](interface_da_aplicacao/img7.png)
 

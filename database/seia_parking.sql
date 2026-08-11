@@ -39,10 +39,13 @@ create table if not exists Registro(
     data_saida DATETIME,
     tipo CHAR(10) not null,
     nome_visitante CHAR(100),
+    contato CHAR(11),
     foreign key (placa) references Carro(placa) on delete cascade,
     foreign key (cpf_cnpj) references Servidor(cpf_cnpj) on delete cascade,
     foreign key (num_vaga) references Vaga(num_vaga) on delete cascade
 );
+
+ALTER TABLE Registro ADD COLUMN contato CHAR(11);
 
 -- [ORDEM DE INSERÇÃO]
 -- Autarquia

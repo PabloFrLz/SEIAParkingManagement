@@ -961,7 +961,7 @@ class SEIAParkingManagement(QGraphicsView):
         if vaga is not None: # [v1.0.0.03]: o codigo dentro desse if é o mesmo presente dentro do metodo mousePressEvent() de Vaga()
             vaga.press_button_status = True
             vaga.checkStatus()
-            vaga.habilitar_sidebar.emit(vaga) # dá um cancel() e atualiza as informações da sidebar e 
+            vaga.habilitar_sidebar.emit(vaga) # dá um cancel() e atualiza as informações da sidebar 
             vaga.press_button_status = False
         else:
             print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Vaga de nº {vaga_id} não encontrada.")
