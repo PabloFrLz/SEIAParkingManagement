@@ -260,7 +260,7 @@ class Sidebar(QWidget, QObject):
         if len(ultimo_registro_da_vaga) != 0:
             cpf = ultimo_registro_da_vaga[0][2] # [v1.0.0.03]: cpf será null/none quando for VISITANTE
             if(cpf is None): # [v1.0.0.03]: para quando for atualizar visualmente as informações da vaga registrada para um VISITANTE
-                self.modelo_carro.setText("CARRO PRIVADO (VISITANTE)")
+                self.modelo_carro.setText(f"CARRO PRIVADO (VISITANTE)")
                 #self.placa_carro.setText("RESTRITO")
                 self.nome_servidor.setText(ultimo_registro_da_vaga[0][7]) # o nome do servidor nesse momento de execução vai estar salvo em self.nome
             else: 
@@ -529,12 +529,19 @@ class Sidebar(QWidget, QObject):
         if(texto.isdigit()): # verifica se é digito pra direcionar o fluxo pra etapa de CPF
             self.cpf = texto # CPF
             self.contato = texto # CONTATO
-            # [v1.0.0.03]: em fluxos normais sem ser de visitante,definir o mesmo valor de cpf para contato nao causaria nenhum tipo de problema já que o fluxo normal (servidores) não usam o campo de contato.
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF/CONTATO de visitante lido: {texto}")
+            # [v1.0.0.03]: em fluxos normais sem ser de visitante, definir o mesmo valor de cpf para contato nao causaria nenhum tipo de problema já que o fluxo normal (servidores) não usam o campo de contato.
         else:
             if(texto.replace(" ", "").replace("-", "").isalpha() and len(texto) >= self.recursos.CONST.MINIMUN_CHARACTER_TO_NAME): # aceita apenas NOMES
                 self.nome = texto
+                print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: NOME de visitante lido: {texto}")
             elif(texto.replace('-', '').isalnum() and (len(texto) >= 7 or len(texto) <= 8)): # aceita apenas PLACAS de carro (alphanumerico com 7 a 8 caracteres)
+                texto = texto.replace(" ", "") # [v1.0.0.03]: remove espaços em branco caso ocorram
                 texto = texto.upper() # [v1.0.0.03]: converte pra maiusculo pra caso o usuario insira minusculas e tbm por motivos de padronização de placa
+                if "-" not in texto: # [v1.0.0.03]: verifica se o texto contém um traço, que é comum em placas de veículos ANTIGAS
+                    texto = f"{texto[:3]}-{texto[3:]}" # [v1.0.0.03]: salva a possível placa identificada com a adição do hífen '-' [P/ PLACAS MERCOSUL]
+
+                print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: PLACA de visitante lida: {texto}")
                 self.placa_carro.setText(texto) # [v1.0.0.03]: já define no campo da sidebar referente a placas a placa lida.
             else:
                 QMessageBox.warning(self.main_window, "Erro", "insira um nome ou placa válido.")
@@ -973,12 +980,12 @@ class Sidebar(QWidget, QObject):
                 QMessageBox.warning(self.main_window, "Erro", "Selecione uma vaga para imprimir o relatório da vaga.")
                 return # [v1.0.0.03]: sai da função sem nenhuma ação
 
-        relatorio_pdf = self.recursos.resource_path(relatorio_pdf) # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
-        conteudo_pdf = self.recursos.resource_path("conteudo.pdf") # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
-        capa_pdf = self.recursos.resource_path("capa_periodo_eleitoral.pdf") # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
+        relatorio_pdf = self.recursos.PATH.resource_path(relatorio_pdf) # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
+        path_conteudo_pdf = self.recursos.PATH.resource_path("conteudo.pdf") # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
+        path_capa_pdf = self.recursos.PATH.resource_path("capa_periodo_eleitoral.pdf") # [v1.0.0.03]: corrige o path do arquivo pra funcionar no pyinstaller
         
         # ETAPA 2: Gerando o documento PDF com os dados
-        doc = SimpleDocTemplate(conteudo_pdf)
+        doc = SimpleDocTemplate(path_conteudo_pdf)
         count = 0
         linhas = []
         linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado", "Contato"]) # define as colunas da tabela
@@ -1004,8 +1011,8 @@ class Sidebar(QWidget, QObject):
         doc.build(elemento) # cria o pdf com os dados do registro
         
         # ETAPA 3: juntando PDF
-        capa_pdf = PdfReader(capa_pdf)
-        conteudo_pdf = PdfReader(conteudo_pdf)
+        capa_pdf = PdfReader(path_capa_pdf)
+        conteudo_pdf = PdfReader(path_conteudo_pdf)
         writer = PdfWriter()
 
         for page in capa_pdf.pages: # primeira página = capa
@@ -1017,7 +1024,7 @@ class Sidebar(QWidget, QObject):
         with open(relatorio_pdf, "wb") as f: # salvar resultado
             writer.write(f)
 
-        os.remove(conteudo_pdf) # deleta do diretorio o documento temporario "conteudo.pdf" 
+        os.remove(path_conteudo_pdf) # deleta do diretorio o documento temporario "conteudo.pdf" 
         print(f"\n{self.recursos.CORES.ROXO}================================{self.recursos.CORES.RESET}")
         print(f"Relatório gerado com sucesso!\nVeja o arquivo {relatorio_pdf}.")
         print(f"{self.recursos.CORES.ROXO}================================{self.recursos.CORES.RESET}\n")

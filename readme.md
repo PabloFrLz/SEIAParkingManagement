@@ -66,14 +66,16 @@ das imagens das placas. Foi utilizado recursos de RTSP da câmera em conjunto co
 o envio de comandos para captura das imagens. O app usado para configurar a câmera é o Yoosee 
 ver. 6.44.1. Ao iniciar a aplicação, será preciso ler manualmente o endereço IP da câmera que 
 o roteador fornece randomicamente ao configurar a câmera pela primeira vez.
+O IP está disponível em: 
 ```
-O IP está disponível em: Configurações > Informações do dispositivo.
+Configurações > Informações do dispositivo.
 ```
 É preciso também ativar e fornecer a senha de conexões NVR fornecido pelo app:
+A ativação ocorre em: 
 ```
-A ativação ocorre em: Configurações > Mais Configurações > Conexão NVR.
+Configurações > Mais Configurações > Conexão NVR.
+```
 A senha é gerada durante a ativação.
-```
 
 ![Tela do sistema 4](interface_da_aplicacao/img6.png)
 

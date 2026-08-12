@@ -102,6 +102,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.model_ocr = ModelPaddleOCR.ModelPaddleOCR() # [v1.0.0.03]:  modelo para identificar placas 
         self.ip_cam = [] # variavel pra armazenar o IP da camera
         self.ip_cam_pass = "" # armazena a senha de Conexão NVR da Camera WiFi
+        self.enable_OCR = True # [v1.0.0.03]:  habilita ou desabilita o OCR (Reconhecimento Óptico de Caracteres) para identificar placas
         
 
         #==============================================================================================
@@ -541,9 +542,8 @@ class SEIAParkingManagement(QGraphicsView):
         # Inserindo toggle switch pra alternar entre formas geometricas e imagens (views)
         #==============================================================================================
 
-        # Toggle Switch customizado via stylesheet
+        # Toggle Switch para habilitar a descrição das vagas
         self.toggle = QCheckBox()
-        self.toggle.setCheckable(True)
         self.toggle.setStyleSheet(self.recursos.ESTILOS.estilo_toggle_switch)
         self.toggle.setText("DISPOSIÇÃO DAS VAGAS")
 
@@ -552,9 +552,19 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_toggle.setPos(25, 10)
         proxy_toggle.setZValue(1000) # força a ficar no topo da pilha de renderização
         self.scene.addItem(proxy_toggle)
-        
         self.toggle.toggled.connect(self.alternar_view)
 
+        # # [v1.0.0.03]: Toggle para desabilitar o OCR
+        self.toggle_OCR = QCheckBox()
+        self.toggle_OCR.setStyleSheet(self.recursos.ESTILOS.estilo_toggle_switch)
+        self.toggle_OCR.setText("DESABILITAR OCR")
+
+        proxy_toggle_OCR = QGraphicsProxyWidget()
+        proxy_toggle_OCR.setWidget(self.toggle_OCR)
+        proxy_toggle_OCR.setPos(225, 10)
+        proxy_toggle_OCR.setZValue(1000) # força a ficar no topo da pilha de renderização
+        self.scene.addItem(proxy_toggle_OCR)
+        self.toggle_OCR.toggled.connect(lambda: setattr(self, 'enable_OCR', not self.enable_OCR))  # [v1.0.0.03]: alterna entre True -> False e False -> True
         
         #==============================================================================================
         # Copyright
@@ -990,42 +1000,32 @@ class SEIAParkingManagement(QGraphicsView):
             img.show()        # [v1.0.0.03]: abre a imagem pra fins de DEBUG pro guarda verificar se a imagem foi batida corretamente.
             #img.save(self.model_ocr.SAVE_PATH)  # [v1.0.0.03]: salva
         
-        self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
+        if self.enable_OCR: # [v1.0.0.03]: verifica se o OCR está habilitado - caso nao, mostra apenas a imagem capturada e finaliza
+            self.model_ocr.identificar_caracteres_com_paddleOCR() # [v1.0.0.03]: chama o metodo com o algoritmo de OCR usando PaddleOCR
 
-        if self.model_ocr.placa[0] is not None:
-            if self.model_ocr.placa[1] is None:
-                self.model_ocr.placa[1] = 0.0 # [v1.0.0.03]: caso a confiabilidade seja None, define como 0.0 pra evitar erro de conversão
+            if self.model_ocr.placa[0] is not None:
+                if self.model_ocr.placa[1] is None:
+                    self.model_ocr.placa[1] = 0.0 # [v1.0.0.03]: caso a confiabilidade seja None, define como 0.0 pra evitar erro de conversão
 
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:     PLACA IDENTIFICADA:\n")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:   ___________________________")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    PLACA: {self.model_ocr.placa[0]}       |")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |")
-            print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |___________________________|\n")
-            
-            resposta = QMessageBox.question(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!\nDeseja buscar essa placa no sistema?")
-            if resposta == QMessageBox.StandardButton.Yes:
-                carro = self.sidebar.getCarroByPlaca(self.model_ocr.placa[0]) # [v1.0.0.03]: chama o metodo que busca a placa no banco de dados pra verificar se é uma placa cadastrada no banco ou nao
-                if len(carro) == 0:
-                    QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' não está cadastrada no banco de dados!")
-                else:
-                    self.processarVagaBuscada(self.model_ocr.placa[0]+" - "+"modelo") # [v1.0.0.03]: chama a função que processa a placa - a string "modelo" é apenas porque o metodo processarVagaBuscada() espera receber uma string no formato "PLACA - MODELO". O que importa mesmo é a placa.
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:     PLACA IDENTIFICADA:\n")
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:   ___________________________")
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    PLACA: {self.model_ocr.placa[0]}       |")
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |    CONFIANÇA: {str(float(self.model_ocr.placa[1])*100)}%       |")
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]:  |___________________________|\n")
                 
-        else:
-            QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
+                resposta = QMessageBox.question(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' foi identificada com taxa de confiabilidade de {self.model_ocr.placa[1]}!\nDeseja buscar essa placa no sistema?")
+                if resposta == QMessageBox.StandardButton.Yes:
+                    carro = self.sidebar.getCarroByPlaca(self.model_ocr.placa[0]) # [v1.0.0.03]: chama o metodo que busca a placa no banco de dados pra verificar se é uma placa cadastrada no banco ou nao
+                    if len(carro) == 0:
+                        QMessageBox.warning(self, "Busca", f"A placa '{self.model_ocr.placa[0]}' não está cadastrada no banco de dados!")
+                    else:
+                        self.processarVagaBuscada(self.model_ocr.placa[0]+" - "+"modelo") # [v1.0.0.03]: chama a função que processa a placa - a string "modelo" é apenas porque o metodo processarVagaBuscada() espera receber uma string no formato "PLACA - MODELO". O que importa mesmo é a placa.
+                    
+            else:
+                QMessageBox.warning(self, "Busca", f"Nenhuma placa foi identificada!")
 
         self.btn_captura_placa.setEnabled(True) # [v1.0.0.03]: habilita o button novamente.
-
-
-    def reposicionar_popup_completer(self): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
-        popup = self.completer.popup()
-        if not popup.isVisible():
-            return  # nada pra reposicionar se a lista não esta aberta
-        
-        viewport_pos = self.mapFromScene(self.proxy_search.pos())
-        global_pos = self.viewport().mapToGlobal(viewport_pos)
-        global_pos.setY(global_pos.y() + 36) # necessario ter esse deslocamento de 50px pra baixo pois a janela do completer aparece em cima da QComboBox
-        popup.move(global_pos)
-
+        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Processo de captura concluído.\n")
 
 
 
@@ -1054,9 +1054,7 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
-
     def FormularioLeituraDados(self): # [v1.0.0.03]: metodo pra ler nomes e etc
-
         container = QWidget()
         pixmap = QPixmap(self.recursos.PATH.img_banner_ip)
         container.setFixedSize(pixmap.size())  # [v1.0.0.03]: container do tamanho exato da imagem
@@ -1065,7 +1063,6 @@ class SEIAParkingManagement(QGraphicsView):
         label.setPixmap(pixmap)
         label.setGeometry(0, 0, container.width(), container.height())
         label.lower()  # [v1.0.0.03]: manda o label pro fundo da pilha de widgets (z-order)
-
 
         layout_ips = QHBoxLayout()  # [v1.0.0.03]: conteiner vertical pros campos de ip ficarem um do lado do outro
         number = [None, None, None, None] # [v1.0.0.03]: 4 campos do endereço IP
@@ -1107,10 +1104,6 @@ class SEIAParkingManagement(QGraphicsView):
         layout_vertical.addWidget(password_label, alignment=Qt.AlignmentFlag.AlignCenter) # [v1.0.0.03]: Insere o campo de leitura da senha em baixo do campo de leitura de IP
         layout_vertical.addLayout(layout_btn, stretch=0.5) # [v1.0.0.03]: Insere os buttons em baixo
 
-
-
-
-
         # [v1.0.0.03]: inserindo na interface
         container.setStyleSheet(self.recursos.ESTILOS.estilo_IP_banner) # [v1.0.0.03]: remove a cor de fundo pra ficar com cor de background transparente.
         proxy = QGraphicsProxyWidget()
@@ -1132,6 +1125,15 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
+    def reposicionar_popup_completer(self): # [v1.0.0.03]: metodo pra corrigir a posição xy da janela do QCompleter da self.search_box
+        popup = self.completer.popup()
+        if not popup.isVisible():
+            return  # nada pra reposicionar se a lista não esta aberta
+        
+        viewport_pos = self.mapFromScene(self.proxy_search.pos())
+        global_pos = self.viewport().mapToGlobal(viewport_pos)
+        global_pos.setY(global_pos.y() + 36) # necessario ter esse deslocamento de 50px pra baixo pois a janela do completer aparece em cima da QComboBox
+        popup.move(global_pos)
 
 
 

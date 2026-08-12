@@ -72,6 +72,7 @@ class ModelPaddleOCR:
             texts = res["rec_texts"]
             scores = res["rec_scores"]
             for texto, score in zip(texts, scores):
+                texto = texto.replace(" ", "") # [v1.0.0.03]: remove espaços em branco caso ocorram
                 print(f"[{self.recursos.CORES.AMARELO}ModelPaddleOCR.py{self.recursos.CORES.RESET}]: {texto}  (confiança: {score:.2f})")
                 if len(texto) == 3: # [v1.0.0.03]: extrai os 3 primeiros digitos da placa de moto (que não possuem o traço '-')
                     self.placa[0] = texto

@@ -132,11 +132,11 @@ class Estilos:
             }}
             
             QPushButton:hover {{
-                background-color: rgba(255, 165, 0, 80);   /* laranja suave */
+                background-color: #008C43;   /* verde bandeira paraná */
             }}
             
             QPushButton:pressed {{
-                background-color: rgba(0, 255, 155, 80);
+                background-color: #2649A5; /* azul bandeira paraná */
                 color: white;
             }}
         """
