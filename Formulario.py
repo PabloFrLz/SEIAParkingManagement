@@ -22,12 +22,15 @@ class Formulario(QWidget):
         # lista de itens vindas do banco de dados
         for tupla in items:
             if categoria == 1: # servidores
-                item = tupla[0]+" - "+tupla[1] # (CPF + Nome)
+                item = tupla[0]+" - "+tupla[1] # (CPF - Nome)
                 self.combo.addItem(item) 
             elif categoria == 2: # carros
-                item = f'{tupla[0]} - {tupla[3]}' # (placa/modelo)
+                item = f'{tupla[0]} - {tupla[3]}' # (placa - modelo)
                 self.combo.addItem(item)
-            else: # autarquias/data/horas/vagas
+            elif categoria == 3: # vagas
+                item = f'{tupla[0]} - {tupla[1]}' # (nº - orgão)
+                self.combo.addItem(item)
+            else: # autarquias/data/horas/
                 self.combo.addItems(tupla)
 
         # estilo dos formulários

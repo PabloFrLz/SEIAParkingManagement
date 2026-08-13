@@ -34,6 +34,9 @@ class Textos:
         self.text_insert_cpf_servidor = "Digite o CPF ou CNPJ do servidor:"
         self.text_insert_placa = "Digite a placa do carro:"
         self.text_insert_contato = "Digite o contato do visitante:"
+        self.text_insert_modelo_carro = "Insira o modelo do carro:"
+        self.text_insert_setor = "Insira o setor responsável pelo veículo:"
+        self.text_select_vaga = "Selecione uma das vagas vinculadas ao orgão selecionado:"
 
 
 
@@ -176,11 +179,11 @@ class Estilos:
             }}
             
             QPushButton:hover {{
-                background-color: rgba(255, 165, 0, 80);   /* laranja suave */
+                background-color: #008C43;   /* verde bandeira paraná */
             }}
             
             QPushButton:pressed {{
-                background-color: rgba(255, 140, 0, 160);
+                background-color: #2649A5; /* azul bandeira paraná */
                 color: white;
             }}
         """

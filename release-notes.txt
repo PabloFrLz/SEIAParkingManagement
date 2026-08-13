@@ -42,5 +42,11 @@
 #       Adotado em seu lugar uma câmera IP WiFi com classificação IP66. Além da referida camêra ser própria para
 #       instalações em área externa (suporta chuva e sol), ela atende bem o propósito de ficar funcionando
 #       durante horas sem sobreaquecer já que é uma câmera de monitoramento.
-#       
+#   16. Modificado o formulario de visitante para ler NOME, PLACA e CONTATO. Modificado a tabela 'Registro' do 
+#       banco MySQL para que esta tenha uma coluna 'Contato'.
+#   17. Removido Brasão caracteristico da atual administração do estado do paraná, atendendo ao que determina 
+#       a lei federal nº 9.504/1997.
+#   18. Inserido checkbox p/ desabilitar o recurso de Identificação Óptica de Caracter (OCR).
+#   19. Adicionado Botão para cadastrar e excluir carros da base de dados.
+#   20. 
 #

@@ -29,8 +29,6 @@ class Sidebar(QWidget, QObject):
         self.recursos = self.main_window.recursos # [v1.0.0.03]: obtem a instancia da classe recursos
         self.conn = janela_principal.conn
         self.scene = janela_principal.scene
-        self.check = [None, None, None, None, None]
-        self.vaga_processada = True # [v1.0.0.03]: variavel pra identificar quando há um fluxo de formulario (ENTRADA, CADASTRO, REMOVER) em andamento
         #self.eixo_x_form = 30
         #self.eixo_y_form = self.CONST_DESLOCAMENTO
         self.categoria = 0 
@@ -58,6 +56,12 @@ class Sidebar(QWidget, QObject):
         self.form1 = None
         self.form2 = None
         self.form3 = None
+        self.form4 = None
+        self.form5 = None
+        self.form6 = None
+        self.form7 = None
+        self.check = [None, None, None, None, None, None, None] #[v1.0.0.03]: permite até 7 formularios por fluxo de cadastro, entrada ou remoção
+        self.vaga_processada = True # [v1.0.0.03]: variavel pra identificar quando há um fluxo de formulario (ENTRADA, CADASTRO, REMOVER) em andamento
         #self.formularios = [self.form1, self.form2, self.form3] # inserindo em um vetor/lista pra facilitar a manipulação e evitar futuros erros de escalamento
 
 
@@ -175,17 +179,27 @@ class Sidebar(QWidget, QObject):
         self.sidebar_layout.addWidget(self.btn_registrar_saida) # insere na GUI
         self.btn_registrar_saida.clicked.connect(self.acaoButtonSaida)
         
-        self.btn_cadastro = QPushButton("CADASTRAR SERVIDOR")
-        self.btn_cadastro.setCheckable(True) # destaca o botão selecionado
-        self.sidebar_layout.addWidget(self.btn_cadastro)
-        self.btn_cadastro.clicked.connect(self.acaoButtonCadastro)
-        #self.btn_cadastro.setStyleSheet(self.recursos.ESTILOS.button_style_2)
+        self.btn_cadastro_servidor = QPushButton("CADASTRAR SERVIDOR")
+        self.btn_cadastro_servidor.setCheckable(True) # destaca o botão selecionado
+        self.sidebar_layout.addWidget(self.btn_cadastro_servidor)
+        self.btn_cadastro_servidor.clicked.connect(self.acaoButtonCadastroServidor)
 
-        self.btn_remove = QPushButton("REMOVER SERVIDOR")
-        self.btn_remove.setCheckable(True) # destaca o botão selecionado
-        self.sidebar_layout.addWidget(self.btn_remove)
-        self.btn_remove.clicked.connect(self.acaoButtonRemoverServidor)
-        self.btn_remove.setStyleSheet(self.recursos.ESTILOS.button_style_4)
+        self.btn_cadastro_veiculo = QPushButton("CADASTRAR VEICULO")
+        self.btn_cadastro_veiculo.setCheckable(True) 
+        self.sidebar_layout.addWidget(self.btn_cadastro_veiculo)
+        self.btn_cadastro_veiculo.clicked.connect(self.acaoButtonCadastroVeiculo)
+        
+        self.btn_remove_servidor = QPushButton("REMOVER SERVIDOR")
+        self.btn_remove_servidor.setCheckable(True) # destaca o botão selecionado
+        self.sidebar_layout.addWidget(self.btn_remove_servidor)
+        self.btn_remove_servidor.clicked.connect(self.acaoButtonRemoverServidor)
+        self.btn_remove_servidor.setStyleSheet(self.recursos.ESTILOS.button_style_4)
+
+        self.btn_remove_carro = QPushButton("REMOVER VEÍCULO")
+        self.btn_remove_carro.setCheckable(True) # destaca o botão selecionado
+        self.sidebar_layout.addWidget(self.btn_remove_carro)
+        self.btn_remove_carro.clicked.connect(self.acaoButtonRemoverVeiculo)
+        self.btn_remove_carro.setStyleSheet(self.recursos.ESTILOS.button_style_4)
 
         self.btn_relatorio = QPushButton() # Button RELATÓRIO
         self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio)) # carrega icone para o botão de relatorio
@@ -210,7 +224,7 @@ class Sidebar(QWidget, QObject):
         grupo_buttons_relatorio.addWidget(self.btn_relatorio_completo)
         self.sidebar_layout.addLayout(grupo_buttons_relatorio)
 
-        self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro, self.btn_remove, self.btn_relatorio, self.btn_relatorio_completo]
+        self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro_servidor, self.btn_cadastro_veiculo, self.btn_remove_servidor, self.btn_remove_carro, self.btn_relatorio, self.btn_relatorio_completo]
 
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
@@ -221,8 +235,12 @@ class Sidebar(QWidget, QObject):
         self.regex_nome = QRegularExpression("^[A-Za-z ]*$") # Para o nome
         self.validator_nome = QRegularExpressionValidator(self.regex_nome)
 
-        self.regex_placa = QRegularExpression("^[A-Za-z0-9-]*$") # Para a placa (admite apenas letras maiusculas, numeros e hífen)
+        self.regex_placa = QRegularExpression("^[A-Za-z0-9-]*$") # Para a placa (admite apenas letras maiusculas, minusculas, numeros e hífen)
         self.validator_placa = QRegularExpressionValidator(self.regex_placa)
+
+        self.regex_modelo = QRegularExpression(r"^[A-Za-z0-9\s\-\./]+$")   # letras, números, espaço, hífen, ponto e barra
+        self.validator_modelo = QRegularExpressionValidator(self.regex_modelo)
+
 
         
         #======================================
@@ -346,21 +364,28 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def acaoButtonCadastro(self):
+    def acaoButtonCadastroServidor(self):
         self.transitToFormulario() # animação que empurra pro lado direito as infos
-        #self.titulo = self.insertHeader("CADASTRAR SERVIDOR") # gera logo no topo e titulo da seção
-        self.titulo.setText("CADASTRAR SERVIDOR") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
+        self.titulo.setText("CADASTRAR SERVIDOR") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de cadastro de servidores
         self.cadastroServidor() # inicializa os formularios pra cadastro de servidor
 
 
 
+    def acaoButtonCadastroVeiculo(self):
+        self.transitToFormulario() # animação que empurra pro lado direito as infos
+        self.titulo.setText("CADASTRAR VEICULO") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de cadastro de veiculos
+        self.cadastroVeiculo() # inicializa os formularios pra cadastro de veiculo
+
+
     def acaoButtonRemoverServidor(self): # [v1.0.0.03]: método que terá a ação que dará inicio ao processo de remoção de servidor 
         self.transitToFormulario() # animação que empurra pro lado direito as infos
-        #self.titulo = self.insertHeader("REMOVER SERVIDOR") 
-        self.titulo.setText("REMOVER SERVIDOR") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção de registro de entrada
+        self.titulo.setText("REMOVER SERVIDOR") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção 
         self.removeServidor() # inicializa os formulários para remoção de servidor
 
-
+    def acaoButtonRemoverVeiculo(self): # [v1.0.0.03]: método que terá a ação que dará inicio ao processo de remoção de veiculo
+        self.transitToFormulario() # animação que empurra pro lado direito as infos
+        self.titulo.setText("REMOVER VEICULO") # [v1.0.0.03]: Altera o titulo da seção para retratar a nova seção
+        self.removeVeiculo() # inicializa os formulários para remoção de veiculo
 
     # transiciona para o formulario de registro e posteriomente de volta para a tela de informações da vaga
     def transitToFormulario(self):
@@ -422,28 +447,28 @@ class Sidebar(QWidget, QObject):
             self.check[2] = True
             # Button pra confirmar inserção no banco de dados
             self.btn_commit = self.insertButton("CONFIRMAR", self.recursos.ESTILOS.button_style_3, self.insertRegistro) # linka com a função para inserir na tabela de registros do banco
-            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
+            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_4, self.cancel)
 
 
 
     def registroEntradaVisitante(self): # [v1.0.0.03]: função propria para o registro de visitantes
         if (self.check[0] is None): # [v1.0.0.03]: coleta NOME do visitante
-            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_visitante, "nome...", self.validator_nome, self.registroEntradaVisitante)
+            self.FormularioLeituraDados("nome", self.recursos.TEXTOS.text_insert_nome_visitante, "nome...", self.validator_nome, self.registroEntradaVisitante)
             self.check[0] = True
 
         elif (self.check[1] is None): # [v1.0.0.03]: coleta PLACA do carro do visitante
-            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_placa, "placa...", self.validator_placa, self.registroEntradaVisitante)
+            self.FormularioLeituraDados("placa", self.recursos.TEXTOS.text_insert_placa, "placa...", self.validator_placa, self.registroEntradaVisitante)
             self.check[1] = True
 
         elif (self.check[2] is None): # [v1.0.0.03]: coleta CONTATO do visitante
-            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_contato, "contato...", self.validator_cpf, self.registroEntradaVisitante)
+            self.FormularioLeituraDados("contato", self.recursos.TEXTOS.text_insert_contato, "contato...", self.validator_cpf, self.registroEntradaVisitante)
             self.check[2] = True
 
         elif(self.check[3] is None):
             self.check[3] = True
             # Button pra confirmar inserção no banco de dados - registro
             self.btn_commit = self.insertButton("CONFIRMAR", self.recursos.ESTILOS.button_style_3, self.insertVisitante) # linka com a função que insere no banco os dados do servidor
-            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
+            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_4, self.cancel)
         
 
 
@@ -461,20 +486,17 @@ class Sidebar(QWidget, QObject):
                 return
             
             self.form1.setDisabled(True)
-            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
+            self.FormularioLeituraDados("nome", self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
             self.check[1] = True
 
         elif (self.check[2] is None): 
-            self.FormularioLeituraDados(self.recursos.TEXTOS.text_insert_cpf_servidor, "ex.: 50545642300...", self.validator_cpf, self.cadastroServidor)
+            self.FormularioLeituraDados("cpf", self.recursos.TEXTOS.text_insert_cpf_servidor, "ex.: 50545642300...", self.validator_cpf, self.cadastroServidor)
             self.check[2] = True
-            #self.coord_last_widget[1] = self.coord_last_widget[1] + 30 # [v1.0.0.03]: deslocando novamente pra corrigir diferença de espaço entre formularios
         
         elif (self.check[3] is None): 
-            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.form1.getResult()}' AND proprietario_cpf IS NULL" # [v1.0.0.03]: selecione todos os servidores onde a autarquia for igual a de interesse e nao tenha proprietarios (null)
+            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.form1.getResult()}' AND proprietario_cpf IS NULL" # [v1.0.0.03]: selecione todos os carros onde a autarquia for igual a de interesse e nao tenha proprietarios (null)
             self.categoria = 2 # informa pra classe Formulario que se trata de um carro
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.cadastroServidor)
-            #self.coord_last_widget[0] = self.form2.getCoordX() # para poder posicionar os botoes corretamente - se tivesse usando conteiner nao precisaria
-            #self.coord_last_widget[1] = self.form2.getCoordY() + 30
             self.check[3] = True
 
         elif(self.check[4] is None):
@@ -482,7 +504,53 @@ class Sidebar(QWidget, QObject):
             self.check[4] = True
             # Button pra confirmar inserção no banco de dados
             self.btn_commit = self.insertButton("CONFIRMAR", self.recursos.ESTILOS.button_style_3, self.insertServidor) # linka com a função que insere no banco os dados do servidor
-            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
+            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_4, self.cancel)
+
+
+        
+    def cadastroVeiculo(self):
+        if (self.check[0] is None): 
+            consulta = "select * from autarquia"
+            self.categoria = 0
+            self.form1 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_autarquia, self.cadastroVeiculo) # gera o primeiro formulario
+            self.check[0] = True #desabilita esse bloco condicional na proxima iteração
+
+        elif (self.check[1] is None): 
+            if (self.form1.getResult() == ""): # [v1.0.0.03]: Corrige o problema do usuario não selecionar orgão
+                QMessageBox.warning(self.main_window, "Erro", "Opção selecionada é inválida.")
+                self.cancel()
+                return
+            
+            self.form1.setDisabled(True)
+            self.FormularioLeituraDados("modelo", self.recursos.TEXTOS.text_insert_modelo_carro, "Modelo do veículo...", self.validator_modelo, self.cadastroVeiculo)
+            self.check[1] = True
+
+        elif (self.check[2] is None): 
+            self.FormularioLeituraDados("placa", self.recursos.TEXTOS.text_insert_placa, "Insira a placa...", self.validator_placa, self.cadastroVeiculo)
+            self.check[2] = True
+        
+        elif (self.check[3] is None): 
+            consulta = f"SELECT * FROM vaga WHERE autarquia = '{self.form1.getResult()}'" # [v1.0.0.03]: selecione todas as vagas da autarquia selecionada
+            self.categoria = 3 # [v1.0.0.03]: informa pra classe Formulario que se trata de uma vaga
+            self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_vaga, self.cadastroVeiculo)
+            self.check[3] = True
+
+        elif (self.check[4] is None): 
+            if (self.form2.getResult() == ""): # [v1.0.0.03]: Corrige o problema do usuario não selecionar a vaga
+                QMessageBox.warning(self.main_window, "Erro", "Opção selecionada é inválida.")
+                self.cancel()
+                return
+            
+            self.form2.setDisabled(True)
+            self.FormularioLeituraDados("setor", self.recursos.TEXTOS.text_insert_setor, "Insira o setor...", self.validator_nome, self.cadastroVeiculo)
+            self.check[4] = True
+
+        elif(self.check[5] is None):
+            self.check[5] = True
+            # Button pra confirmar inserção no banco de dados
+            self.btn_commit = self.insertButton("CONFIRMAR", self.recursos.ESTILOS.button_style_3, self.insertVeiculo) # linka com a função que insere no banco os dados do veiculo
+            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_4, self.cancel)
+
 
 
 
@@ -500,22 +568,23 @@ class Sidebar(QWidget, QObject):
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_servidor, self.removeServidor)
             self.check[1] = True
             # para poder posicionar os botoes corretamente
-            self.coord_last_widget[0] = self.form2.getCoordX() 
-            self.coord_last_widget[1] = self.form2.getCoordY() + 20
+            #self.coord_last_widget[0] = self.form2.getCoordX() 
+            #self.coord_last_widget[1] = self.form2.getCoordY() + 20
 
         elif(self.check[2] is None):
             self.form2.setDisabled(True)
             servidor = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtém o nome e cpf do servidor
-            self.nome = servidor[1] # [v1.0.0.03]: usa apenas o nome capturado
+            self.nome = servidor[1] # [v1.0.0.03]: captura o nome 
+            self.cpf = servidor[0] # [v1.0.0.03]: capturao cpf 
             # [v1.0.0.03]: Buttons pra confirmar remoção de servidor
-            self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_3, self.deleteServidor) # [v1.0.0.03]: linka coma função que remove os dados do servidor do banco
-            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_3, self.cancel)
+            self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_4, self.deleteServidor) # [v1.0.0.03]: linka coma função que remove os dados do servidor do banco
+            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_2, self.cancel)
             servidor_entrada = self.verificaEntradaServidor(servidor[0]) # [v1.0.0.03]: consulta secundária pra verificar se o servidor possui registro em andamento pra não permitir exclusão até que seja registrado uma saida pra esse servidor.
             self.check[2] = True
             if len(servidor_entrada) != 0: # [v1.0.0.03]: se for diferente de zero então significa que tem ocorrencia de entrada do servidor no registro.
                 resposta = QMessageBox.question(self.main_window, "Erro", f"Servidor '{servidor[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua exclusão do banco.\nGostaria de registrar SAIDA para esse servidor e exclui-lo em seguida ?")
                 if (resposta == QMessageBox.StandardButton.Yes):
-                    self.acaoButtonSaida() # [v1.0.0.03]: registra a SAIDA
+                    self.registraSaidaByCPF(self.cpf) # [v1.0.0.03]: registra a SAIDA a partir do CPF
                     self.deleteServidor() # [v1.0.0.03]: chama direto a função que deleta do banco pra nao ter que começar a remoção do servidor do inicio chamando removeServidor()
                 else:
                     self.cancel() # [v1.0.0.03]: cancela a operação
@@ -524,29 +593,84 @@ class Sidebar(QWidget, QObject):
     
 
 
-    def capturar_nome_cpf(self, line_edit, func_call_recursivamente):
+    def removeVeiculo(self): # [v1.0.0.03]: Gerando os formularios do processo de remoção de veiculo
+        if (self.check[0] is None): 
+            consulta = "select * from autarquia"
+            self.categoria = 0
+            self.form1 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_autarquia, self.removeVeiculo) # gera o primeiro formulario
+            self.check[0] = True #desabilita esse bloco condicional na proxima iteração
+        
+        elif (self.check[1] is None): 
+            self.form1.setDisabled(True)
+            consulta = f"select * from carro where autarquia='{self.form1.getResult()}'"
+            self.categoria = 2
+            self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.removeVeiculo)
+            self.check[1] = True
+
+        elif(self.check[2] is None):
+            self.form2.setDisabled(True)
+            carro = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtém a placa e modelo do carro
+            self.placa = carro[0] # [v1.0.0.03]: usa apenas a placa capturada
+            # [v1.0.0.03]: Buttons pra confirmar remoção de veiculo
+            self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_4, self.deleteVeiculo) # [v1.0.0.03]: linka coma função que remove os dados do veiculo do banco
+            self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_2, self.cancel)
+            carro_entrada = self.verificaSAIDAbyPlaca(self.placa) # [v1.0.0.03]: consulta secundária pra verificar se o carro possui registro em andamento pra não permitir exclusão até que seja registrado uma saida pra esse carro.
+            self.check[2] = True
+            if len(carro_entrada) != 0: # [v1.0.0.03]: se for diferente de zero então significa que tem ocorrencia de entrada do carro no registro.
+                resposta = QMessageBox.question(self.main_window, "Erro", f"Veículo '{carro[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua EXCLUSÃO.\nGostaria de registrar SAIDA para essa ENTRADA do registro e em seguida excluir o veículo do banco ?")
+                if (resposta == QMessageBox.StandardButton.Yes):
+                    self.registraSaidaByPlaca(self.placa) # [v1.0.0.03]: registra a SAIDA 
+                    self.deleteVeiculo() # [v1.0.0.03]: deleta o veiculo do banco
+                else:
+                    self.cancel() # [v1.0.0.03]: cancela a operação
+            else:
+                QMessageBox.warning(self.main_window, "Atenção", "Não consta ENTRADA pendente no registro!\nClique em REMOVER para concluir a operação de EXCLUSÃO!")
+    
+
+
+
+    def capturar_valor(self, tipo, line_edit, func_call_recursivamente):
         texto = line_edit.text().strip() 
-        if(texto.isdigit()): # verifica se é digito pra direcionar o fluxo pra etapa de CPF
+        if tipo == "cpf":
             self.cpf = texto # CPF
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF de visitante lido: {texto}")
+
+        elif tipo == "contato":
             self.contato = texto # CONTATO
-            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF/CONTATO de visitante lido: {texto}")
-            # [v1.0.0.03]: em fluxos normais sem ser de visitante, definir o mesmo valor de cpf para contato nao causaria nenhum tipo de problema já que o fluxo normal (servidores) não usam o campo de contato.
-        else:
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CONTATO de visitante lido: {texto}")
+        
+        elif tipo == "nome":
             if(texto.replace(" ", "").replace("-", "").isalpha() and len(texto) >= self.recursos.CONST.MINIMUN_CHARACTER_TO_NAME): # aceita apenas NOMES
                 self.nome = texto
                 print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: NOME de visitante lido: {texto}")
-            elif(texto.replace('-', '').isalnum() and (len(texto) >= 7 or len(texto) <= 8)): # aceita apenas PLACAS de carro (alphanumerico com 7 a 8 caracteres)
+            else:
+                QMessageBox.warning(self.main_window, "Erro", "insira um nome válido.")
+                self.cancel()
+                return
+
+        elif tipo == "placa":
+            if(texto.replace('-', '').isalnum() and (len(texto) >= 7 or len(texto) <= 8)): # aceita apenas PLACAS de carro (alphanumerico com 7 a 8 caracteres)
                 texto = texto.replace(" ", "") # [v1.0.0.03]: remove espaços em branco caso ocorram
                 texto = texto.upper() # [v1.0.0.03]: converte pra maiusculo pra caso o usuario insira minusculas e tbm por motivos de padronização de placa
                 if "-" not in texto: # [v1.0.0.03]: verifica se o texto contém um traço, que é comum em placas de veículos ANTIGAS
                     texto = f"{texto[:3]}-{texto[3:]}" # [v1.0.0.03]: salva a possível placa identificada com a adição do hífen '-' [P/ PLACAS MERCOSUL]
 
-                print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: PLACA de visitante lida: {texto}")
-                self.placa_carro.setText(texto) # [v1.0.0.03]: já define no campo da sidebar referente a placas a placa lida.
-            else:
-                QMessageBox.warning(self.main_window, "Erro", "insira um nome ou placa válido.")
-                self.cancel()
-                return
+            self.placa = texto
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: PLACA de visitante lida: {texto}")
+
+        elif tipo == "modelo":
+            self.modelo = texto
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: MODELO de visitante lido: {texto}")
+
+        elif tipo == "setor":
+            self.setor = texto
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: SETOR de visitante lido: {texto}")
+
+        else:
+            QMessageBox.warning(self.main_window, "Erro", "insira um valor válido.")
+            self.cancel()
+            return
+        
         
         func_call_recursivamente()
 
@@ -557,6 +681,11 @@ class Sidebar(QWidget, QObject):
         print(f"  ***************** ({self.recursos.CORES.CIANO} {self.titulo.text()} {self.recursos.CORES.RESET}) *****************")
         print(f"{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}\n")
         num_vaga = self.num_vaga.displayText()
+        
+        #    __________________________________________________________
+        #   |                                                          |
+        #   |           ATUALIZA SAIDA (visitante e servidor)          |
+        #   |__________________________________________________________|
         if dados is not None:
             #obtem os dados direto do banco
             placa = dados[0][1]
@@ -572,6 +701,11 @@ class Sidebar(QWidget, QObject):
                 # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde a placa e cpf 
                 # baterem com os coletados nesse bloco condicional - por fim, onde 'data_saida' estiver vazio e o tipo estiver definido como ENTRADA, pois assim voce tem a certeza 
                 # de atualizar a tupla no banco com dados de saida em branco e que so tem uma ENTRADA registrada - pode ser que seja redundante, mas funciona!
+        
+        #    _______________________________________________
+        #   |                                               |
+        #   |           INSERE ENTRADA SERVIDOR             |
+        #   |_______________________________________________|
         else:
             #obtem os dados apartir dos formularios de ENTRADA
             tipo = "ENTRADA"
@@ -584,7 +718,6 @@ class Sidebar(QWidget, QObject):
             #tratamento dos dados
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Nº vaga: {num_vaga}")
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF/CNPJ: {cpf_cnpj}")
-            #print("Nome:", nome_servidor)
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Placa: {placa}")
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Modelo: {modelo}")
             
@@ -610,11 +743,14 @@ class Sidebar(QWidget, QObject):
             self.error_message(e)
     
 
-
+    #    _______________________________________________
+    #   |                                               |
+    #   |           INSERE ENTRADA VISITANTE            |
+    #   |_______________________________________________|
     def insertVisitante(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO Registro(placa, num_vaga, data_entrada, tipo, nome_visitante, contato) VALUES ('{self.placa_carro.displayText()}', {self.num_vaga.displayText()}, NOW(), 'ENTRADA', '{self.nome}', '{self.contato}')")
+            cursor.execute(f"INSERT INTO Registro(placa, num_vaga, data_entrada, tipo, nome_visitante, contato) VALUES ('{self.placa}', {self.num_vaga.displayText()}, NOW(), 'ENTRADA', '{self.nome}', '{self.contato}')")
             self.conn.commit()
             QMessageBox.information(self.main_window, "Sucesso", "Registro efetuado com sucesso!")
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
@@ -623,7 +759,7 @@ class Sidebar(QWidget, QObject):
             self.error_message(e)
             
 
-
+    
     def insertServidor(self):
         try:
             cursor = self.conn.cursor()
@@ -649,16 +785,51 @@ class Sidebar(QWidget, QObject):
             
 
 
+    def insertVeiculo(self):
+        self.vaga = self.form2.getResult().split(" - ")[0] # [v1.0.0.03]: obtem o numero da vaga selecionada
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f"INSERT INTO Carro (placa, num_vaga, autarquia, modelo, setor, proprietario_cpf) VALUES ('{self.placa}', {self.vaga}, '{self.form1.getResult()}', '{self.modelo}', '{self.setor}', NULL)") # [v1.0.0.03]: a placa esta sendo definida como NULL pois o veiculo ainda não tem um proprietário vinculado a ele, e o cadastro de servidor é que vai vincular o carro ao CPF do servidor posteriormente
+            self.conn.commit()
+            print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
+            print(f"Carro [{self.modelo}] registrado com sucesso!")
+            print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
+            
+            QMessageBox.information(self.main_window, "Sucesso", "Carro cadastrado com sucesso!")
+            self.cancel(self.sentinel) # reseta informações e retrocede sidebar
+
+        except Error as e:
+            self.error_message(e)
+
+
+
     def deleteServidor(self): # [v1.0.0.03]: remoção do servidor do banco de dados
         try:
             cursor = self.conn.cursor() 
-            cursor.execute(f"delete from servidor where nome='{self.nome}'")
+            cursor.execute(f"delete from servidor where cpf_cnpj='{self.cpf}'")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
             print("Servidor [{self.nome}] deletado com sucesso!")
             print(f"{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}\n")
 
             QMessageBox.information(self.main_window, "Sucesso", "Servidor removido com sucesso!")
+            self.cancel(self.sentinel) # reseta informações e retrocede sidebar
+
+        except Error as e:
+            self.error_message(e)
+
+
+
+    def deleteVeiculo(self): # [v1.0.0.03]: remoção do veiculo do banco de dados
+        try:
+            cursor = self.conn.cursor() 
+            cursor.execute(f"delete from carro where placa='{self.placa}'")
+            self.conn.commit()
+            print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
+            print("Veículo [{self.placa}] deletado com sucesso!")
+            print(f"{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}\n")
+
+            QMessageBox.information(self.main_window, "Sucesso", "Veículo removido com sucesso!")
             self.cancel(self.sentinel) # reseta informações e retrocede sidebar
 
         except Error as e:
@@ -861,8 +1032,30 @@ class Sidebar(QWidget, QObject):
         cursor.execute(f"SELECT * FROM registro WHERE num_vaga = '{num_vaga}' AND tipo = 'ENTRADA'")
         result = cursor.fetchall()
         return result 
-    
 
+
+
+    def verificaSAIDAbyPlaca(self, placa): # [v1.0.0.03]: verifica se tem ocorrencia do veiculo no registro com ENTRADA registrada e aguardando SAIDA
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM registro WHERE placa = '{placa}' AND tipo = 'ENTRADA'")
+        result = cursor.fetchall()
+        return result 
+
+
+
+    def registraSaidaByPlaca(self, placa): # [v1.0.0.03]: registra a saida para veiculos que precisem ser removidos mas que conste ENTRADA ativa
+        cursor = self.conn.cursor()
+        sql = f"UPDATE registro SET data_saida = NOW(), tipo = 'SAIDA' WHERE placa = '{placa}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+        cursor.execute(sql)
+        self.conn.commit()
+
+
+    def registraSaidaByCPF(self, cpf): # [v1.0.0.03]: registra a saida para veiculos que precisem ser removidos mas que conste ENTRADA ativa
+        cursor = self.conn.cursor()
+        sql = f"UPDATE registro SET data_saida = NOW(), tipo = 'SAIDA' WHERE cpf_cnpj = '{cpf}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+        cursor.execute(sql)
+        self.conn.commit()
+    
 
     def updateHistoricoRegistro(self): # Função que mostra um preview de entradas no registro para a vaga selecionada
         tuplas_tabela = self.getRegistroByVagaAtDay(self.num_vaga.displayText()) # [v1.0.0.03]: retorna apenas os registros do dia
@@ -891,7 +1084,7 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def FormularioLeituraDados(self, pergunta, instrucao_in_box, regex_validacao, func): # [v1.0.0.03]: metodo pra ler nomes e etc
+    def FormularioLeituraDados(self, tipo_leitura, pergunta, instrucao_in_box, regex_validacao, func): # [v1.0.0.03]: metodo pra ler nomes e etc
         container = QWidget()
         label = QLabel(pergunta)
         label.setFont(self.recursos.FONTES.fonte_texto_pergunta)
@@ -902,7 +1095,7 @@ class Sidebar(QWidget, QObject):
         line_edit.setContentsMargins(5,0,0,0) # remove margens adicionais
         btn_confirmar = QPushButton("OK")
         btn_confirmar.setFixedHeight(self.recursos.CONST.LARGURA_FORMULARIO_BUTTON)
-        btn_confirmar.clicked.connect(lambda: self.capturar_nome_cpf(line_edit, func)) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
+        btn_confirmar.clicked.connect(lambda: self.capturar_valor(tipo_leitura, line_edit, func)) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
         layout = QVBoxLayout(container) # conteiner vertical pro nome da pergunta ficar acima da caixa/box de leitura de nome
         layout_2 = QHBoxLayout() # conteiner horizontal pro button ficar de lado nesses tipos de formulario que requisitam entrada
         layout.addWidget(label) # insere a pergunta
