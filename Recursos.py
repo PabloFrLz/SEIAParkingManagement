@@ -45,18 +45,21 @@ class Textos:
 
 class Fontes:
     def __init__(self):
-        self.fonte_texto_desc_infoboxes = QFont("Segoe UI", 12) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
+        self.fonte_texto_desc_infoboxes = QFont("SF Pro Text", 13) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
         self.fonte_texto_infoboxes = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte dos textos das boxes da sidebar, como "98, SESP, Carlos João Rodrigues, OCUPADO"
-        self.fonte_texto_pergunta = QFont("Segoe UI", 14) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
-        self.fonte_tabela = "font-size: 14px" # [v1.0.0.03]: tamanho da fonte da tabela de registros da sidebar
+        self.fonte_texto_pergunta = QFont("SF Pro Text", 14) # [v1.0.0.03]:  fonte para perguntas como por exemplo: "selecione a autarquia:"
+        self.fonte_tabela = "font-family: 'SF Pro Text'; font-size: 14px;" # [v1.0.0.03]: tamanho da fonte da tabela de registros da sidebar
         self.fonte_texto_buttons = "font-size: 18px" # [v1.0.0.03]: tamanho da fonte do texto dos botões da interface
         self.fonte_texto_buttons_2 = "font-size: 12px"
         #self.fonte_title_header = "<font size='6'>" # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
-        self.fonte_title_header = QFont("Segoe UI", 20) # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
+        self.fonte_title_header = QFont("SF Pro Text", 20) # [v1.0.0.03]: tamanho da fonte do título das seções, como "REGISTRAR ENTRADA", ou "REMOVER SERVIDOR"
         self.fonte_copyright = QFont("Segoe UI Condensed", 10) # [v1.0.0.03]: Fonte do texto de copyright
+        self.fonte_family_geral = "font-family: 'SF Pro Text';"
 
-        self.fonte_texto_desc_infoboxes_2 = QFont("Consolas", 12)
+        self.fonte_texto_desc_infoboxes_2 = QFont("SF Pro Text", 12)
         self.fonte_texto_placa = QFont("Consolas", 16, QFont.Bold)
+
+        self.fonte_texto_toggle = "font-size: 14px"
 
 
 
@@ -120,6 +123,7 @@ class Estilos:
                 border-radius: 8px;            /* bordas arredondadas */
                 padding: 8px 12px;
                 {self.FONTES.fonte_texto_buttons};
+                {self.FONTES.fonte_family_geral};
                 min-height: 24px;
             }}
             QLineEdit:focus {{
@@ -243,11 +247,10 @@ class Estilos:
 
                 border:1px solid #FF542E;
                 color:white;
-
                 font-weight:700;
                 border-radius:6px;
-
                 padding:5px 12px;
+                {self.FONTES.fonte_family_geral};
             }}
 
             QPushButton:hover{{
@@ -271,11 +274,10 @@ class Estilos:
 
                 border:1px solid #2cffae;
                 color:white;
-
                 font-weight:700;
                 border-radius:6px;
-
                 padding:5px 12px;
+                {self.FONTES.fonte_family_geral};
             }}
 
             QPushButton:hover{{
@@ -292,6 +294,8 @@ class Estilos:
             QCheckBox {{
                 background-color: transparent;
                 border: none;
+                {self.FONTES.fonte_family_geral};
+                {self.FONTES.fonte_texto_toggle};
             }}
             QCheckBox::indicator {{
                 width: 30px;

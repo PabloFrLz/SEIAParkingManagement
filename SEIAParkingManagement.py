@@ -733,7 +733,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.btn_admin.clicked.connect(self.authenticateAdmin)
         self.btn_admin.setStyleSheet(self.recursos.ESTILOS.button_style_7)
         self.btn_admin.setAttribute(Qt.WA_TranslucentBackground)
-        self.btn_admin.setFixedSize(80, 44)
+        self.btn_admin.setFixedSize(80, 40)
 
         layout = QVBoxLayout(self.btn_admin)
         self.text_btn_admin = QLabel()
