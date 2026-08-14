@@ -232,6 +232,34 @@ class Estilos:
             }}
         """
 
+        self.button_style_7 = f"""
+            QPushButton{{
+
+                background:qlineargradient(
+                    x1:0,y1:0,
+                    x2:0,y2:1,
+                    stop:0 #802917,
+                    stop:1 #571D10);
+
+                border:1px solid #FF542E;
+                color:white;
+
+                font-weight:700;
+                border-radius:6px;
+
+                padding:5px 12px;
+            }}
+
+            QPushButton:hover{{
+                background-color:#852915;
+            }}
+
+            QPushButton:pressed{{
+                background-color:#541C0D;
+            }}
+            
+        """
+
         self.button_style_8 = f"""
             QPushButton{{
 
@@ -361,6 +389,23 @@ class Estilos:
                 background-color: rgba(0, 255, 155, 80);
                 color: white;
             }}
+        """
+
+        self.text_admin = """
+            background-color: transparent;
+            font-weight: bold;
+        """
+
+        self.text_admin_OFF = """
+            background-color: transparent;
+            font-weight: bold;
+            color: red;
+        """
+
+        self.text_admin_ON = """
+            background-color: transparent;
+            font-weight: bold;
+            color: green;
         """
 
 

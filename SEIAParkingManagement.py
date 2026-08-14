@@ -28,7 +28,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
-    QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
+    QGraphicsProxyWidget, QHBoxLayout, QInputDialog, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 )
 from PySide6.QtGui import QIntValidator, QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
@@ -51,6 +51,7 @@ ver = "v1.0.0.03" # versão do software
 #variaveis de autenticação do banco de dados
 USER = 'root'
 PASSWORD = '5452' #senha de exemplo - não condiz com a real
+ADMIN_PASSWORD = 'nas5452'  # [v1.0.0.03]: senha de administrador
 
 # _______________________________________
 #                                        |
@@ -579,7 +580,7 @@ class SEIAParkingManagement(QGraphicsView):
         )        
         copyright.setFont(self.recursos.FONTES.fonte_copyright)
         copyright.setDefaultTextColor(QColor("gray"))
-        copyright.setPos(WIDTH+230, HEIGHT+320)
+        copyright.setPos(WIDTH+245, HEIGHT+320)
         copyright.setZValue(10)
         self.scene.addItem(copyright)
 
@@ -627,6 +628,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.completer.activated.connect(self.onCompleterActivated)
 
         self.completer.popup().setStyleSheet(self.recursos.ESTILOS.estilo_search_box) # [v1.0.0.03]: aplica o mesmo estilo do QcomboBox no QCompleter
+        self.completer.popup().setFixedHeight(250)
 
 
         # NOVO: reposiciona o popup toda vez que o texto mudar (a cada tecla)
@@ -720,7 +722,42 @@ class SEIAParkingManagement(QGraphicsView):
         # [v1.0.0.03]: adicionando caixa de leitura de texto pra ler o IP da Camera IP WiFi.
         self.garbage_collector = [] # [v1.0.0.03]: para deletar os widgets gerados no processo
         self.FormularioLeituraDados() # [v1.0.0.03]: chamar a função que lê o IP do usuario
+
+        #==============================================================================================
+        # [Admin] Controle de administrador do sistema (v1.0.0.03)
+        #==============================================================================================
+
         
+        self.btn_admin = QPushButton()
+        self.btn_admin.setCheckable(True)
+        self.btn_admin.clicked.connect(self.authenticateAdmin)
+        self.btn_admin.setStyleSheet(self.recursos.ESTILOS.button_style_7)
+        self.btn_admin.setAttribute(Qt.WA_TranslucentBackground)
+        self.btn_admin.setFixedSize(80, 44)
+
+        layout = QVBoxLayout(self.btn_admin)
+        self.text_btn_admin = QLabel()
+        self.text_btn_admin.setText('ADMIN')
+        self.text_btn_admin.setStyleSheet(self.recursos.ESTILOS.text_admin)
+        self.text_btn_admin.setContentsMargins(0,-13,0,0)
+        self.text_btn_admin.setAlignment(Qt.AlignCenter)
+        self.text_btn_admin.setFixedHeight(20)
+
+        self.text_btn_admin_state = QLabel()
+        self.text_btn_admin_state.setText('OFF')
+        self.text_btn_admin_state.setStyleSheet(self.recursos.ESTILOS.text_admin_OFF)
+        self.text_btn_admin_state.setContentsMargins(0,-10,0,0)
+        self.text_btn_admin_state.setAlignment(Qt.AlignCenter)
+        self.text_btn_admin_state.setFixedHeight(20)
+
+        layout.addWidget(self.text_btn_admin)
+        layout.addWidget(self.text_btn_admin_state)
+
+        proxy_btn_admin = QGraphicsProxyWidget()
+        proxy_btn_admin.setWidget(self.btn_admin)
+        proxy_btn_admin.setPos((WIDTH+K-100)/1.21, 0)
+        proxy_btn_admin.setZValue(999)
+        self.scene.addItem(proxy_btn_admin)
 
      
     """
@@ -1134,6 +1171,26 @@ class SEIAParkingManagement(QGraphicsView):
         global_pos = self.viewport().mapToGlobal(viewport_pos)
         global_pos.setY(global_pos.y() + 36) # necessario ter esse deslocamento de 50px pra baixo pois a janela do completer aparece em cima da QComboBox
         popup.move(global_pos)
+
+
+
+    def authenticateAdmin(self):
+        if not self.sidebar.enable_ADMIN_privileges:
+            password, ok = QInputDialog.getText(self, "Autenticação de ADMINISTRADOR", "Entre com a senha de ADMINISTRADOR:", QLineEdit.EchoMode.Password)
+            if ok and password == ADMIN_PASSWORD:
+                QMessageBox.information(self, "ADMIN Access", "Acesso autorizado!")
+                self.sidebar.showAdminControls()  # [v1.0.0.03]: habilita o modo admin desbloqueando botoes da sidebar especificos para esse modo
+                self.text_btn_admin_state.setText('ON')
+                self.text_btn_admin_state.setStyleSheet(self.recursos.ESTILOS.text_admin_ON)
+            elif ok:
+                QMessageBox.warning(self, "Admin Access", "Senha incorreta!\nAcesso NÃO autorizado.")
+        else:
+            resposta = QMessageBox.question(self, "Atenção", "Deseja sair do Modo ADMINISTRADOR?")
+            if resposta == QMessageBox.StandardButton.Yes:
+                QMessageBox.information(self, "ADMIN Access", "Modo ADMINISTRADOR desabilitado")
+                self.sidebar.hideAdminControls() # [v1.0.0.03]: desabilita o modo admin
+                self.text_btn_admin_state.setText('OFF')
+                self.text_btn_admin_state.setStyleSheet(self.recursos.ESTILOS.text_admin_OFF)
 
 
 

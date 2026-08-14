@@ -17,10 +17,15 @@ class Sidebar(QWidget, QObject):
     signal_insert = Signal(object)
 
     def __init__(self, janela_principal, WIDTH, HEIGHT, J, POS_X_SIDEBAR):
-
         super().__init__()
         self.POS_X_SIDEBAR = POS_X_SIDEBAR
         self.CONST_DESLOCAMENTO = 220
+
+        #======================================
+        # Admin
+        #======================================
+
+        self.enable_ADMIN_privileges = False # [v1.0.0.03]: inicialmente modo desabilitado.
 
         #======================================
         # Vars
@@ -64,14 +69,11 @@ class Sidebar(QWidget, QObject):
         self.vaga_processada = True # [v1.0.0.03]: variavel pra identificar quando há um fluxo de formulario (ENTRADA, CADASTRO, REMOVER) em andamento
         #self.formularios = [self.form1, self.form2, self.form3] # inserindo em um vetor/lista pra facilitar a manipulação e evitar futuros erros de escalamento
 
-
         #======================================
         # Configurações iniciais
         #======================================
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        #main_layout.setSpacing(0)
-
 
         #======================================
         # infos da sidebar
@@ -123,7 +125,7 @@ class Sidebar(QWidget, QObject):
         # Sidebar
         #======================================
         self.sidebar = QWidget()
-        self.sidebar.setFixedWidth(WIDTH - 800)           # largura da sidebar
+        self.sidebar.setFixedWidth(WIDTH - 760)           # largura da sidebar
         self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar 
 
         self.sidebar_layout = QVBoxLayout(self.sidebar)
@@ -206,11 +208,11 @@ class Sidebar(QWidget, QObject):
         self.btn_remove_servidor.clicked.connect(self.acaoButtonRemoverServidor)
         self.btn_remove_servidor.setStyleSheet(self.recursos.ESTILOS.button_style_4)
 
-        self.btn_remove_carro = QPushButton("REMOVER VEÍCULO")
-        self.btn_remove_carro.setCheckable(True) # destaca o botão selecionado
-        self.sidebar_layout.addWidget(self.btn_remove_carro)
-        self.btn_remove_carro.clicked.connect(self.acaoButtonRemoverVeiculo)
-        self.btn_remove_carro.setStyleSheet(self.recursos.ESTILOS.button_style_4)'''
+        self.btn_remove_veiculo = QPushButton("REMOVER VEÍCULO")
+        self.btn_remove_veiculo.setCheckable(True) # destaca o botão selecionado
+        self.sidebar_layout.addWidget(self.btn_remove_veiculo)
+        self.btn_remove_veiculo.clicked.connect(self.acaoButtonRemoverVeiculo)
+        self.btn_remove_veiculo.setStyleSheet(self.recursos.ESTILOS.button_style_4)'''
 
         self.btn_registrar_entrada = QPushButton()
         self.btn_registrar_entrada.setIcon(QIcon(self.recursos.PATH.icon_btn_entrada)) # carrega icone para o botão de relatorio
@@ -220,6 +222,7 @@ class Sidebar(QWidget, QObject):
         self.btn_registrar_entrada.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_registrar_entrada.setToolTip("Registrar ENTRADA.")
         self.btn_registrar_entrada.setStyleSheet(self.recursos.ESTILOS.button_style_5) # estilo CSS do botão
+        self.btn_registrar_entrada.setCursor(Qt.PointingHandCursor)
 
         self.btn_registrar_saida = QPushButton()
         self.btn_registrar_saida.setIcon(QIcon(self.recursos.PATH.icon_btn_saida))
@@ -229,6 +232,7 @@ class Sidebar(QWidget, QObject):
         self.btn_registrar_saida.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_registrar_saida.setToolTip("Registrar SAÍDA.")
         self.btn_registrar_saida.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_registrar_saida.setCursor(Qt.PointingHandCursor) 
 
         self.btn_cadastro_servidor = QPushButton()
         self.btn_cadastro_servidor.setIcon(QIcon(self.recursos.PATH.icon_btn_cadastrar_servidor))
@@ -238,6 +242,8 @@ class Sidebar(QWidget, QObject):
         self.btn_cadastro_servidor.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_cadastro_servidor.setToolTip("Cadastrar SERVIDOR")
         self.btn_cadastro_servidor.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_cadastro_servidor.setCursor(Qt.PointingHandCursor)
+        self.btn_cadastro_servidor.setDisabled(True) # [v1.0.0.03]: OPÇÃO DE Administrador
 
         self.btn_cadastro_veiculo = QPushButton()
         self.btn_cadastro_veiculo.setIcon(QIcon(self.recursos.PATH.icon_btn_cadastrar_veiculo))
@@ -247,6 +253,8 @@ class Sidebar(QWidget, QObject):
         self.btn_cadastro_veiculo.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_cadastro_veiculo.setToolTip("Cadastrar VEÍCULO")
         self.btn_cadastro_veiculo.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_cadastro_veiculo.setCursor(Qt.PointingHandCursor)
+        self.btn_cadastro_veiculo.setDisabled(True) # [v1.0.0.03]: OPÇÃO DE Administrador
 
         self.btn_remove_servidor = QPushButton()
         self.btn_remove_servidor.setIcon(QIcon(self.recursos.PATH.icon_btn_remover_servidor))
@@ -256,15 +264,19 @@ class Sidebar(QWidget, QObject):
         self.btn_remove_servidor.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_remove_servidor.setToolTip("Remover SERVIDOR")
         self.btn_remove_servidor.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_remove_servidor.setCursor(Qt.PointingHandCursor)
+        self.btn_remove_servidor.setDisabled(True) # [v1.0.0.03]: OPÇÃO DE Administrador
 
-        self.btn_remove_carro = QPushButton()
-        self.btn_remove_carro.setIcon(QIcon(self.recursos.PATH.icon_btn_remover_veiculo))
-        self.btn_remove_carro.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
-        self.btn_remove_carro.setCheckable(True)
-        self.btn_remove_carro.clicked.connect(self.acaoButtonRemoverVeiculo)
-        self.btn_remove_carro.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
-        self.btn_remove_carro.setToolTip("Remover VEÍCULO")
-        self.btn_remove_carro.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_remove_veiculo = QPushButton()
+        self.btn_remove_veiculo.setIcon(QIcon(self.recursos.PATH.icon_btn_remover_veiculo))
+        self.btn_remove_veiculo.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
+        self.btn_remove_veiculo.setCheckable(True)
+        self.btn_remove_veiculo.clicked.connect(self.acaoButtonRemoverVeiculo)
+        self.btn_remove_veiculo.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_remove_veiculo.setToolTip("Remover VEÍCULO")
+        self.btn_remove_veiculo.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_remove_veiculo.setCursor(Qt.PointingHandCursor)
+        self.btn_remove_veiculo.setDisabled(True) # [v1.0.0.03]: OPÇÃO DE Administrador
 
         self.btn_relatorio = QPushButton() # Button RELATÓRIO
         self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio)) # carrega icone para o botão de relatorio
@@ -274,6 +286,7 @@ class Sidebar(QWidget, QObject):
         self.btn_relatorio.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_relatorio.setToolTip("Emitir relatório dessa vaga.")
         self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_relatorio.setCursor(Qt.PointingHandCursor)
 
         self.btn_relatorio_completo = QPushButton() # Button RELATÓRIO COMPLETO
         self.btn_relatorio_completo.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio_completo)) # carrega icone para o botão de relatorio completo
@@ -283,6 +296,7 @@ class Sidebar(QWidget, QObject):
         self.btn_relatorio_completo.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_relatorio_completo.setToolTip("Emitir relatório de todas as vagas.")
         self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+        self.btn_relatorio_completo.setCursor(Qt.PointingHandCursor)
 
         grupo_buttons_1 = QHBoxLayout()
         grupo_buttons_1.addWidget(self.btn_registrar_entrada)
@@ -293,7 +307,7 @@ class Sidebar(QWidget, QObject):
         grupo_buttons_2 = QHBoxLayout()
         grupo_buttons_2.addWidget(self.btn_registrar_saida)
         grupo_buttons_2.addWidget(self.btn_remove_servidor)
-        grupo_buttons_2.addWidget(self.btn_remove_carro)
+        grupo_buttons_2.addWidget(self.btn_remove_veiculo)
         grupo_buttons_2.addWidget(self.btn_relatorio_completo)
 
         grupo_buttons_1.setContentsMargins(0, 20, 0, 0) # adicionando um espaçamento de 20px entre o topo do grupo e o topo da sidebar
@@ -307,7 +321,7 @@ class Sidebar(QWidget, QObject):
         self.sidebar_layout.setSpacing(1)
 
 
-        self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro_servidor, self.btn_cadastro_veiculo, self.btn_remove_servidor, self.btn_remove_carro, self.btn_relatorio, self.btn_relatorio_completo]
+        self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro_servidor, self.btn_cadastro_veiculo, self.btn_remove_servidor, self.btn_remove_veiculo, self.btn_relatorio, self.btn_relatorio_completo]
 
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
@@ -892,7 +906,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"delete from servidor where cpf_cnpj='{self.cpf}'")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
-            print("Servidor [{self.nome}] deletado com sucesso!")
+            print(f"Servidor [{self.nome}] deletado com sucesso!")
             print(f"{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}\n")
 
             QMessageBox.information(self.main_window, "Sucesso", "Servidor removido com sucesso!")
@@ -909,7 +923,7 @@ class Sidebar(QWidget, QObject):
             cursor.execute(f"delete from carro where placa='{self.placa}'")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
-            print("Veículo [{self.placa}] deletado com sucesso!")
+            print(f"Veículo [{self.placa}] deletado com sucesso!")
             print(f"{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}\n")
 
             QMessageBox.information(self.main_window, "Sucesso", "Veículo removido com sucesso!")
@@ -1361,3 +1375,16 @@ class Sidebar(QWidget, QObject):
         #anim.finished.connect(line_edit.setStyleSheet(f"background-color: rgba(0, 0, 0, 0);")) # [v1.0.0.03]: corrige o problema do fundo nao voltar a ser preto
         line_edit._highlight_anim = anim  # [v1.0.0.03]: mantém referência viva
 
+    def showAdminControls(self):
+        self.btn_cadastro_servidor.setDisabled(False) # [v1.0.0.03]: habilita o botão de cadastro de servidor
+        self.btn_cadastro_veiculo.setDisabled(False) # [v1.0.0.03]: habilita o botão de cadastro de veiculo
+        self.btn_remove_servidor.setDisabled(False) # [v1.0.0.03]: habilita o botão de remoção de servidor
+        self.btn_remove_veiculo.setDisabled(False) # [v1.0.0.03]: habilita o botão de remoção de veiculo
+        self.enable_ADMIN_privileges = True
+
+    def hideAdminControls(self):
+        self.btn_cadastro_servidor.setDisabled(True) # [v1.0.0.03]: desabilita o botão de cadastro de servidor
+        self.btn_cadastro_veiculo.setDisabled(True) # [v1.0.0.03]: desabilita o botão de cadastro de veiculo
+        self.btn_remove_servidor.setDisabled(True) # [v1.0.0.03]: desabilita o botão de remoção de servidor
+        self.btn_remove_veiculo.setDisabled(True) # [v1.0.0.03]: desabilita o botão de remoção de veiculo
+        self.enable_ADMIN_privileges = False
