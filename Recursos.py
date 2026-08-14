@@ -10,6 +10,9 @@ class Constantes:
 
         self.MINIMUN_CHARACTER_TO_NAME = 10
 
+        self.ICON_SIZE_X = 128 # tamanho dos icones dos botões da sidebar
+        self.ICON_SIZE_Y = 144 # tamanho dos icones dos botões da sidebar
+
 
 
 
@@ -213,59 +216,19 @@ class Estilos:
         self.button_style_5 = f"""
             QPushButton {{
                 color: #ffffff;
-                background-color: #004b51;
-                border: 1px solid rgba(255, 165, 0, 90); /* borda laranja suave */
-                text-align: center;
-                {self.FONTES.fonte_texto_buttons_2};
-                border-radius: 6px;
+                background-color: transparent;
                 margin: 4px 8px;
             }}
             
             QPushButton:hover {{
-                background-color: rgba(0, 255, 155, 80); 
+                background-color: #2649A5;   /* verde bandeira paraná */
+                border: 1px solid #444;
+                border-radius: 5px;
             }}
             
             QPushButton:pressed {{
-                background-color: rgba(0, 255, 0, 160);
-                color: white;
-            }}
-        """
-
-        self.button_style_6 = f"""
-            QPushButton{{
-                background-color:#0d5d45;
-                color:white;
-                border:1px solid #18c77d;
-                border-radius:6px;
-                {self.FONTES.fonte_texto_buttons_2};
-                padding:4px 12px;
-            }}
-
-            QPushButton:hover{{
-                background-color:#14855f;
-            }}
-
-            QPushButton:pressed{{
-                background-color:#0b4d38;
-            }}
-        """
-
-        self.button_style_7 = f"""
-            QPushButton{{
-                background:#262626;
-                border:1px solid #ff9800;
-                color:#ffd180;
-                border-radius:6px;
-                {self.FONTES.fonte_texto_buttons_2};
-            }}
-
-            QPushButton:hover{{
-                background:#ff9800;
-                color:black;
-            }}
-
-            QPushButton:pressed{{
-                background:#ffb74d;
+                background-color: #2649A5; /* azul bandeira paraná */
+                border: 2px solid #00C853;
             }}
         """
 
@@ -411,8 +374,6 @@ class Paths:
         self.togle_switch_on = self.resource_path("imagens/on2.png") # [v1.0.0.03]: imagem do switch on
 
         self.img_logo_sidebar = self.resource_path("imagens/nas_logo_periodo_eleitoral.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
-        self.icon_btn_relatorio = self.resource_path("imagens/relatorio.png") # [v1.0.0.03]: imagem do button de relatorio por vaga
-        self.icon_btn_relatorio_completo = self.resource_path("imagens/relatorio_completo.png") # [v1.0.0.03]: imagem do button relatorio completo
 
         self.img_carro_hatch = self.resource_path("imagens/hatch.png") # [v1.0.0.03]: imagem que representa o carro hatch da SEIA
         self.img_carro_sedan = self.resource_path("imagens/sedan.png") # [v1.0.0.03]: imagem que representa o carro sedan da SEIA
@@ -428,6 +389,15 @@ class Paths:
         ]
 
         self.img_banner_ip = self.resource_path("imagens/BANNER_LEITURA_IP_CAM_IP.png")
+
+        self.icon_btn_entrada = self.resource_path("imagens/entrada.png") # [v1.0.0.03]: imagem do button de registrar entrada
+        self.icon_btn_saida = self.resource_path("imagens/saida.png") # [v1.0.0.03]: imagem do button de registrar saida
+        self.icon_btn_cadastrar_servidor = self.resource_path("imagens/cadastrar_servidor.png") # [v1.0.0.03]: imagem do button de cadastro de servidor
+        self.icon_btn_cadastrar_veiculo = self.resource_path("imagens/cadastrar_veiculo.png") # [v1.0.0.03]: imagem do button de cadastro de veiculo
+        self.icon_btn_remover_servidor = self.resource_path("imagens/remover_servidor.png") # [v1.0.0.03]: imagem do button de remover servidor
+        self.icon_btn_remover_veiculo = self.resource_path("imagens/remover_veiculo.png") # [v1.0.0.03]: imagem do button de remover veiculo
+        self.icon_btn_relatorio = self.resource_path("imagens/relatorio_vaga.png") # [v1.0.0.03]: imagem do button de relatorio por vaga
+        self.icon_btn_relatorio_completo = self.resource_path("imagens/relatorio_completo.png") # [v1.0.0.03]: imagem do button relatorio completo
 
         #self.relatorio_pdf = self.resource_path("relatorio.pdf") # [v1.0.0.03]: caminho do arquivo de relatorio.pdf que é gerado quando o usuário clica no botão de gerar relatório
         #self.conteudo_pdf = self.resource_path("conteudo.pdf") # [v1.0.0.03]: caminho do arquivo de conteudo.pdf que é gerado quando o usuário clica no botão de gerar relatório

@@ -123,7 +123,7 @@ class Sidebar(QWidget, QObject):
         # Sidebar
         #======================================
         self.sidebar = QWidget()
-        self.sidebar.setFixedWidth(WIDTH - 890)           # largura da sidebar
+        self.sidebar.setFixedWidth(WIDTH - 800)           # largura da sidebar
         self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar 
 
         self.sidebar_layout = QVBoxLayout(self.sidebar)
@@ -136,12 +136,23 @@ class Sidebar(QWidget, QObject):
         self.header_conteiner = QVBoxLayout(self.header) # [v1.0.0.03]: conteiner vertical que vai agrupar a logomarca superior e título
         self.img = QPixmap(self.recursos.PATH.img_logo_sidebar) #imagem de plano de fundo
         self.seia_logo = QLabel()
-        
-        self.seia_logo.setPixmap(self.img.scaled(
-            320, 180,  # ajuste conforme necessário
+
+        dpr = self.devicePixelRatioF()  # normalmente 1.0, 1.25, 1.5, 2.0 etc
+        target_w, target_h = 416, 167
+
+        scaled = self.img.scaled(
+            int(target_w * dpr), int(target_h * dpr),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
-        ))
+        )
+        scaled.setDevicePixelRatio(dpr)  
+        self.seia_logo.setPixmap(scaled)
+        
+        '''self.seia_logo.setPixmap(self.img.scaled(
+            400, 180,  # ajuste conforme necessário
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        ))'''
         #self.seia_logo.setPixmap(self.img)
         #self.seia_logo.setFixedSize(QSize(370, 150))
         self.seia_logo.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo)
@@ -169,7 +180,7 @@ class Sidebar(QWidget, QObject):
         self.setStyleSheet(self.recursos.ESTILOS.button_style) # [v1.0.0.03]: se não definir um setStyleSheet() pra cada button, eles vão herdar esse estilo padrão de Button
 
         # criação e estética dos botoes
-        self.btn_registrar_entrada = QPushButton("ENTRADA")
+        '''self.btn_registrar_entrada = QPushButton("ENTRADA")
         self.btn_registrar_entrada.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_registrar_entrada)
         self.btn_registrar_entrada.clicked.connect(lambda: self.acaoButtonEntrada(False))
@@ -199,30 +210,102 @@ class Sidebar(QWidget, QObject):
         self.btn_remove_carro.setCheckable(True) # destaca o botão selecionado
         self.sidebar_layout.addWidget(self.btn_remove_carro)
         self.btn_remove_carro.clicked.connect(self.acaoButtonRemoverVeiculo)
-        self.btn_remove_carro.setStyleSheet(self.recursos.ESTILOS.button_style_4)
+        self.btn_remove_carro.setStyleSheet(self.recursos.ESTILOS.button_style_4)'''
+
+        self.btn_registrar_entrada = QPushButton()
+        self.btn_registrar_entrada.setIcon(QIcon(self.recursos.PATH.icon_btn_entrada)) # carrega icone para o botão de relatorio
+        self.btn_registrar_entrada.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)) # define e fixa o tamanho (width, height) do icone
+        self.btn_registrar_entrada.setCheckable(True) # destaca o botão selecionado
+        self.btn_registrar_entrada.clicked.connect(lambda: self.acaoButtonEntrada(False)) # função que será chamada ao detectar click no botão
+        self.btn_registrar_entrada.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_registrar_entrada.setToolTip("Registrar ENTRADA.")
+        self.btn_registrar_entrada.setStyleSheet(self.recursos.ESTILOS.button_style_5) # estilo CSS do botão
+
+        self.btn_registrar_saida = QPushButton()
+        self.btn_registrar_saida.setIcon(QIcon(self.recursos.PATH.icon_btn_saida))
+        self.btn_registrar_saida.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
+        self.btn_registrar_saida.setCheckable(True)
+        self.btn_registrar_saida.clicked.connect(self.acaoButtonSaida)
+        self.btn_registrar_saida.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_registrar_saida.setToolTip("Registrar SAÍDA.")
+        self.btn_registrar_saida.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+
+        self.btn_cadastro_servidor = QPushButton()
+        self.btn_cadastro_servidor.setIcon(QIcon(self.recursos.PATH.icon_btn_cadastrar_servidor))
+        self.btn_cadastro_servidor.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
+        self.btn_cadastro_servidor.setCheckable(True)
+        self.btn_cadastro_servidor.clicked.connect(self.acaoButtonCadastroServidor)
+        self.btn_cadastro_servidor.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_cadastro_servidor.setToolTip("Cadastrar SERVIDOR")
+        self.btn_cadastro_servidor.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+
+        self.btn_cadastro_veiculo = QPushButton()
+        self.btn_cadastro_veiculo.setIcon(QIcon(self.recursos.PATH.icon_btn_cadastrar_veiculo))
+        self.btn_cadastro_veiculo.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
+        self.btn_cadastro_veiculo.setCheckable(True)
+        self.btn_cadastro_veiculo.clicked.connect(self.acaoButtonCadastroVeiculo)
+        self.btn_cadastro_veiculo.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_cadastro_veiculo.setToolTip("Cadastrar VEÍCULO")
+        self.btn_cadastro_veiculo.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+
+        self.btn_remove_servidor = QPushButton()
+        self.btn_remove_servidor.setIcon(QIcon(self.recursos.PATH.icon_btn_remover_servidor))
+        self.btn_remove_servidor.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
+        self.btn_remove_servidor.setCheckable(True)
+        self.btn_remove_servidor.clicked.connect(self.acaoButtonRemoverServidor)
+        self.btn_remove_servidor.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_remove_servidor.setToolTip("Remover SERVIDOR")
+        self.btn_remove_servidor.setStyleSheet(self.recursos.ESTILOS.button_style_5)
+
+        self.btn_remove_carro = QPushButton()
+        self.btn_remove_carro.setIcon(QIcon(self.recursos.PATH.icon_btn_remover_veiculo))
+        self.btn_remove_carro.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y))
+        self.btn_remove_carro.setCheckable(True)
+        self.btn_remove_carro.clicked.connect(self.acaoButtonRemoverVeiculo)
+        self.btn_remove_carro.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
+        self.btn_remove_carro.setToolTip("Remover VEÍCULO")
+        self.btn_remove_carro.setStyleSheet(self.recursos.ESTILOS.button_style_5)
 
         self.btn_relatorio = QPushButton() # Button RELATÓRIO
         self.btn_relatorio.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio)) # carrega icone para o botão de relatorio
-        self.btn_relatorio.setIconSize(QSize(64, 64)) # define e fixa o tamanho (width, height) do icone
+        self.btn_relatorio.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)) # define e fixa o tamanho (width, height) do icone
         self.btn_relatorio.setCheckable(True) # destaca o botão selecionado
         self.btn_relatorio.clicked.connect(lambda: self.acaoButtonRelatorio(False)) # função que será chamada ao detectar click no botão
-        #self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_2) # estilo CSS do botão
-        self.btn_relatorio.setFixedHeight(100) # definindo apenas a altura pra 100px pra fazer o botão ficar maior na vertical
+        self.btn_relatorio.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_relatorio.setToolTip("Emitir relatório dessa vaga.")
+        self.btn_relatorio.setStyleSheet(self.recursos.ESTILOS.button_style_5)
 
         self.btn_relatorio_completo = QPushButton() # Button RELATÓRIO COMPLETO
         self.btn_relatorio_completo.setIcon(QIcon(self.recursos.PATH.icon_btn_relatorio_completo)) # carrega icone para o botão de relatorio completo
-        self.btn_relatorio_completo.setIconSize(QSize(64, 64)) # define e fixa o tamanho (width, height) do icone
+        self.btn_relatorio_completo.setIconSize(QSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)) # define e fixa o tamanho (width, height) do icone
         self.btn_relatorio_completo.setCheckable(True) # destaca o botão selecionado
         self.btn_relatorio_completo.clicked.connect(lambda: self.acaoButtonRelatorio(True)) # função que será chamada ao detectar click no botão
-        #self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_2)
-        self.btn_relatorio_completo.setFixedHeight(100)
+        self.btn_relatorio_completo.setFixedSize(self.recursos.CONST.ICON_SIZE_X, self.recursos.CONST.ICON_SIZE_Y)
         self.btn_relatorio_completo.setToolTip("Emitir relatório de todas as vagas.")
+        self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_5)
 
-        grupo_buttons_relatorio = QHBoxLayout()
-        grupo_buttons_relatorio.addWidget(self.btn_relatorio)
-        grupo_buttons_relatorio.addWidget(self.btn_relatorio_completo)
-        self.sidebar_layout.addLayout(grupo_buttons_relatorio)
+        grupo_buttons_1 = QHBoxLayout()
+        grupo_buttons_1.addWidget(self.btn_registrar_entrada)
+        grupo_buttons_1.addWidget(self.btn_cadastro_servidor)
+        grupo_buttons_1.addWidget(self.btn_cadastro_veiculo)
+        grupo_buttons_1.addWidget(self.btn_relatorio)
+
+        grupo_buttons_2 = QHBoxLayout()
+        grupo_buttons_2.addWidget(self.btn_registrar_saida)
+        grupo_buttons_2.addWidget(self.btn_remove_servidor)
+        grupo_buttons_2.addWidget(self.btn_remove_carro)
+        grupo_buttons_2.addWidget(self.btn_relatorio_completo)
+
+        grupo_buttons_1.setContentsMargins(0, 20, 0, 0) # adicionando um espaçamento de 20px entre o topo do grupo e o topo da sidebar
+        grupo_buttons_2.setContentsMargins(0, 0, 0, 0) 
+
+        #grupo_buttons_1.addSpacing(5)
+        #grupo_buttons_2.addSpacing(5)
+
+        self.sidebar_layout.addLayout(grupo_buttons_1)
+        self.sidebar_layout.addLayout(grupo_buttons_2)
+        self.sidebar_layout.setSpacing(1)
+
 
         self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro_servidor, self.btn_cadastro_veiculo, self.btn_remove_servidor, self.btn_remove_carro, self.btn_relatorio, self.btn_relatorio_completo]
 
