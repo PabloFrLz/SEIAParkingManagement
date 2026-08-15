@@ -1182,6 +1182,7 @@ class SEIAParkingManagement(QGraphicsView):
                 self.sidebar.showAdminControls()  # [v1.0.0.03]: habilita o modo admin desbloqueando botoes da sidebar especificos para esse modo
                 self.text_btn_admin_state.setText('ON')
                 self.text_btn_admin_state.setStyleSheet(self.recursos.ESTILOS.text_admin_ON)
+                self.btn_admin.setStyleSheet(self.recursos.ESTILOS.button_style_8)
             elif ok:
                 QMessageBox.warning(self, "Admin Access", "Senha incorreta!\nAcesso NÃO autorizado.")
         else:
@@ -1191,6 +1192,7 @@ class SEIAParkingManagement(QGraphicsView):
                 self.sidebar.hideAdminControls() # [v1.0.0.03]: desabilita o modo admin
                 self.text_btn_admin_state.setText('OFF')
                 self.text_btn_admin_state.setStyleSheet(self.recursos.ESTILOS.text_admin_OFF)
+                self.btn_admin.setStyleSheet(self.recursos.ESTILOS.button_style_7)
 
 
 

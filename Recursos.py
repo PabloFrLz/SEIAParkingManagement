@@ -10,8 +10,8 @@ class Constantes:
 
         self.MINIMUN_CHARACTER_TO_NAME = 10
 
-        self.ICON_SIZE_X = 128 # tamanho dos icones dos botões da sidebar
-        self.ICON_SIZE_Y = 144 # tamanho dos icones dos botões da sidebar
+        self.ICON_SIZE_X = 115 # tamanho dos icones dos botões da sidebar
+        self.ICON_SIZE_Y = 129 # tamanho dos icones dos botões da sidebar
 
 
 
@@ -140,14 +140,14 @@ class Estilos:
                 border-radius: 6px;
                 margin: 4px 8px;
             }}
-            
             QPushButton:hover {{
                 background-color: #008C43;   /* verde bandeira paraná */
+                padding: 14px 24px;  /* maior que o padding normal (12px 20px) dando o aspecto de crescimento */
+                border: 2px solid rgba(255, 165, 0, 150);
             }}
             
             QPushButton:pressed {{
                 background-color: #2649A5; /* azul bandeira paraná */
-                color: white;
             }}
         """
 
@@ -219,20 +219,20 @@ class Estilos:
 
         self.button_style_5 = f"""
             QPushButton {{
-                color: #ffffff;
                 background-color: transparent;
-                margin: 4px 8px;
-            }}
-            
-            QPushButton:hover {{
-                background-color: #2649A5;   /* verde bandeira paraná */
-                border: 1px solid #444;
+                border: 2px solid transparent;
                 border-radius: 5px;
+                min-width: 75px;
+                min-height: 107px;
             }}
-            
+
+            QPushButton:hover {{
+                background-color: rgba(38, 73, 165, 120);
+                border: 2px solid #2649A5;
+            }}
+
             QPushButton:pressed {{
-                background-color: #2649A5; /* azul bandeira paraná */
-                border: 2px solid #00C853;
+                background-color: rgba(38, 73, 165, 200);
             }}
         """
 

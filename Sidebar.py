@@ -1,5 +1,5 @@
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, QSize, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation
-from PySide6.QtWidgets import QFormLayout, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QTextEdit, QWidget, QVBoxLayout, QVBoxLayout, QPushButton
+from PySide6.QtCore import QEvent, QObject, QPoint, QRegularExpression, QSize, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation
+from PySide6.QtWidgets import QFormLayout, QGraphicsDropShadowEffect, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QTextEdit, QWidget, QVBoxLayout, QVBoxLayout, QPushButton
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator, QColor
 
 from pymysql import Error
@@ -103,6 +103,7 @@ class Sidebar(QWidget, QObject):
         #======================================
         self.lista_registro = QTableWidget()
         self.lista_registro.setColumnCount(5)
+
         
         
         #======================================
@@ -111,6 +112,7 @@ class Sidebar(QWidget, QObject):
         form = QFormLayout()
         form.setSpacing(16)
         form.setLabelAlignment(Qt.AlignRight)
+        form.setContentsMargins(10,0,20,0)
 
         for i, text in enumerate(self.recursos.TEXTOS.text_interface):
             qlabel = QLabel(text) # [v1.0.0.03]: instancia o texto
@@ -129,7 +131,7 @@ class Sidebar(QWidget, QObject):
         self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar 
 
         self.sidebar_layout = QVBoxLayout(self.sidebar)
-        self.sidebar_layout.setContentsMargins(20, 0, 20, 20)
+        self.sidebar_layout.setContentsMargins(20, 0, 20, 0)
 
         #======================================
         # Logomarca da SEIA na sidebar
@@ -150,11 +152,6 @@ class Sidebar(QWidget, QObject):
         scaled.setDevicePixelRatio(dpr)  
         self.seia_logo.setPixmap(scaled)
         
-        '''self.seia_logo.setPixmap(self.img.scaled(
-            400, 180,  # ajuste conforme necessário
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation
-        ))'''
         #self.seia_logo.setPixmap(self.img)
         #self.seia_logo.setFixedSize(QSize(370, 150))
         self.seia_logo.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo)
@@ -298,6 +295,11 @@ class Sidebar(QWidget, QObject):
         self.btn_relatorio_completo.setStyleSheet(self.recursos.ESTILOS.button_style_5)
         self.btn_relatorio_completo.setCursor(Qt.PointingHandCursor)
 
+        #self.btn_efeito = QGraphicsDropShadowEffect(blurRadius=15, color=QColor(38,73,165,180), xOffset=0, yOffset=0) # [v1.0.0.03]: efeito de dropshadow para quando o botão for selecionado
+
+
+
+
         grupo_buttons_1 = QHBoxLayout()
         grupo_buttons_1.addWidget(self.btn_registrar_entrada)
         grupo_buttons_1.addWidget(self.btn_cadastro_servidor)
@@ -310,8 +312,8 @@ class Sidebar(QWidget, QObject):
         grupo_buttons_2.addWidget(self.btn_remove_veiculo)
         grupo_buttons_2.addWidget(self.btn_relatorio_completo)
 
-        grupo_buttons_1.setContentsMargins(0, 20, 0, 0) # adicionando um espaçamento de 20px entre o topo do grupo e o topo da sidebar
-        grupo_buttons_2.setContentsMargins(0, 0, 0, 0) 
+        grupo_buttons_1.setContentsMargins(0, 20, 30, 0) # adicionando um espaçamento de 20px entre o topo do grupo e o topo da sidebar
+        grupo_buttons_2.setContentsMargins(0, 0, 30, 0) 
 
         #grupo_buttons_1.addSpacing(5)
         #grupo_buttons_2.addSpacing(5)
@@ -322,7 +324,7 @@ class Sidebar(QWidget, QObject):
 
 
         self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro_servidor, self.btn_cadastro_veiculo, self.btn_remove_servidor, self.btn_remove_veiculo, self.btn_relatorio, self.btn_relatorio_completo]
-
+        
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
         #======================================
@@ -1375,6 +1377,11 @@ class Sidebar(QWidget, QObject):
         #anim.finished.connect(line_edit.setStyleSheet(f"background-color: rgba(0, 0, 0, 0);")) # [v1.0.0.03]: corrige o problema do fundo nao voltar a ser preto
         line_edit._highlight_anim = anim  # [v1.0.0.03]: mantém referência viva
 
+
+    #    _______________________________________________
+    #   |                                               |
+    #   |           PRIVILEGIOS DE ADMIN                |
+    #   |_______________________________________________|
     def showAdminControls(self):
         self.btn_cadastro_servidor.setDisabled(False) # [v1.0.0.03]: habilita o botão de cadastro de servidor
         self.btn_cadastro_veiculo.setDisabled(False) # [v1.0.0.03]: habilita o botão de cadastro de veiculo
@@ -1382,9 +1389,12 @@ class Sidebar(QWidget, QObject):
         self.btn_remove_veiculo.setDisabled(False) # [v1.0.0.03]: habilita o botão de remoção de veiculo
         self.enable_ADMIN_privileges = True
 
+
+
     def hideAdminControls(self):
         self.btn_cadastro_servidor.setDisabled(True) # [v1.0.0.03]: desabilita o botão de cadastro de servidor
         self.btn_cadastro_veiculo.setDisabled(True) # [v1.0.0.03]: desabilita o botão de cadastro de veiculo
         self.btn_remove_servidor.setDisabled(True) # [v1.0.0.03]: desabilita o botão de remoção de servidor
         self.btn_remove_veiculo.setDisabled(True) # [v1.0.0.03]: desabilita o botão de remoção de veiculo
         self.enable_ADMIN_privileges = False
+
