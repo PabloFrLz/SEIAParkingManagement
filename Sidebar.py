@@ -127,11 +127,11 @@ class Sidebar(QWidget, QObject):
         # Sidebar
         #======================================
         self.sidebar = QWidget()
-        self.sidebar.setFixedWidth(WIDTH - 760)           # largura da sidebar
-        self.sidebar.setFixedHeight(HEIGHT + J - 10)          # altura da sidebar 
+        self.sidebar.setFixedWidth(WIDTH - 780)           # largura da sidebar
+        self.sidebar.setFixedHeight(HEIGHT + 70)          # [v1.0.0.03]: Altura da sidebar. O +70 era pra completar a sidebar até a base inferior
 
         self.sidebar_layout = QVBoxLayout(self.sidebar)
-        self.sidebar_layout.setContentsMargins(20, 0, 20, 0)
+        self.sidebar_layout.setContentsMargins(20, 0, 15, 0)
 
         #======================================
         # Logomarca da SEIA na sidebar
@@ -312,15 +312,18 @@ class Sidebar(QWidget, QObject):
         grupo_buttons_2.addWidget(self.btn_remove_veiculo)
         grupo_buttons_2.addWidget(self.btn_relatorio_completo)
 
-        grupo_buttons_1.setContentsMargins(0, 20, 30, 0) # adicionando um espaçamento de 20px entre o topo do grupo e o topo da sidebar
-        grupo_buttons_2.setContentsMargins(0, 0, 30, 0) 
+
+        grupo_buttons_1.setContentsMargins(10, 20, 25, 0) # adicionando um espaçamento de 20px entre o topo do grupo e o topo da sidebar
+        grupo_buttons_2.setContentsMargins(10, 0, 25, 0) 
 
         #grupo_buttons_1.addSpacing(5)
         #grupo_buttons_2.addSpacing(5)
-
+        
+        self.sidebar_layout.setSpacing(0)
         self.sidebar_layout.addLayout(grupo_buttons_1)
         self.sidebar_layout.addLayout(grupo_buttons_2)
-        self.sidebar_layout.setSpacing(1)
+
+
 
 
         self.list_buttons = [self.btn_registrar_entrada, self.btn_registrar_saida, self.btn_cadastro_servidor, self.btn_cadastro_veiculo, self.btn_remove_servidor, self.btn_remove_veiculo, self.btn_relatorio, self.btn_relatorio_completo]

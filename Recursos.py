@@ -10,8 +10,8 @@ class Constantes:
 
         self.MINIMUN_CHARACTER_TO_NAME = 10
 
-        self.ICON_SIZE_X = 115 # tamanho dos icones dos botões da sidebar
-        self.ICON_SIZE_Y = 129 # tamanho dos icones dos botões da sidebar
+        self.ICON_SIZE_X = 115   # tamanho dos icones dos botões da sidebar
+        self.ICON_SIZE_Y = 129   # tamanho dos icones dos botões da sidebar
 
 
 
@@ -224,10 +224,12 @@ class Estilos:
                 border-radius: 5px;
                 min-width: 75px;
                 min-height: 107px;
+                margin: 0px;
+                padding: 0px;
             }}
 
             QPushButton:hover {{
-                background-color: rgba(38, 73, 165, 120);
+                background-color: rgba(38, 73, 165, 200);
                 border: 2px solid #2649A5;
             }}
 

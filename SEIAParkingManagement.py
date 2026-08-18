@@ -60,7 +60,7 @@ SCALE_APP = 0.70 # ESCALA DA APLICAÇÃO   |
 
 
 global WIDTH, HEIGHT, K, J
-WIDTH = 1300
+WIDTH = 1310
 HEIGHT = 990
 K = 400 #variavel de ajuste para expansão da propriedade na HORIZONTAL 
 J = 530 ##variavel de ajuste para expansão da propriedade na VERTICAL 
@@ -97,6 +97,9 @@ class SEIAParkingManagement(QGraphicsView):
 
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
+        self.setSceneRect(0, 0, WIDTH, HEIGHT)  # trava a sceneRect no tamanho real do seu fundo
+        self.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # ancora (0,0) no canto superior-esquerdo, sem centralizar
+        
         self.turnRound = True
         self.anim = None
         self.recursos = Recursos.Recursos() # [v1.0.0.03]:  classe que agrupa recursos da aplicação
@@ -104,6 +107,8 @@ class SEIAParkingManagement(QGraphicsView):
         self.ip_cam = [] # variavel pra armazenar o IP da camera
         self.ip_cam_pass = "" # armazena a senha de Conexão NVR da Camera WiFi
         self.enable_OCR = True # [v1.0.0.03]:  habilita ou desabilita o OCR (Reconhecimento Óptico de Caracteres) para identificar placas
+
+
         
 
         #==============================================================================================
@@ -114,7 +119,6 @@ class SEIAParkingManagement(QGraphicsView):
         self.bg = QGraphicsPixmapItem(self.pixmap)
         self.bg.setOpacity(0.85) # um pouco transparente para destacar o desenho
         self.scene.addItem(self.bg)
-        
         self.pixmap2 = QPixmap(self.recursos.PATH.logo_marca_dagua_parana) #imagem marca d'agua do gov. do paraná
         self.bg2 = QGraphicsPixmapItem(self.pixmap2)
         self.bg2.setOpacity(0.05)
@@ -573,14 +577,14 @@ class SEIAParkingManagement(QGraphicsView):
 
         #copyright = QGraphicsTextItem("                                                                                                                                                  © 2026 SEIA Parking Management "+ver+".\n Todos os direitos reservados ao Supervisor Especialista em Governança Digital & Transformação Digital André Luis Costa Batistela - um dos nomes mais proeminentes da Diretoria de Inovação e um dos pilares da Inovação no Estado do Paraná.")
         copyright = QGraphicsTextItem(
-            "      © 2026 SEIA Parking Management " + ver + ". Todos os direitos reservados.\n"
-            "                    Secretaria de Inovação e Inteligência Artificial (SEIA)\n"
-            "                                  Diretoria de Inovação (DIN)\n"
-            "                    Desenvolvido por Pablo F. L. (github.com/PabloFrLz)" 
+            "          © 2026 SEIA Parking Management " + ver + ". Todos os direitos reservados.\n"
+            "                        Secretaria de Inovação e Inteligência Artificial (SEIA)\n"
+            "                                         Diretoria de Inovação (DIN)\n"
+            "                        Desenvolvido por Pablo F. L. (github.com/PabloFrLz)" 
         )        
         copyright.setFont(self.recursos.FONTES.fonte_copyright)
         copyright.setDefaultTextColor(QColor("gray"))
-        copyright.setPos(WIDTH+245, HEIGHT+320)
+        copyright.setPos(WIDTH+245, HEIGHT+295)
         copyright.setZValue(10)
         self.scene.addItem(copyright)
 
@@ -758,6 +762,7 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_btn_admin.setPos((WIDTH+K-100)/1.21, 0)
         proxy_btn_admin.setZValue(999)
         self.scene.addItem(proxy_btn_admin)
+
 
      
     """
