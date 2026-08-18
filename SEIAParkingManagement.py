@@ -50,8 +50,8 @@ ver = "v1.0.0.03" # versão do software
 
 #variaveis de autenticação do banco de dados
 USER = 'root'
-PASSWORD = '5452' #senha de exemplo - não condiz com a real
-ADMIN_PASSWORD = 'nas5452'  # [v1.0.0.03]: senha de administrador
+PASSWORD_DB = '5452'        # [v1.0.0.03]: senha do banco de dados
+ADMIN_PASSWORD = 'NAS5452'  # [v1.0.0.03]: senha de administrador
 
 # _______________________________________
 #                                        |
@@ -777,7 +777,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.conn = pymysql.connect(
             host='localhost',
             user=USER,
-            password=PASSWORD,
+            password=PASSWORD_DB,
             database='seia_parking'
         )
 

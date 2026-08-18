@@ -56,7 +56,8 @@ class Fontes:
         self.fonte_copyright = QFont("Segoe UI Condensed", 10) # [v1.0.0.03]: Fonte do texto de copyright
         self.fonte_family_geral = "font-family: 'SF Pro Text';"
 
-        self.fonte_texto_desc_infoboxes_2 = QFont("SF Pro Text", 12)
+        self.fonte_texto_desc_infoboxes_2 = QFont("Consolas", 12)
+        self.fonte_texto_desc_infoboxes_3 = QFont("SF Pro Text", 12)
         self.fonte_texto_placa = QFont("Consolas", 16, QFont.Bold)
 
         self.fonte_texto_toggle = "font-size: 14px"
