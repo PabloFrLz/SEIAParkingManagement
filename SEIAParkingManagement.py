@@ -50,8 +50,8 @@ ver = "v1.0.0.03" # versão do software
 
 #variaveis de autenticação do banco de dados
 USER = 'root'
-PASSWORD_DB = '5452'        # [v1.0.0.03]: senha do banco de dados
-ADMIN_PASSWORD = 'NAS5452'  # [v1.0.0.03]: senha de administrador
+PASSWORD_DB = '5452'        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)
+ADMIN_PASSWORD = 'NAS5452'    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)
 
 # _______________________________________
 #                                        |

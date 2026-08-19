@@ -575,6 +575,7 @@ class Sidebar(QWidget, QObject):
 
 
     def cadastroServidor(self):
+
         if (self.check[0] is None): 
             consulta = "select * from autarquia"
             self.categoria = 0
@@ -586,6 +587,12 @@ class Sidebar(QWidget, QObject):
                 QMessageBox.warning(self.main_window, "Erro", "Opção selecionada é inválida.")
                 self.cancel()
                 return
+            
+            verifica = self.verificaCarroSemVinculo(self.form1.getResult()) # [v1.0.0.03]: Corrige o problema de não haver carro cadastrado sem vinculo no ato de vínculo mais abaixo
+            if len(verifica) == 0:
+                QMessageBox.warning(self.main_window, "Erro", "Não foi encontrado veículo disponível para vínculo neste orgão.\nFavor registrar o veículo do servidor antes de efetuar seu cadastro.")
+                self.cancel()
+                return; 
             
             self.form1.setDisabled(True)
             self.FormularioLeituraDados("nome", self.recursos.TEXTOS.text_insert_nome_servidor, "Digite o nome aqui...", self.validator_nome, self.cadastroServidor)
@@ -727,7 +734,7 @@ class Sidebar(QWidget, QObject):
                     self.cancel() # [v1.0.0.03]: cancela a operação
             else:
                 QMessageBox.warning(self.main_window, "Atenção", "Não consta ENTRADA pendente no registro!\nClique em REMOVER para concluir a operação de EXCLUSÃO!")
-    
+            QMessageBox.warning(self.main_window, "Atenção", "A EXCLUSÃO do veículo não exclui o servidor ao qual ele foi vinculado.\n Ainda é necessário excluir o servidor manualmente na opção 'REMOVER SERVIDOR'.")
 
 
 
@@ -1021,7 +1028,18 @@ class Sidebar(QWidget, QObject):
         cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.proprietario_cpf IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')")
         carros_disponiveis = cursor.fetchall()
         return carros_disponiveis
-        
+
+
+
+    def verificaCarroSemVinculo(self, orgao):
+        # [DESCRIÇÃO DA CONSULTA]: 
+        #       Selecione todos os carros da tabela Carro onde não tenha vinculo registrado com algum servidor. 
+
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT * FROM carro WHERE autarquia = '{orgao}' AND proprietario_cpf IS NULL")
+        veiculo_sem_vinculo = cursor.fetchall()
+        return veiculo_sem_vinculo
+
 
     
     def getInstance(self):
@@ -1236,13 +1254,8 @@ class Sidebar(QWidget, QObject):
         """
         label = QLabel(texto) #  [v1.0.0.03]: cria a label e define o titulo + informações
         label.setFont(self.recursos.FONTES.fonte_texto_desc_infoboxes_2)
-        #label.setContentsMargins(0,0,0,0)
-        #btn_confirmar = QPushButton("OK")
-        #btn_confirmar.setFixedHeight(self.recursos.CONST.LARGURA_FORMULARIO_BUTTON)
-        #btn_confirmar.clicked.connect(self.registroEntrada) # [v1.0.0.03]: o endereço da função passada como parametro é apenas pra chamar essa função novamente de forma recursiva
         layout = QVBoxLayout(container) # [v1.0.0.03]: conteiner vertical pro nome do titulo e as informações ficarem uma abaixo da outra
         layout.addWidget(label) # [v1.0.0.03]: insere o titulo + informações
-        #layout.addWidget(btn_confirmar, stretch=0.2) # insere o botão 'OK' com tamanho comprimido 
         
         object_proxy = self.insertOnGUI(container, 30)
         container.setStyleSheet(self.recursos.ESTILOS.toolbar_estilo_2) # [v1.0.0.03]: altera o estilo para o mesmo estilo de planod e fundo do header (onde está a logomarca) da aplicação

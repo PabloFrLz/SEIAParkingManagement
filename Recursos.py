@@ -143,8 +143,6 @@ class Estilos:
             }}
             QPushButton:hover {{
                 background-color: #008C43;   /* verde bandeira paraná */
-                padding: 14px 24px;  /* maior que o padding normal (12px 20px) dando o aspecto de crescimento */
-                border: 2px solid rgba(255, 165, 0, 150);
             }}
             
             QPushButton:pressed {{
@@ -230,8 +228,8 @@ class Estilos:
             }}
 
             QPushButton:hover {{
-                background-color: rgba(38, 73, 165, 200);
-                border: 2px solid #2649A5;
+                background-color: #008C43;   /* verde bandeira paraná */
+                border: 3px solid #008C43;
             }}
 
             QPushButton:pressed {{
