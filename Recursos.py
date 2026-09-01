@@ -34,7 +34,7 @@ class Textos:
         self.text_select_carro = "Selecione a placa e modelo do carro:"
         self.text_insert_nome_servidor = "Digite o nome do servidor:"
         self.text_insert_nome_visitante = "Digite o nome do visitante:"
-        self.text_insert_cpf_servidor = "Digite o CPF ou CNPJ do servidor:"
+        self.text_insert_id_servidor = "Insira o Terminal ID do servidor:"
         self.text_insert_placa = "Digite a placa do carro:"
         self.text_insert_contato = "Digite o contato do visitante:"
         self.text_insert_modelo_carro = "Insira o modelo do carro:"
@@ -452,6 +452,8 @@ class Paths:
         #self.relatorio_pdf = self.resource_path("relatorio.pdf") # [v1.0.0.03]: caminho do arquivo de relatorio.pdf que é gerado quando o usuário clica no botão de gerar relatório
         #self.conteudo_pdf = self.resource_path("conteudo.pdf") # [v1.0.0.03]: caminho do arquivo de conteudo.pdf que é gerado quando o usuário clica no botão de gerar relatório
         #self.capa_pdf = self.resource_path("capa.pdf") # [v1.0.0.03]: caminho do arquivo de capa.pdf que é gerado quando o usuário clica no botão de gerar relatório
+
+        self.img_banner_security_id_card = self.resource_path("imagens/security_card_id.png")
 
     def resource_path(self, relative_path): # [v1.0.0.03]: função para obter o caminho relativo 
         try:

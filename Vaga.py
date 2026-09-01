@@ -39,15 +39,15 @@ class Vaga(QObject, QGraphicsPixmapItem):
 
         #variaveis extras com dados restritos ao banco de dados
         #carros
-        self.modelo_carro = " - "
-        self.nome_servidor = " - "
-        self.placa_carro = " - "
+        #self.modelo_carro = " - "
+        #self.nome_servidor = " - "
+        #self.placa_carro = " - "
         # servidores 
-        self.cpf_cnpj = " - "
-        self.nome = " - "
+        #self.id = " - "
+        #self.nome = " - "
         #registros
-        self.data_hora = " - "
-        self.tipo = " - "
+        #self.data_hora = " - "
+        #self.tipo = " - "
 
 
         #geração da imagem do carro

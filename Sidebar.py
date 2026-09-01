@@ -331,8 +331,8 @@ class Sidebar(QWidget, QObject):
         #======================================
         # configurando restrições de entrada - para etapa de cadastro de servidor
         #======================================
-        self.regex_cpf = QRegularExpression(r"^\d{0,11}$") # para o CPF
-        self.validator_cpf = QRegularExpressionValidator(self.regex_cpf)
+        self.regex_id = QRegularExpression(r"^\d{0,11}$") # criado para ler CPF, só que posteriori foi modificado para terminal ID.
+        self.validator_id = QRegularExpressionValidator(self.regex_id)
 
         self.regex_nome = QRegularExpression("^[A-Za-z ]*$") # Para o nome
         self.validator_nome = QRegularExpressionValidator(self.regex_nome)
@@ -378,8 +378,8 @@ class Sidebar(QWidget, QObject):
 
         #atualizando informações secundárias
         if len(ultimo_registro_da_vaga) != 0:
-            cpf = ultimo_registro_da_vaga[0][2] # [v1.0.0.03]: cpf será null/none quando for VISITANTE
-            if(cpf is None): # [v1.0.0.03]: para quando for atualizar visualmente as informações da vaga registrada para um VISITANTE
+            id = ultimo_registro_da_vaga[0][2] # [v1.0.0.03]: id será null/none quando for VISITANTE
+            if(id is None): # [v1.0.0.03]: para quando for atualizar visualmente as informações da vaga registrada para um VISITANTE
                 self.modelo_carro.setText(f"CARRO PRIVADO (VISITANTE)")
                 #self.placa_carro.setText("RESTRITO")
                 self.nome_servidor.setText(ultimo_registro_da_vaga[0][7]) # o nome do servidor nesse momento de execução vai estar salvo em self.nome
@@ -389,7 +389,7 @@ class Sidebar(QWidget, QObject):
                 cursor.execute(f"select * from carro where placa='{ultimo_registro_da_vaga[0][1]}'")
                 dados_carro = cursor.fetchall()
                 #consulta pra pegar o nome do servidor
-                cursor.execute(f"select * from servidor where cpf_cnpj='{ultimo_registro_da_vaga[0][2]}'")
+                cursor.execute(f"select * from servidor where terminal_id='{ultimo_registro_da_vaga[0][2]}'")
                 dados_servidor = cursor.fetchall()
                 # atualizando as infos
                 self.modelo_carro.setText(dados_carro[0][3])
@@ -524,13 +524,13 @@ class Sidebar(QWidget, QObject):
     def registroEntrada(self):
         if (self.check[0] is None): 
             # [v1.0.0.03]: Em conversas com guardas da guarita, fui informado que a abordagem melhor seria o fluxo começar com a placa do veiculo
-            #consulta = f"SELECT * FROM carro WHERE autarquia = '{self.orgao_vinculado.displayText()}' AND proprietario_cpf IS NOT NULL" # [v1.0.0.03]: selecione todos os carros que sejam vinculados ao orgão da vaga e que tenha um cpf de proprietario válido
+            #consulta = f"SELECT * FROM carro WHERE autarquia = '{self.orgao_vinculado.displayText()}' AND terminal_id IS NOT NULL" # [v1.0.0.03]: selecione todos os carros que sejam vinculados ao orgão da vaga e que tenha um ID de proprietario válido
 
             # [DESCRIÇÃO DA CONSULTA]: 
             #       Selecione todos os carros da tabela carro onde a autarquia seja igual ao valor informado,
-            #       e onde o CPF do proprietario nao esteja vazio, e cuja placa não apareça em nenhum registro 
+            #       e onde o Terminal ID do proprietario nao esteja vazio, e cuja placa não apareça em nenhum registro 
             #       da tabela Registro que tenha tipo = 'ENTRADA' (considerando apenas registros onde a placa não é nula)."
-            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.proprietario_cpf IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')"
+            consulta = f"SELECT * FROM carro c WHERE c.autarquia = '{self.orgao_vinculado.displayText()}' AND c.terminal_id IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')"
             self.categoria = 2 # [v1.0.0.03]: informa a classe Formulario() que se trata de um carro
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.registroEntrada)
             self.check[0] = True
@@ -540,8 +540,8 @@ class Sidebar(QWidget, QObject):
             placa, modelo = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtendo a PLACA e MODELO do carro
             self.placa_carro.setText(placa) # [v1.0.0.03]: gambiarra pra poder pegar dados de placa e carro no insert
             self.modelo_carro.setText(modelo)
-            cpf = self.getCPFbyPlaca(placa)
-            self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", cpf)
+            id = self.getIDbyPlaca(placa)
+            self.showInformacoesServidor("INFORMAÇÕES DO SERVIDOR: ", id)
             self.check[1] = True
             self.registroEntrada() # [v1.0.0.03]: chamada recursiva
         
@@ -563,7 +563,7 @@ class Sidebar(QWidget, QObject):
             self.check[1] = True
 
         elif (self.check[2] is None): # [v1.0.0.03]: coleta CONTATO do visitante
-            self.FormularioLeituraDados("contato", self.recursos.TEXTOS.text_insert_contato, "contato...", self.validator_cpf, self.registroEntradaVisitante)
+            self.FormularioLeituraDados("contato", self.recursos.TEXTOS.text_insert_contato, "contato...", self.validator_id, self.registroEntradaVisitante)
             self.check[2] = True
 
         elif(self.check[3] is None):
@@ -599,11 +599,11 @@ class Sidebar(QWidget, QObject):
             self.check[1] = True
 
         elif (self.check[2] is None): 
-            self.FormularioLeituraDados("cpf", self.recursos.TEXTOS.text_insert_cpf_servidor, "ex.: 50545642300...", self.validator_cpf, self.cadastroServidor)
+            self.FormularioLeituraDados("id", self.recursos.TEXTOS.text_insert_id_servidor, "ex.: 123...", self.validator_id, self.cadastroServidor)
             self.check[2] = True
         
         elif (self.check[3] is None): 
-            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.form1.getResult()}' AND proprietario_cpf IS NULL" # [v1.0.0.03]: selecione todos os carros onde a autarquia for igual a de interesse e nao tenha proprietarios (null)
+            consulta = f"SELECT * FROM carro WHERE autarquia = '{self.form1.getResult()}' AND terminal_id IS NULL" # [v1.0.0.03]: selecione todos os carros onde a autarquia for igual a de interesse e nao tenha proprietarios (null)
             self.categoria = 2 # informa pra classe Formulario que se trata de um carro
             self.form2 = self.geraFormulario(consulta, self.recursos.TEXTOS.text_select_carro, self.cadastroServidor)
             self.check[3] = True
@@ -682,9 +682,9 @@ class Sidebar(QWidget, QObject):
 
         elif(self.check[2] is None):
             self.form2.setDisabled(True)
-            servidor = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtém o nome e cpf do servidor
+            servidor = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtém o nome e ID do servidor
             self.nome = servidor[1] # [v1.0.0.03]: captura o nome 
-            self.cpf = servidor[0] # [v1.0.0.03]: capturao cpf 
+            self.id = servidor[0] # [v1.0.0.03]: capturao terminal ID vinculado ao servidor 
             # [v1.0.0.03]: Buttons pra confirmar remoção de servidor
             self.btn_commit = self.insertButton("REMOVER", self.recursos.ESTILOS.button_style_4, self.deleteServidor) # [v1.0.0.03]: linka coma função que remove os dados do servidor do banco
             self.btn_cancel = self.insertButton("CANCELAR", self.recursos.ESTILOS.button_style_2, self.cancel)
@@ -693,7 +693,7 @@ class Sidebar(QWidget, QObject):
             if len(servidor_entrada) != 0: # [v1.0.0.03]: se for diferente de zero então significa que tem ocorrencia de entrada do servidor no registro.
                 resposta = QMessageBox.question(self.main_window, "Erro", f"Servidor '{servidor[1]}' possui uma ENTRADA no registro. Favor registrar sua SAIDA para habilitar sua exclusão do banco.\nGostaria de registrar SAIDA para esse servidor e exclui-lo em seguida ?")
                 if (resposta == QMessageBox.StandardButton.Yes):
-                    self.registraSaidaByCPF(self.cpf) # [v1.0.0.03]: registra a SAIDA a partir do CPF
+                    self.registraSaidaByID(self.id) # [v1.0.0.03]: registra a SAIDA a partir do terminal ID do servidor
                     self.deleteServidor() # [v1.0.0.03]: chama direto a função que deleta do banco pra nao ter que começar a remoção do servidor do inicio chamando removeServidor()
                 else:
                     self.cancel() # [v1.0.0.03]: cancela a operação
@@ -740,9 +740,9 @@ class Sidebar(QWidget, QObject):
 
     def capturar_valor(self, tipo, line_edit, func_call_recursivamente):
         texto = line_edit.text().strip() 
-        if tipo == "cpf":
-            self.cpf = texto # CPF
-            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF de visitante lido: {texto}")
+        if tipo == "id":
+            self.id = texto # id
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: ID de visitante lido: {texto}")
 
         elif tipo == "contato":
             self.contato = texto # CONTATO
@@ -798,16 +798,16 @@ class Sidebar(QWidget, QObject):
         if dados is not None:
             #obtem os dados direto do banco
             placa = dados[0][1]
-            cpf_cnpj = dados[0][2]
+            terminal_id = dados[0][2]
             nome_visitante = dados[0][7] # [v1.0.0.03]: os dados do nome do visitante será a 8ª coluna da tabela Registro
             tipo = "SAIDA"
-            if placa is None or cpf_cnpj is None: # [v1.0.0.03]: para o caso de ser um visitante, a placa e o cpf_cnpj serão None/null
+            if placa is None or terminal_id is None: # [v1.0.0.03]: para o caso de ser um visitante, a placa e o terminal_id serão None/null
                 sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE nome_visitante = '{nome_visitante}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
                 # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde o nome do visitante
                 # bater com o que foi coletado da tabela Registro - por fim, onde 'data_saida' estiver NULL (vazio) e o tipo for ENTRADA.
             else:
-                sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND cpf_cnpj = '{cpf_cnpj}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
-                # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde a placa e cpf 
+                sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE placa = '{placa}' AND terminal_id = '{terminal_id}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+                # sql = atualize a tabela Registro definindo a coluna 'data_saida' com a hora atual do banco (clausula NOW()), definindo o tipo para "SAIDA" onde a placa e ID 
                 # baterem com os coletados nesse bloco condicional - por fim, onde 'data_saida' estiver vazio e o tipo estiver definido como ENTRADA, pois assim voce tem a certeza 
                 # de atualizar a tupla no banco com dados de saida em branco e que so tem uma ENTRADA registrada - pode ser que seja redundante, mas funciona!
         
@@ -818,15 +818,15 @@ class Sidebar(QWidget, QObject):
         else:
             #obtem os dados apartir dos formularios de ENTRADA
             tipo = "ENTRADA"
-            sql = "INSERT INTO registro (placa, cpf_cnpj, num_vaga, data_entrada, tipo) VALUES (%s, %s, %s, NOW(), %s)"
+            sql = "INSERT INTO registro (placa, terminal_id, num_vaga, data_entrada, tipo) VALUES (%s, %s, %s, NOW(), %s)"
             placa, modelo = self.placa_carro.displayText(), self.modelo_carro.toPlainText()
-            cpf_cnpj = self.getCPFbyPlaca(placa)
-            #servidor = self.getServidorByCPF(cpf_cnpj)
+            terminal_id = self.getIDbyPlaca(placa)
+            #servidor = self.getServidorByID(terminal_id)
             #nome_servidor = servidor[0][1]
 
             #tratamento dos dados
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Nº vaga: {num_vaga}")
-            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: CPF/CNPJ: {cpf_cnpj}")
+            print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Terminal ID: {terminal_id}")
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Placa: {placa}")
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]: Modelo: {modelo}")
             
@@ -838,7 +838,7 @@ class Sidebar(QWidget, QObject):
             cursor = self.conn.cursor()
             #data e hora serão calculados automaticamente pelo banco de dados MySQL com a clausula NOW()
             if tipo == "ENTRADA":
-                cursor.execute(sql, (placa, cpf_cnpj, num_vaga, tipo))
+                cursor.execute(sql, (placa, terminal_id, num_vaga, tipo))
             else:
                 cursor.execute(sql)
             self.conn.commit() # commit - pra persistir no banco
@@ -872,18 +872,18 @@ class Sidebar(QWidget, QObject):
     def insertServidor(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO Servidor VALUES('{self.cpf}', '{self.nome}', '{self.form1.getResult()}')")
+            cursor.execute(f"INSERT INTO Servidor VALUES('{self.id}', '{self.nome}', '{self.form1.getResult()}')")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
             print(f"Servidor [{self.nome}] registrado com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
 
-            # [v1.0.0.03]: a partir dessa versão o servidor tem que selecionar o carro no cadastro para linkar o veiculo ao seu cpf
+            # [v1.0.0.03]: a partir dessa versão o servidor tem que selecionar o carro no cadastro para linkar o veiculo ao seu terminal ID
             placa, modelo = self.form2.getResult().split(" - ") # [v1.0.0.03]: obtem a placa
-            cursor.execute(f"UPDATE Carro SET proprietario_cpf = '{self.cpf}' WHERE placa = '{placa}'") # [v1.0.0.03]: atualiza o campo proprietario_cpf da tabela carro com o CPF do servidor
+            cursor.execute(f"UPDATE Carro SET terminal_id = '{self.id}' WHERE placa = '{placa}'") # [v1.0.0.03]: atualiza o campo terminal_id da tabela carro com o terminal_id do servidor
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
-            print(f"Carro [{modelo}] de placa [{placa}] atualizado com CPF [{self.cpf}] do Servidor [{self.nome}] com sucesso!")
+            print(f"Carro [{modelo}] de placa [{placa}] atualizado com Terminal ID [{self.id}] do Servidor [{self.nome}] com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
             
             QMessageBox.information(self.main_window, "Sucesso", "Servidor cadastrado com sucesso!")
@@ -898,7 +898,7 @@ class Sidebar(QWidget, QObject):
         self.vaga = self.form2.getResult().split(" - ")[0] # [v1.0.0.03]: obtem o numero da vaga selecionada
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO Carro (placa, num_vaga, autarquia, modelo, setor, proprietario_cpf) VALUES ('{self.placa}', {self.vaga}, '{self.form1.getResult()}', '{self.modelo}', '{self.setor}', NULL)") # [v1.0.0.03]: a placa esta sendo definida como NULL pois o veiculo ainda não tem um proprietário vinculado a ele, e o cadastro de servidor é que vai vincular o carro ao CPF do servidor posteriormente
+            cursor.execute(f"INSERT INTO Carro (placa, num_vaga, autarquia, modelo, setor, terminal_id) VALUES ('{self.placa}', {self.vaga}, '{self.form1.getResult()}', '{self.modelo}', '{self.setor}', NULL)") # [v1.0.0.03]: a placa esta sendo definida como NULL pois o veiculo ainda não tem um proprietário vinculado a ele, e o cadastro de servidor é que vai vincular o carro ao Terminal ID do servidor posteriormente
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
             print(f"Carro [{self.modelo}] registrado com sucesso!")
@@ -915,7 +915,7 @@ class Sidebar(QWidget, QObject):
     def deleteServidor(self): # [v1.0.0.03]: remoção do servidor do banco de dados
         try:
             cursor = self.conn.cursor() 
-            cursor.execute(f"delete from servidor where cpf_cnpj='{self.cpf}'")
+            cursor.execute(f"delete from servidor where terminal_id='{self.id}'")
             self.conn.commit()
             print(f"\n{self.recursos.CORES.VERMELHO}================================{self.recursos.CORES.RESET}")
             print(f"Servidor [{self.nome}] deletado com sucesso!")
@@ -1022,10 +1022,10 @@ class Sidebar(QWidget, QObject):
 
         # [DESCRIÇÃO DA CONSULTA]: 
         #       Selecione todos os carros da tabela carro onde a autarquia seja igual ao valor informado,
-        #       e onde o CPF do proprietario nao esteja vazio, e cuja placa não apareça em nenhum registro 
+        #       e onde o terminal ID do proprietario nao esteja vazio, e cuja placa não apareça em nenhum registro 
         #       da tabela Registro que tenha tipo = 'ENTRADA' (considerando apenas registros onde a placa não é nula)."
 
-        cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.proprietario_cpf IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')")
+        cursor.execute(f"SELECT * FROM carro c WHERE c.autarquia = '{valor}' AND c.terminal_id IS NOT NULL AND c.placa NOT IN (SELECT r.placa FROM registro r WHERE r.placa IS NOT NULL AND r.tipo = 'ENTRADA')")
         carros_disponiveis = cursor.fetchall()
         return carros_disponiveis
 
@@ -1036,7 +1036,7 @@ class Sidebar(QWidget, QObject):
         #       Selecione todos os carros da tabela Carro onde não tenha vinculo registrado com algum servidor. 
 
         cursor = self.conn.cursor()
-        cursor.execute(f"SELECT * FROM carro WHERE autarquia = '{orgao}' AND proprietario_cpf IS NULL")
+        cursor.execute(f"SELECT * FROM carro WHERE autarquia = '{orgao}' AND terminal_id IS NULL")
         veiculo_sem_vinculo = cursor.fetchall()
         return veiculo_sem_vinculo
 
@@ -1092,9 +1092,9 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def getServidorByCPF(self, cpf_cnpj): # busca o servidor a partir do seu CPF
+    def getServidorByID(self, terminal_id): # busca o servidor a partir do seu terminal ID
         cursor = self.conn.cursor()
-        cursor.execute(f"SELECT * FROM servidor WHERE cpf_cnpj='{cpf_cnpj}'")
+        cursor.execute(f"SELECT * FROM servidor WHERE terminal_id='{terminal_id}'")
         servidor = cursor.fetchall()
         return servidor
     
@@ -1108,17 +1108,17 @@ class Sidebar(QWidget, QObject):
     
 
 
-    def verificaEntradaServidor(self, cpf_cnpj):
+    def verificaEntradaServidor(self, terminal_id):
         cursor = self.conn.cursor()
-        cursor.execute(f"SELECT * FROM registro WHERE cpf_cnpj='{cpf_cnpj}' AND tipo='ENTRADA'") # busca no registro se há uma tupla com o cpf do servidor e se ela só foi registrada ENTRADA e não SAIDA
+        cursor.execute(f"SELECT * FROM registro WHERE terminal_id='{terminal_id}' AND tipo='ENTRADA'") # busca no registro se há uma tupla com o terminal ID do servidor e se ela só foi registrada ENTRADA e não SAIDA
         servidor_entrada = cursor.fetchall()
         return servidor_entrada
     
 
 
-    def getCarroByCPF(self, cpf_cnpj):  # [v1.0.0.03]: função para obter os dados do carro vinculado ao CPF do servidor
+    def getCarroByID(self, terminal_id):  # [v1.0.0.03]: função para obter os dados do carro vinculado ao terminal ID do servidor
         cursor = self.conn.cursor()
-        cursor.execute(f"SELECT * FROM Carro WHERE proprietario_cpf = '{cpf_cnpj}'")
+        cursor.execute(f"SELECT * FROM Carro WHERE terminal_id = '{terminal_id}'")
         servidor = cursor.fetchall()
         return servidor
     
@@ -1132,11 +1132,11 @@ class Sidebar(QWidget, QObject):
     
 
 
-    def getCPFbyPlaca(self, placa):
+    def getIDbyPlaca(self, placa):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM Carro WHERE placa = '{placa}'")
-        cpf = cursor.fetchall()
-        return cpf[0][5] # retorna apenas o CPF e nao a tupla inteira
+        tupla = cursor.fetchall()
+        return tupla[0][5] # retorna apenas o terminal_id e nao a tupla inteira
         
 
     def getIdVagaByPlaca(self, placa):
@@ -1170,9 +1170,9 @@ class Sidebar(QWidget, QObject):
         self.conn.commit()
 
 
-    def registraSaidaByCPF(self, cpf): # [v1.0.0.03]: registra a saida para veiculos que precisem ser removidos mas que conste ENTRADA ativa
+    def registraSaidaByID(self, id): # [v1.0.0.03]: registra a saida para veiculos que precisem ser removidos mas que conste ENTRADA ativa
         cursor = self.conn.cursor()
-        sql = f"UPDATE registro SET data_saida = NOW(), tipo = 'SAIDA' WHERE cpf_cnpj = '{cpf}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
+        sql = f"UPDATE registro SET data_saida = NOW(), tipo = 'SAIDA' WHERE terminal_id = '{id}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
         cursor.execute(sql)
         self.conn.commit()
     
@@ -1238,15 +1238,15 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def showInformacoesServidor(self, titulo, cpf): # [v1.0.0.03]: metodo para mostrar informações do Servidor nos formularios
-        servidor = self.getServidorByCPF(cpf)
-        carro = self.getCarroByCPF(cpf)
+    def showInformacoesServidor(self, titulo, id): # [v1.0.0.03]: metodo para mostrar informações do Servidor nos formularios
+        servidor = self.getServidorByID(id)
+        carro = self.getCarroByID(id)
         container = QWidget()
         texto = """
         <b>"""+titulo+"""</b><br>
         <br>
         <b>Nº VAGA:</b>&nbsp;"""+str(carro[0][1])+"""<br>
-        <b>CPF:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][0]+"""<br>
+        <b>ID:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][0]+"""<br>
         <b>NOME:</b>&nbsp;&nbsp;&nbsp;&nbsp;"""+servidor[0][1]+"""<br>
         <b>ORGÃO:</b>&nbsp;&nbsp;&nbsp;"""+servidor[0][2]+"""<br>
         <b>CARRO:</b>&nbsp;&nbsp;&nbsp;"""+carro[0][3]+"""<br>
@@ -1296,9 +1296,9 @@ class Sidebar(QWidget, QObject):
         doc = SimpleDocTemplate(path_conteudo_pdf)
         count = 0
         linhas = []
-        linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "CPF/CNPJ", "Servidor", "Orgão Vinculado", "Contato"]) # define as colunas da tabela
+        linhas.append(["Placa", "Data/Hora (ENTRADA)", "Data/Hora (SAÍDA)", "Terminal ID", "Servidor", "Orgão Vinculado", "Contato"]) # define as colunas da tabela
         for tupla in tuplas_tabela:
-            servidor = self.getServidorByCPF(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
+            servidor = self.getServidorByID(tupla[2]) # pesquisa dados do servidor pra inserir na tabela em complemento
             if len(servidor) == 0:
                 #visitante = self.getVisitante(tupla[7])
                 tupla_formatada = [tupla[1], tupla[4], tupla[5], tupla[2], tupla[7].upper(), "[VISITANTE]: "+self.orgao_vinculado.displayText(), tupla[8]]

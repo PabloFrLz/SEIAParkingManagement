@@ -50,12 +50,14 @@ import AI520FaceServer
 init()
 ver = "v1.0.0.04" # versão do software
 
-#variaveis de autenticação do banco de dados
-USER = 'root'
-PASSWORD_DB = '5452'        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)
-ADMIN_PASSWORD = 'NAS5452'    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)
 
-# _______________________________________
+# AUTENTICAÇÃO DO BANCO DE DADOS MYSQL
+USER = 'root'
+PASSWORD_DB = ''        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
+# AUTENTICAÇÃO DO SOFTWARE (SENHA DE ADMINISTRADOR)
+ADMIN_PASSWORD = ''    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
+
+#________________________________________
 #                                        |
 SCALE_APP = 0.70 # ESCALA DA APLICAÇÃO   |
 #________________________________________|
@@ -771,7 +773,7 @@ class SEIAParkingManagement(QGraphicsView):
         # [AI520F] Terminal de Reconhecimento Facial (v1.0.0.04) 
         #==============================================================================================
 
-        self.ai520f_server = AI520FaceServer.AI520FaceServer(host="10.0.0.111", port=8001, recursos=self.recursos, on_recognition=self.monitora_reconhecimento)
+        self.ai520f_server = AI520FaceServer.AI520FaceServer(host="192.168.0.61", port=8001, recursos=self.recursos, on_recognition=self.monitora_reconhecimento)
         self.ai520f_server.start()
 
      
@@ -1215,11 +1217,70 @@ class SEIAParkingManagement(QGraphicsView):
         # [v1.0.0.04]: metodo que vai processar os dados identificados do reconhecimento
         if passed:
             print(f"Detectado:\n  NAME: {employee_name} \n  ID: {employee_id}\n")
-            
-            image = Image.open(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE) # [v1.0.0.04]: abrindo imagem
-            image.show() # [v1.0.0.04]: mostrando a imagem
-            # ex: with open(f"{employee_id}.jpg", "wb") as f: f.write(image_bytes)
-            # ex: seia_backend.registrar_acesso(employee_id, image_bytes)
+
+            #    _______________________________________________
+            #   |                                               |
+            #   |            TRATAMENTO DOS DADOS               |
+            #   |_______________________________________________|
+            employee_id = f"{employee_id[:3]}-{employee_id[3:]}" # [v1.0.0.04]: insere o hifen no ID pois inicialmente há nº de placas de veiculos no lugar do ID
+            servidor = self.sidebar.getServidorByID(employee_id) # [v1.0.0.04]: busca o ID do servidor no banco
+            if len(servidor) == 0:
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Servidor com ID '{employee_id}' não encontrado no banco de dados.")
+                QMessageBox.warning(self, "Terminal de Reconhecimento Facial", f"Servidor com ID '{employee_id}' não encontrado no banco de dados.")
+                return
+            else:
+                servidor_nome = servidor[0][1] # [v1.0.0.04]: pega o nome do servidor
+                servidor_orgao = servidor[0][2] # [v1.0.0.04]: pega o orgao do servidor
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Servidor encontrado no banco de dados: {servidor_nome}")
+                #QMessageBox.information(self, "Terminal de Reconhecimento Facial", f"Servidor encontrado no banco de dados: {servidor_nome}")
+
+                #    _______________________________________________
+                #   |                                               |
+                #   |         APRESENTAÇÃO DAS INFORMAÇÕES          |
+                #   |_______________________________________________|
+                self.showSecurityIDCard(employee_id, servidor_nome, servidor_orgao) # [v1.0.0.04]: mostra o BANNER com o Terminal ID do servidor identificado
+
+
+    def showSecurityIDCard(self, id, nome, orgao):
+        # [v1.0.0.04]: metodo que vai mostrar o ID Card do servidor identificado
+        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Gerando informações...")
+        card = QWidget()
+        card.setPixmap(QPixmap(self.recursos.PATH.img_banner_security_id_card)) # [v1.0.0.04]: define a imagem de fundo do ID Card
+        #card.setWindowTitle("ID Card - Reconhecimento Facial")
+        #card.setFixedSize(400, 300)
+        layout = QVBoxLayout(card)
+
+        label_rosto = QLabel() # [v1.0.0.04]: adiciona a imagem do rosto do servidor centralizada
+        label_rosto.setPixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE).scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
+        layout.addWidget(label_rosto, alignment=Qt.AlignmentFlag.AlignCenter) 
+
+        label_name = QLabel(f"{nome}")
+        label_name.setFont(QFont("Arial", 14))
+        layout.addWidget(label_name)
+
+        label_id = QLabel(f"{id}")
+        label_id.setFont(QFont("Arial", 14))
+        layout.addWidget(label_id)
+
+        label_orgao = QLabel(f"{orgao}")
+        label_orgao.setFont(QFont("Arial", 14))
+        layout.addWidget(label_orgao)
+
+        # [v1.0.0.04]: Adiciona o card na interface principal
+        proxy_card = QGraphicsProxyWidget()
+        proxy_card.setWidget(card)
+        proxy_card.setPos(WIDTH/2 - 200, 100)
+        proxy_card.setZValue(1001) # força a ficar no topo da pilha de renderização
+        self.scene.addItem(proxy_card)
+
+        
+        # [v1.0.0.04]: Exibe o card na tela
+        #card.show()
+        proxy_card.show()
+
+        # [v1.0.0.04]: Esconde o card após 20 segundos
+        QTimer.singleShot(20000, proxy_card.hide)
+
 
 app = QApplication(sys.argv)
 app.setStyleSheet(

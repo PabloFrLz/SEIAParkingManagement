@@ -44,6 +44,7 @@ class AI520FaceServer:
         self._seen = set()
         self._lock = threading.Lock()
         self._server = None
+        self._thread = None
 
     @staticmethod
     def _event_key(data: dict) -> str:
@@ -130,7 +131,12 @@ class AI520FaceServer:
 
         return Handler
 
-    def start(self):
+    def start(self, block: bool = False):
+        """Inicia o servidor.
+
+        Por padrão inicia o loop do servidor em uma thread daemon (não bloqueante).
+        Se `block=True`, o método bloqueará chamando `serve_forever()` no thread principal.
+        """
         class QuietServer(ThreadingHTTPServer):
             daemon_threads = True
 
@@ -140,17 +146,29 @@ class AI520FaceServer:
                     super().handle_error(request, client_address)
 
         self._server = QuietServer((self.host, self.port), self._build_handler())
-        print(f"[{self.recursos.CORES.AMARELO}AI520FaceServer.py{self.recursos.CORES.RESET}]: Servidor rodando em http://{self.host}:{self.port} — aguardando eventos...\n")
-        try:
-            self._server.serve_forever()
-        except KeyboardInterrupt:
-            self.stop()
+        # inicia em thread daemon para não bloquear a aplicação
+        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+        self._thread.start()
+        print(f"[{self.recursos.CORES.AMARELO}AI520FaceServer.py{self.recursos.CORES.RESET}]: Servidor rodando em http://{self.host}:{self.port} — aguardando eventos... (thread em background)\n")
+
+        if block:
+            try:
+                # bloqueia no processo principal quando explicitado
+                self._server.serve_forever()
+            except KeyboardInterrupt:
+                self.stop()
 
     def stop(self):
         if self._server:
             print(f"[{self.recursos.CORES.AMARELO}AI520FaceServer.py{self.recursos.CORES.RESET}]: Encerrando servidor...")
             self._server.shutdown()
             self._server.server_close()
+            # aguarda a thread encerrar (se existir)
+            try:
+                if self._thread and self._thread.is_alive():
+                    self._thread.join(timeout=1)
+            except Exception:
+                pass
 
 '''
 if __name__ == '__main__':
