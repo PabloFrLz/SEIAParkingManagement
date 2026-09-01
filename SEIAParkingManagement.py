@@ -4,12 +4,12 @@
              edifício onde a secretaria está lotada. Projeto conduzido pelo núcleo de Diretoria
              em Inovação (DIN), vinculado à Secretaria da Inovação e Inteligência Artificial (SEIA), 
              do Estado do Paraná.
-    Tools: Python3, PySide6, MySQL, PyQtDarkTheme, Photoshop CC 2015, Github  
+    Tools: Python3, PySide6, MySQL, PyQtDarkTheme, Photoshop CC 2015, Github, PaddleOCR,   
     Department: Diretoria de Inovação (DIN)
     Author: Pablo Franco Luz (pablo-tr1@hotmail.com - https://github.com/PabloFrLz)
     Supervisor: André Luis Costa Batistela 
     Director: Thiago Rodrigo da Silva (Thiago Marcelino)
-    Version: 1.0.0.03
+    Version: 1.0.0.04
     Start: 31/03/2026 - 08:16PM
     End: 18/07/2026 - 15:42PM
     Notas:
@@ -35,18 +35,20 @@ from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
 from PySide6.QtCore import qInstallMessageHandler
 import traceback
 import sys
+from PIL import Image
 
 from shiboken6 import isValid
+from colorama import init
 import Vaga as vg
 import Sidebar as sb
 import Recursos
 import ModelPaddleOCR
 import qdarktheme
 import pymysql
-from colorama import init
+import AI520FaceServer
 
 init()
-ver = "v1.0.0.03" # versão do software
+ver = "v1.0.0.04" # versão do software
 
 #variaveis de autenticação do banco de dados
 USER = 'root'
@@ -107,7 +109,6 @@ class SEIAParkingManagement(QGraphicsView):
         self.ip_cam = [] # variavel pra armazenar o IP da camera
         self.ip_cam_pass = "" # armazena a senha de Conexão NVR da Camera WiFi
         self.enable_OCR = True # [v1.0.0.03]:  habilita ou desabilita o OCR (Reconhecimento Óptico de Caracteres) para identificar placas
-
 
         
 
@@ -727,11 +728,12 @@ class SEIAParkingManagement(QGraphicsView):
         self.garbage_collector = [] # [v1.0.0.03]: para deletar os widgets gerados no processo
         self.FormularioLeituraDados() # [v1.0.0.03]: chamar a função que lê o IP do usuario
 
+
+
         #==============================================================================================
         # [Admin] Controle de administrador do sistema (v1.0.0.03)
         #==============================================================================================
 
-        
         self.btn_admin = QPushButton()
         self.btn_admin.setCheckable(True)
         self.btn_admin.clicked.connect(self.authenticateAdmin)
@@ -763,6 +765,14 @@ class SEIAParkingManagement(QGraphicsView):
         proxy_btn_admin.setZValue(999)
         self.scene.addItem(proxy_btn_admin)
 
+
+
+        #==============================================================================================
+        # [AI520F] Terminal de Reconhecimento Facial (v1.0.0.04) 
+        #==============================================================================================
+
+        self.ai520f_server = AI520FaceServer.AI520FaceServer(host="10.0.0.111", port=8001, recursos=self.recursos, on_recognition=self.monitora_reconhecimento)
+        self.ai520f_server.start()
 
      
     """
@@ -1200,6 +1210,16 @@ class SEIAParkingManagement(QGraphicsView):
                 self.btn_admin.setStyleSheet(self.recursos.ESTILOS.button_style_7)
 
 
+
+    def monitora_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
+        # [v1.0.0.04]: metodo que vai processar os dados identificados do reconhecimento
+        if passed:
+            print(f"Detectado:\n  NAME: {employee_name} \n  ID: {employee_id}\n")
+            
+            image = Image.open(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE) # [v1.0.0.04]: abrindo imagem
+            image.show() # [v1.0.0.04]: mostrando a imagem
+            # ex: with open(f"{employee_id}.jpg", "wb") as f: f.write(image_bytes)
+            # ex: seia_backend.registrar_acesso(employee_id, image_bytes)
 
 app = QApplication(sys.argv)
 app.setStyleSheet(
