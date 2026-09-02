@@ -53,9 +53,9 @@ ver = "v1.0.0.04" # versão do software
 
 # AUTENTICAÇÃO DO BANCO DE DADOS MYSQL
 USER = 'root'
-PASSWORD_DB = 'Seia@2026'        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
+PASSWORD_DB = ''        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
 # AUTENTICAÇÃO DO SOFTWARE (SENHA DE ADMINISTRADOR)
-ADMIN_PASSWORD = 'NASCH@2026'    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
+ADMIN_PASSWORD = ''    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
 
 #________________________________________
 #                                        |secin
