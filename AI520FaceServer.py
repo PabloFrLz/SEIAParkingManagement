@@ -15,6 +15,7 @@ if SAVE_IMAGES and not os.path.exists(DIR): # cria o diretorio das imagens
     os.makedirs(DIR)
 
 class AI520FaceServer:
+    
     """
     Servidor mínimo para o terminal AI520F-EM.
 
@@ -118,9 +119,16 @@ class AI520FaceServer:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Content-Length', str(len(outer.ACK_BODY)))
-                self.send_header('Connection', 'keep-alive')
+                # Force connection close so the device reliably receives the ACK
+                self.send_header('Connection', 'close')
                 self.end_headers()
-                self.wfile.write(outer.ACK_BODY)
+                try:
+                    self.wfile.write(outer.ACK_BODY)
+                    self.wfile.flush()
+                except Exception:
+                    pass
+                # ensure the server closes this connection after the response
+                self.close_connection = True
 
             def do_GET(self):
                 self.send_response(404)

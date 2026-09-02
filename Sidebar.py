@@ -1147,6 +1147,22 @@ class Sidebar(QWidget, QObject):
 
 
 
+    def getIdVagaByTerminalID(self, terminal_id):
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT num_vaga FROM Carro WHERE terminal_id = '{terminal_id}'")
+        num_vaga = cursor.fetchall()
+        return num_vaga[0][0] # retorna apenas o numero da vaga
+
+
+
+    def getSetorByTerminalID(self, terminal_id):
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT setor FROM Carro WHERE terminal_id = '{terminal_id}'")
+        setor = cursor.fetchall()
+        return setor[0][0] # retorna apenas a descrição do setor
+
+
+    
     def verificaSAIDA(self, num_vaga):# [v1.0.0.03]: função para verificar se o carro já possui uma entrada no registro e ainda não possui uma saída registrada, ou seja, se o carro está dentro do estacionamento]
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM registro WHERE num_vaga = '{num_vaga}' AND tipo = 'ENTRADA'")

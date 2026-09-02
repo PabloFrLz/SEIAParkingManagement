@@ -62,6 +62,10 @@ class Fontes:
 
         self.fonte_texto_toggle = "font-size: 14px"
 
+        self.fonte_texto_card_titulo = QFont("SF Pro Text", 24, QFont.Bold) # [v1.0.0.04]: Fonte para o NOME do servidor no card de reconhecimento
+        self.fonte_texto_card_subtitulo = QFont("SF Pro Text", 18) # [v1.0.0.04]: Fonte para o SETOR do servidor no card de reconhecimento
+        self.fonte_texto_card_info = QFont("SF Pro Text", 16) # [v1.0.0.04]: Fonte para demais informações do servidor (ID, VAGA, ORGAO) no card de reconhecimento
+
 
 
 class Cores:
@@ -393,6 +397,14 @@ class Estilos:
             QPushButton:pressed {{
                 background-color: rgba(0, 255, 155, 80);
                 color: white;
+            }}
+        """
+
+        self.estilo_id_card_security = f"""
+            QWidget {{
+                background-color: transparent;
+                border: none;
+                color: #000000;
             }}
         """
 

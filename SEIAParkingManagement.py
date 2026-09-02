@@ -30,8 +30,8 @@ from PySide6.QtWidgets import (
     QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem,
     QGraphicsProxyWidget, QHBoxLayout, QInputDialog, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 )
-from PySide6.QtGui import QIntValidator, QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter,QFont
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF
+from PySide6.QtGui import QIntValidator, QPainterPath, QPixmap, QPolygonF, QPen, QBrush, QColor, QPainter, QFont
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, QPointF, Signal
 from PySide6.QtCore import qInstallMessageHandler
 import traceback
 import sys
@@ -53,12 +53,12 @@ ver = "v1.0.0.04" # versão do software
 
 # AUTENTICAÇÃO DO BANCO DE DADOS MYSQL
 USER = 'root'
-PASSWORD_DB = ''        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
+PASSWORD_DB = 'Seia@2026'        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
 # AUTENTICAÇÃO DO SOFTWARE (SENHA DE ADMINISTRADOR)
-ADMIN_PASSWORD = ''    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
+ADMIN_PASSWORD = 'NASCH@2026'    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
 
 #________________________________________
-#                                        |
+#                                        |secin
 SCALE_APP = 0.70 # ESCALA DA APLICAÇÃO   |
 #________________________________________|
 
@@ -92,6 +92,8 @@ PEN_AZUL = QPen(QColor("#0062BE"), 2)
 BRUSH_AZUL = QBrush(QColor(56, 109, 255, 40))
 
 class SEIAParkingManagement(QGraphicsView):
+    signal_reconhecimento = Signal(object, object, object, object, object) 
+
     def __init__(self):
         super().__init__()
         self.setRenderHint(QPainter.Antialiasing)
@@ -773,7 +775,8 @@ class SEIAParkingManagement(QGraphicsView):
         # [AI520F] Terminal de Reconhecimento Facial (v1.0.0.04) 
         #==============================================================================================
 
-        self.ai520f_server = AI520FaceServer.AI520FaceServer(host="192.168.0.61", port=8001, recursos=self.recursos, on_recognition=self.monitora_reconhecimento)
+        self.signal_reconhecimento.connect(self.monitora_reconhecimento)
+        self.ai520f_server = AI520FaceServer.AI520FaceServer(host="192.168.0.61", port=8001, recursos=self.recursos, on_recognition=self._emit_reconhecimento)
         self.ai520f_server.start()
 
      
@@ -1213,6 +1216,12 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
+    def _emit_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
+        # adaptador: recebe os kwargs do AI520FaceServer e emite o Signal de forma posicional
+        self.signal_reconhecimento.emit(employee_id, employee_name, passed, confidence, note_time)
+
+
+
     def monitora_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
         # [v1.0.0.04]: metodo que vai processar os dados identificados do reconhecimento
         if passed:
@@ -1231,6 +1240,8 @@ class SEIAParkingManagement(QGraphicsView):
             else:
                 servidor_nome = servidor[0][1] # [v1.0.0.04]: pega o nome do servidor
                 servidor_orgao = servidor[0][2] # [v1.0.0.04]: pega o orgao do servidor
+                servidor_vaga = self.sidebar.getIdVagaByTerminalID(employee_id) # [v1.0.0.04]: pega o nº da vaga
+                servidor_setor = self.sidebar.getSetorByTerminalID(employee_id) # [v1.0.0.04]: pega o setor do servidor
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Servidor encontrado no banco de dados: {servidor_nome}")
                 #QMessageBox.information(self, "Terminal de Reconhecimento Facial", f"Servidor encontrado no banco de dados: {servidor_nome}")
 
@@ -1238,49 +1249,104 @@ class SEIAParkingManagement(QGraphicsView):
                 #   |                                               |
                 #   |         APRESENTAÇÃO DAS INFORMAÇÕES          |
                 #   |_______________________________________________|
-                self.showSecurityIDCard(employee_id, servidor_nome, servidor_orgao) # [v1.0.0.04]: mostra o BANNER com o Terminal ID do servidor identificado
+                self.showSecurityIDCard(employee_id, servidor_nome, servidor_setor, servidor_vaga, servidor_orgao) # [v1.0.0.04]: mostra o BANNER com o Terminal ID do servidor identificado
 
 
-    def showSecurityIDCard(self, id, nome, orgao):
-        # [v1.0.0.04]: metodo que vai mostrar o ID Card do servidor identificado
+    def showSecurityIDCard(self, id, nome, setor, vaga, orgao):# [v1.0.0.04]: metodo que vai mostrar o ID Card do servidor identificado
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Gerando informações...")
+        # QWIDGET PRINCIPAL E LAYOUT 
         card = QWidget()
-        card.setPixmap(QPixmap(self.recursos.PATH.img_banner_security_id_card)) # [v1.0.0.04]: define a imagem de fundo do ID Card
-        #card.setWindowTitle("ID Card - Reconhecimento Facial")
-        #card.setFixedSize(400, 300)
+        card.setStyleSheet(self.recursos.ESTILOS.estilo_id_card_security) # [v1.0.0.04]: remove a cor de fundo pra ficar com cor de background transparente.
         layout = QVBoxLayout(card)
 
+        # LABEL QUE TERÁ A IMAGEM DE BACKGROUND
+        pixmap = QPixmap(self.recursos.PATH.img_banner_security_id_card).scaled(600, 1050, Qt.AspectRatioMode.KeepAspectRatio) # [v1.0.0.04]: redução de 50% na resolução da imagem
+        card.setFixedSize(pixmap.size())  # [v1.0.0.04]: container do tamanho exato da imagem
+        label = QLabel(card)
+        label.setPixmap(pixmap)
+        label.setGeometry(0, 0, card.width(), card.height())
+        label.lower()  # [v1.0.0.04]: manda o label pro fundo da pilha de widgets (z-order)
+
+        layout.addSpacing(222) # # [v1.0.0.04]: espaçamento para a IMAGEM (entre IMAGEM e topo do card Widget)
+
+        # LABELS QUE TERÁ A IMAGEM DO SERVIDOR RECONHECIDO
         label_rosto = QLabel() # [v1.0.0.04]: adiciona a imagem do rosto do servidor centralizada
-        label_rosto.setPixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE).scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
+        label_rosto.setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE), 320))
         layout.addWidget(label_rosto, alignment=Qt.AlignmentFlag.AlignCenter) 
 
-        label_name = QLabel(f"{nome}")
-        label_name.setFont(QFont("Arial", 14))
-        layout.addWidget(label_name)
+        #layout.addSpacing(25)
+        #layout.setSpacing(4)  # # [v1.0.0.04]: espaçamento para o conjunto (NOME + SETOR)
 
-        label_id = QLabel(f"{id}")
-        label_id.setFont(QFont("Arial", 14))
+        # LABELS QUE TERÃO AS INFORMAÇÕES DO SERVIDOR RECONHECIDO
+        label_name = QLabel(f"{nome}") # # [v1.0.0.04]: NOME DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR
+        label_name.setFont(self.recursos.FONTES.fonte_texto_card_titulo)
+        label_name.setWordWrap(True)  # # [v1.0.0.04]: permite quebra de linha automática se o texto for muito longo
+        label_name.setFixedWidth(card.width() - 40)  # [v1.0.0.04]: 40 = margem de respiro nas laterais, ajuste como quiser
+        label_name.setAlignment(Qt.AlignmentFlag.AlignCenter)  # [v1.0.0.04]: centraliza cada linha quebrada, não só o bloco
+        layout.addWidget(label_name, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        label_setor = QLabel(f"{setor}") # [v1.0.0.04]: SETOR DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR SÓ QUE MENOR QUE O NOME DO SERVIDOR
+        label_setor.setFont(self.recursos.FONTES.fonte_texto_card_subtitulo)
+        label_setor.setWordWrap(True)  # [v1.0.0.04]: permite quebra de linha automática se o texto for muito longo
+        label_setor.setFixedWidth(card.width() - 40)  # [v1.0.0.04]: 40 = margem de respiro nas laterais, ajuste como quiser
+        label_setor.setAlignment(Qt.AlignmentFlag.AlignCenter)  # [v1.0.0.04]: centraliza cada linha quebrada, não só o bloco
+        layout.addWidget(label_setor, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        layout.addSpacing(130) # [v1.0.0.04]: distancia maior entre o conjunto (NOME + SETOR) e o conjunto (ID + VAGA + ORGAO)
+
+        label_id = QLabel(f"<b>ID Nº</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{id}")
+        label_id.setFont(self.recursos.FONTES.fonte_texto_card_info)
         layout.addWidget(label_id)
+        label_id.setContentsMargins(200,0,0,0)
 
-        label_orgao = QLabel(f"{orgao}")
-        label_orgao.setFont(QFont("Arial", 14))
+        label_vaga = QLabel(f"<b>Vaga Nº</b>&nbsp;&nbsp;&nbsp;{vaga}")
+        label_vaga.setFont(self.recursos.FONTES.fonte_texto_card_info)
+        layout.addWidget(label_vaga)
+        label_vaga.setContentsMargins(200,0,0,0)
+
+        label_orgao = QLabel(f"<b>Orgão</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{orgao}")
+        label_orgao.setFont(self.recursos.FONTES.fonte_texto_card_info)
         layout.addWidget(label_orgao)
+        label_orgao.setContentsMargins(200,0,0,0)
+
+        layout.addSpacing(150) # [v1.0.0.04]: empurra de baixo pra cima o conjunto (ID + VAGA + ORGAO) e o conjunto (DATA + HORA)
 
         # [v1.0.0.04]: Adiciona o card na interface principal
         proxy_card = QGraphicsProxyWidget()
         proxy_card.setWidget(card)
-        proxy_card.setPos(WIDTH/2 - 200, 100)
-        proxy_card.setZValue(1001) # força a ficar no topo da pilha de renderização
+        proxy_card.setPos(WIDTH/2 - 100, 200)
+        proxy_card.setZValue(1001) # [v1.0.0.04]: força a ficar no topo da pilha de renderização
         self.scene.addItem(proxy_card)
-
         
         # [v1.0.0.04]: Exibe o card na tela
-        #card.show()
         proxy_card.show()
-
         # [v1.0.0.04]: Esconde o card após 20 segundos
         QTimer.singleShot(20000, proxy_card.hide)
 
+
+
+    def get_circular_pixmap(self, pixmap: QPixmap, size: int) -> QPixmap:
+        # [1] recorta um quadrado central da imagem (evita ovalizar o círculo)
+        lado = min(pixmap.width(), pixmap.height())
+        x = (pixmap.width() - lado) // 2
+        y = (pixmap.height() - lado) // 2
+        quadrado = pixmap.copy(x, y, lado, lado).scaled(
+            size, size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+        )
+
+        # [2] cria um pixmap transparente e "recorta" o quadrado com uma máscara circular
+        circular = QPixmap(size, size)
+        circular.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(circular)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # borda lisa, sem serrilhado
+        path = QPainterPath()
+        path.addEllipse(0, 0, size, size)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, quadrado)
+        painter.end()
+
+        return circular
 
 app = QApplication(sys.argv)
 app.setStyleSheet(
