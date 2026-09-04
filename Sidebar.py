@@ -1,4 +1,4 @@
-from PySide6.QtCore import QEvent, QObject, QPoint, QRegularExpression, QSize, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation
+from PySide6.QtCore import QEvent, QObject, QPoint, QRegularExpression, QSize, QTimer, QVariantAnimation, Qt, QPropertyAnimation, Signal, QPropertyAnimation
 from PySide6.QtWidgets import QFormLayout, QGraphicsDropShadowEffect, QGraphicsProxyWidget, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QTextEdit, QWidget, QVBoxLayout, QVBoxLayout, QPushButton
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator, QColor
 
@@ -12,6 +12,8 @@ from reportlab.lib.units import mm
 
 import Formulario # classes próprias da aplicação
 
+TIMER_TO_CLOSE_MESSAGE = 5000  # [v1.0.0.04]: 5 segundos
+
 class Sidebar(QWidget, QObject):
     
     signal_insert = Signal(object)
@@ -20,6 +22,7 @@ class Sidebar(QWidget, QObject):
         super().__init__()
         self.POS_X_SIDEBAR = POS_X_SIDEBAR
         self.CONST_DESLOCAMENTO = 220
+
 
         #======================================
         # Admin
@@ -360,7 +363,6 @@ class Sidebar(QWidget, QObject):
 
 
 
-
     def controlActions(self, vaga):
         self.cancel() # destroi formularios caso esteja em andamento - isso permite interagir com outras vagas na interface enquanto em outras etapas do fluxo dos formularios de ENTRADA, CADASTRO, etc.
         self.atualizar_info(vaga) 
@@ -442,7 +444,7 @@ class Sidebar(QWidget, QObject):
             resposta = QMessageBox.question(self.main_window, "Atenção", "A vaga selecionada está OCUPADA! \nDeseja registrar a SAÍDA do servidor ?")
             if resposta == QMessageBox.StandardButton.Yes:
                 self.acaoButtonSaida()
-                return False # [v1.0.0.03]: define retorno falso pra evitar continuidade do fluxo de registro de ENTRADA para quando o fluxo vier do buscador global de placas (self.search_box)
+                return False # [v1.0.0.03]: define retorno pra evitar continuidade do fluxo de registro de ENTRADA para quando o fluxo vier do buscador global de placas (self.search_box)
             return False
         
         return True # [v1.0.0.03]: definindo retorno só pra verificar erros e evitar executar metodos especificos em SEIAParkingManagement.py -> processarVagaBuscada() 
@@ -452,11 +454,6 @@ class Sidebar(QWidget, QObject):
     def acaoButtonSaida(self):
         dados = None
         if self.status_vaga.displayText() == "OCUPADA":
-            '''if self.vaga_processada:
-                dados = self.getUltimaEntradaRegistroDaVaga(self.num_vaga.displayText()) #obtem a ultima entrada registrada pra uma vaga especifica
-            else:
-                dados = self.getUltimaEntradaRegistroDaVagaByPlaca(self.placa_carro.displayText()) #obtem a ultima entrada registrada pra uma vaga especifica
-            '''
             dados = self.getUltimaEntradaRegistroDaVaga(self.num_vaga.displayText()) #obtem a ultima entrada no registro para esse numero de vaga
             self.insertRegistro(dados=dados)
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]:  Iniciando registro de SAIDA para a vaga de nº {dados[0][3]}")
@@ -845,8 +842,9 @@ class Sidebar(QWidget, QObject):
             print(f"\n{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}")
             print("Dados inseridos no Registro com sucesso!")
             print(f"{self.recursos.CORES.VERDE}================================{self.recursos.CORES.RESET}\n")
-            QMessageBox.information(self.main_window, "Sucesso", "Registro efetuado com sucesso!")
-            self.cancel(self.sentinel) # reseta informações e retrocede sidebar
+            # [v1.0.0.04]: adaptando pra fechar a mensagem automaticamente
+            self.show_message_temporary(self.main_window, "Sucesso", f"Registro de {tipo} efetuado com sucesso!") # [v1.0.0.04]: adaptado pra mostrar o tipo de inserção (ENTRADA/SAIDA)
+            self.cancel(self.sentinel) # [v1.0.0.01]: reseta informações e retrocede sidebar
 
         except Error as e:
             self.error_message(e)
@@ -1119,8 +1117,8 @@ class Sidebar(QWidget, QObject):
     def getCarroByID(self, terminal_id):  # [v1.0.0.03]: função para obter os dados do carro vinculado ao terminal ID do servidor
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT * FROM Carro WHERE terminal_id = '{terminal_id}'")
-        servidor = cursor.fetchall()
-        return servidor
+        carro = cursor.fetchall()
+        return carro
     
 
 
@@ -1143,7 +1141,7 @@ class Sidebar(QWidget, QObject):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT num_vaga FROM Carro WHERE placa = '{placa}'")
         num_vaga = cursor.fetchall()
-        return num_vaga[0][0] # retorna apenas o numero da vaga e nao a tupla inteira
+        return num_vaga[0][0] # retorna apenas o numero da vaga e nao a tupla inteira - esta [0][0] e não [0][1] por conta que há apenas um valor retornado, devido o trecho "SELECT num_vaga"
 
 
 
@@ -1151,7 +1149,7 @@ class Sidebar(QWidget, QObject):
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT num_vaga FROM Carro WHERE terminal_id = '{terminal_id}'")
         num_vaga = cursor.fetchall()
-        return num_vaga[0][0] # retorna apenas o numero da vaga
+        return num_vaga[0][0] # retorna apenas o numero da vaga - esta [0][0] e não [0][1] por conta que há apenas um valor retornado, devido o trecho "SELECT num_vaga"
 
 
 
@@ -1430,3 +1428,18 @@ class Sidebar(QWidget, QObject):
         self.btn_remove_veiculo.setDisabled(True) # [v1.0.0.03]: desabilita o botão de remoção de veiculo
         self.enable_ADMIN_privileges = False
 
+
+
+    #    _______________________________________________
+    #   |                                               |
+    #   |              MOSTRAR MENSAGENS                |
+    #   |_______________________________________________|
+    def show_message_temporary(self, janela, titulo, texto):
+        msg = QMessageBox(janela)      
+        msg.setWindowTitle(titulo)
+        msg.setText(texto)
+        msg.setIcon(QMessageBox.Icon.Information) 
+        msg.setOption(QMessageBox.Option.DontUseNativeDialog, True) # Força não usar diálogo nativo (deve ser antes do exec/show)
+        msg.show() # mostra a caixa de dialogo
+        QTimer.singleShot(TIMER_TO_CLOSE_MESSAGE, msg.close)  # [v1.0.0.04]: fecha automaticamente depois de TIMER_TO_CLOSE_MESSAGE segundos
+        return msg

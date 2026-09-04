@@ -779,6 +779,11 @@ class SEIAParkingManagement(QGraphicsView):
         self.ai520f_server = AI520FaceServer.AI520FaceServer(host="192.168.0.61", port=8001, recursos=self.recursos, on_recognition=self._emit_reconhecimento)
         self.ai520f_server.start()
 
+        self.list_labels = [] # [v1.0.0.04]: lista de labels para alterar as informações do reconhecimento facial
+        self.proxy_card = None
+        self.generateSecurityIDCard() # [v1.0.0.04]: gera o cartão de identificação do sistema de reconhecimento facial
+        
+
      
     """
     def wheelEvent(self, event):
@@ -816,16 +821,8 @@ class SEIAParkingManagement(QGraphicsView):
                         vaga.setStatus(2) # reserva
                     
                     vaga.ligar_led() # liga o led pra refletir o estado atual da vaga
+ 
 
-    
-    def show_message(self, titulo, texto):
-        msg = QMessageBox(self)      
-        msg.setWindowTitle(titulo)
-        msg.setText(texto)
-        msg.setIcon(QMessageBox.Icon.Warning) 
-        # Força não usar diálogo nativo (deve ser antes do exec/show)
-        msg.setOption(QMessageBox.Option.DontUseNativeDialog, True)
-        msg.exec()   
 
     def alternar_view(self): # alterna entre view 1 (objetos geometricos) e view 2 (imagens 3D)
         if self.turnRound:
@@ -978,7 +975,7 @@ class SEIAParkingManagement(QGraphicsView):
         self.placa_label_text.setText(placa) # [v1.0.0.03]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
         ultimo_registro_para_placa_informada = self.sidebar.getUltimaEntradaRegistroDaVagaByPlaca(placa) # [v1.0.0.03]: obtendo a ultima tupla do registro com ocorrencia dessa placa de carro 
         if len(ultimo_registro_para_placa_informada) == 0: # [v1.0.0.03]: caso nao encontre nenhum registro com essa placa
-            reply = QMessageBox.question(self, "Atenção", f"Não foi encontrado no registro nenhuma ocorrência dessa placa de carro '{placa}'.\nDeseja registrar uma entrada para essa placa ?")
+            reply = QMessageBox.question(self, "Atenção", f"Não foi encontrado no registro ocorrência dessa placa de carro '{placa}'.\nDeseja registrar uma entrada para essa placa ?")
             if reply == QMessageBox.StandardButton.Yes:
                 num_vaga = self.sidebar.getIdVagaByPlaca(placa) # [v1.0.0.03]: Pesquisa o numero da vaga vinculado ao carro no banco e insere nesse numero de vaga, independente da vaga selecionada.
             else:
@@ -986,10 +983,10 @@ class SEIAParkingManagement(QGraphicsView):
                 return # [v1.0.0.03]: retorna sem ação
         else:
             # [v1.0.0.03]: caso a ultima entrada do registro dessa placa seja uma ENTRADA, então o 
-            #              carro está no estacionamento e precisa ser registrado uma SAIDA - nesses 
-            #              termos, é preciso pegar o num_vaga onde consta essa pendencia pra atualizar
-            #              nela a SAIDA.
-            num_vaga = ultimo_registro_para_placa_informada[0][3] # [v1.0.0.03]: pega o numero da vaga (num_vaga) da ultima entrada do registro dessa placa de carro
+            #              carro está no estacionamento ou esquecerão de registrar uma SAIDA - então é 
+            #              preciso registrar uma SAIDA - nesses termos, é preciso pegar o nº da vaga onde 
+            #              consta essa pendencia pra atualizar como SAIDA.
+            num_vaga = ultimo_registro_para_placa_informada[0][3] # [v1.0.0.03]: pega o numero da vaga (num_vaga) da ultima tupla do registro dessa placa de carro
 
              
             possui_entrada = self.sidebar.verificaSAIDA(num_vaga) # [v1.0.0.03]: verifica se tem SAIDA pendente na vaga do carro - se tiver, então o carro está dentro do estacionamento e precisa ser registrado uma SAIDA
@@ -1027,7 +1024,7 @@ class SEIAParkingManagement(QGraphicsView):
         vaga = self.getVagaByID(vaga_id)
         if vaga is not None: # [v1.0.0.03]: o codigo dentro desse if é o mesmo presente dentro do metodo mousePressEvent() de Vaga()
             vaga.press_button_status = True
-            vaga.checkStatus()
+            vaga.checkStatus() # [v1.0.0.03]: atualiza o status da vaga (disponivel, ocupado ou reserva) e altera a cor do led de acordo com o status
             vaga.habilitar_sidebar.emit(vaga) # dá um cancel() e atualiza as informações da sidebar 
             vaga.press_button_status = False
         else:
@@ -1245,14 +1242,62 @@ class SEIAParkingManagement(QGraphicsView):
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Servidor encontrado no banco de dados: {servidor_nome}")
                 #QMessageBox.information(self, "Terminal de Reconhecimento Facial", f"Servidor encontrado no banco de dados: {servidor_nome}")
 
+                #    __________________________________________________________________
+                #   |                                                                  |
+                #   |         APRESENTA O SECURITY CARD ID COM AS INFORMAÇÕES          |
+                #   |__________________________________________________________________|
+                self.showSecurityIDCard([servidor_nome, servidor_setor, employee_id, servidor_vaga, servidor_orgao]) # [v1.0.0.04]: mostra o BANNER com o Terminal ID do servidor identificado
+
                 #    _______________________________________________
                 #   |                                               |
-                #   |         APRESENTAÇÃO DAS INFORMAÇÕES          |
+                #   |               INSERE NO BANCO                 |
                 #   |_______________________________________________|
-                self.showSecurityIDCard(employee_id, servidor_nome, servidor_setor, servidor_vaga, servidor_orgao) # [v1.0.0.04]: mostra o BANNER com o Terminal ID do servidor identificado
+
+                # VERIFICA SE TEM PENDENCIAS DE SAÍDA DO SERVIDOR
+                self.selecionarVagaPorID(servidor_vaga) # [v1.0.0.04]: seleciona a vaga na GUI
+                possui_entrada = self.sidebar.verificaSAIDA(servidor_vaga) # [v1.0.0.04]: verifica se tem SAIDA pendente na vaga do carro - se tiver, então o carro está dentro do estacionamento e precisa ser registrado uma SAIDA
+                if len(possui_entrada) != 0:
+                    print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Foi identificado que há uma pendência de SAIDA para a vaga {servidor_vaga}. \nIniciando o processo de inserção automático de SAIDA...")
+                    self.sidebar.show_message_temporary(self, "Terminal de Reconhecimento Facial", f"Foi identificado que há uma pendência de SAIDA para a vaga {servidor_vaga}. \nIniciando processo de inserção automático de SAIDA...")
+                    self.sidebar.acaoButtonSaida() # [v1.0.0.04]: registra a saída
+
+                # DESENCADEIA O FLUXO DE FORMULARIOS PARA REGISTRAR A ENTRADA DO SERVIDOR
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Fluxo de inserção de ENTRADA iniciado para o servidor {servidor_nome} (ID: {employee_id}) na vaga {servidor_vaga}.")
+                # [v1.0.0.04]: Chamando manualmente o fluxo de formularios
+                #state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.04]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
+                self.sidebar.transitToFormulario() # [v1.0.0.04]: animação que empurra pro lado direito as infos
+                self.sidebar.titulo.setText("REGISTRO DE ENTRADA") # [v1.0.0.04]: Altera o titulo da seção para retratar a nova seção de registro de entrada
+                self.sidebar.registroEntrada() # [v1.0.0.04]: inicializa os formularios pra registro da ENTRADA de servidores
+                # SELECIONANDO O CARRO VINCULADO AO SERVIDOR RECONHECIDO AUTOMATICAMENTE
+                carro = self.sidebar.getCarroByID(employee_id) # [v1.0.0.04]: obtém informações do carro no banco vinculado ao terminal ID pra extrair a placa e modelo do carro
+                self.sidebar.form2.opcaoSelecionada(carro[0][0]+" - "+carro[0][3]) # [v1.0.0.04]: envia as informações formatadas no formato que a função opcaoSelecionada() espera: "PLACA - MODELO"
+                self.placa_label_text.setText(carro[0][0]) # [v1.0.0.04]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
+                #QTimer.singleShot(10000, self.sidebar.btn_commit.click)  # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados depois de 10 segundos
+                #self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados
+                print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Inserção no banco de dados concluída com sucesso!")
 
 
-    def showSecurityIDCard(self, id, nome, setor, vaga, orgao):# [v1.0.0.04]: metodo que vai mostrar o ID Card do servidor identificado
+
+    def showSecurityIDCard(self, list_infos): # [v1.0.0.04]: mostra o cartão de identificação do sistema de reconhecimento facial
+        # ATUALIZA A IMAGEM DO ROSTO
+        self.list_labels[0].setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE), 320)) 
+        # ATUALIZA AS INFORMAÇÕES DO CARD
+        self.list_labels[1].setText(f"{list_infos[0]}") # [v1.0.0.04]: atualiza o NOME DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR
+        self.list_labels[2].setText(f"{list_infos[1]}") # [v1.0.0.04]: atualiza o SETOR DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR SÓ QUE MENOR QUE O NOME DO SERVIDOR
+        self.list_labels[3].setText(f"<b>ID Nº</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{list_infos[2]}") # [v1.0.0.04]: atualiza o ID do SERVIDOR
+        self.list_labels[4].setText(f"<b>Vaga Nº</b>&nbsp;&nbsp;&nbsp;{list_infos[3]}") # [v1.0.0.04]: atualiza o nº da VAGA do SERVIDOR
+        self.list_labels[5].setText(f"<b>Orgão</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{list_infos[4]}") # [v1.0.0.04]: atualiza o Orgão do SERVIDOR
+
+        '''for label in self.list_labels:
+            label.setText() # [v1.0.0.04]: atualiza o texto nos labels na seguinte sequencia: label_name, label_setor, label_id, label_vaga, label_orgao
+        '''
+        # APRESENTA AS INFORMAÇÕES DO CARD NA TELA
+        self.proxy_card.show() # [v1.0.0.04]: Exibe o card na tela
+        QTimer.singleShot(20000, self.proxy_card.hide) # [v1.0.0.04]: Esconde o card após 20 segundos
+
+
+
+    def generateSecurityIDCard(self):# [v1.0.0.04]: metodo que vai mostrar o ID Card do servidor identificado
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Gerando informações...")
         # QWIDGET PRINCIPAL E LAYOUT 
         card = QWidget()
@@ -1260,72 +1305,73 @@ class SEIAParkingManagement(QGraphicsView):
         layout = QVBoxLayout(card)
 
         # LABEL QUE TERÁ A IMAGEM DE BACKGROUND
-        pixmap = QPixmap(self.recursos.PATH.img_banner_security_id_card).scaled(600, 1050, Qt.AspectRatioMode.KeepAspectRatio) # [v1.0.0.04]: redução de 50% na resolução da imagem
+        pixmap = QPixmap(self.recursos.PATH.img_banner_security_id_card).scaled(725, 1175, Qt.AspectRatioMode.KeepAspectRatio) # [v1.0.0.04]: redução de 50% na resolução da imagem
         card.setFixedSize(pixmap.size())  # [v1.0.0.04]: container do tamanho exato da imagem
         label = QLabel(card)
         label.setPixmap(pixmap)
         label.setGeometry(0, 0, card.width(), card.height())
         label.lower()  # [v1.0.0.04]: manda o label pro fundo da pilha de widgets (z-order)
 
-        layout.addSpacing(222) # # [v1.0.0.04]: espaçamento para a IMAGEM (entre IMAGEM e topo do card Widget)
+        layout.addSpacing(283) # # [v1.0.0.04]: espaçamento para a IMAGEM (entre IMAGEM e topo do card Widget)
 
         # LABELS QUE TERÁ A IMAGEM DO SERVIDOR RECONHECIDO
         label_rosto = QLabel() # [v1.0.0.04]: adiciona a imagem do rosto do servidor centralizada
-        label_rosto.setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE), 320))
+        #label_rosto.setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE), 320))
         layout.addWidget(label_rosto, alignment=Qt.AlignmentFlag.AlignCenter) 
 
         #layout.addSpacing(25)
         #layout.setSpacing(4)  # # [v1.0.0.04]: espaçamento para o conjunto (NOME + SETOR)
 
         # LABELS QUE TERÃO AS INFORMAÇÕES DO SERVIDOR RECONHECIDO
-        label_name = QLabel(f"{nome}") # # [v1.0.0.04]: NOME DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR
+        label_name = QLabel() # # [v1.0.0.04]: NOME DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR
         label_name.setFont(self.recursos.FONTES.fonte_texto_card_titulo)
         label_name.setWordWrap(True)  # # [v1.0.0.04]: permite quebra de linha automática se o texto for muito longo
-        label_name.setFixedWidth(card.width() - 40)  # [v1.0.0.04]: 40 = margem de respiro nas laterais, ajuste como quiser
+        label_name.setFixedWidth(card.width() - 80)  # [v1.0.0.04]: 80 = margem de respiro nas laterais, ajuste como quiser
         label_name.setAlignment(Qt.AlignmentFlag.AlignCenter)  # [v1.0.0.04]: centraliza cada linha quebrada, não só o bloco
         layout.addWidget(label_name, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        label_setor = QLabel(f"{setor}") # [v1.0.0.04]: SETOR DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR SÓ QUE MENOR QUE O NOME DO SERVIDOR
+        label_setor = QLabel() # [v1.0.0.04]: SETOR DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR SÓ QUE MENOR QUE O NOME DO SERVIDOR
         label_setor.setFont(self.recursos.FONTES.fonte_texto_card_subtitulo)
         label_setor.setWordWrap(True)  # [v1.0.0.04]: permite quebra de linha automática se o texto for muito longo
-        label_setor.setFixedWidth(card.width() - 40)  # [v1.0.0.04]: 40 = margem de respiro nas laterais, ajuste como quiser
+        label_setor.setFixedWidth(card.width() - 80)  # [v1.0.0.04]: 80 = margem de respiro nas laterais, ajuste como quiser
         label_setor.setAlignment(Qt.AlignmentFlag.AlignCenter)  # [v1.0.0.04]: centraliza cada linha quebrada, não só o bloco
         layout.addWidget(label_setor, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        layout.addSpacing(130) # [v1.0.0.04]: distancia maior entre o conjunto (NOME + SETOR) e o conjunto (ID + VAGA + ORGAO)
+        layout.addSpacing(50) # [v1.0.0.04]: distancia maior entre o conjunto (NOME + SETOR) e o conjunto (ID + VAGA + ORGAO)
 
-        label_id = QLabel(f"<b>ID Nº</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{id}")
+        label_id = QLabel()
         label_id.setFont(self.recursos.FONTES.fonte_texto_card_info)
         layout.addWidget(label_id)
-        label_id.setContentsMargins(200,0,0,0)
+        label_id.setContentsMargins(240,30,0,0)
 
-        label_vaga = QLabel(f"<b>Vaga Nº</b>&nbsp;&nbsp;&nbsp;{vaga}")
+        label_vaga = QLabel()
         label_vaga.setFont(self.recursos.FONTES.fonte_texto_card_info)
         layout.addWidget(label_vaga)
-        label_vaga.setContentsMargins(200,0,0,0)
+        label_vaga.setContentsMargins(240,0,0,0)
 
-        label_orgao = QLabel(f"<b>Orgão</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{orgao}")
+        label_orgao = QLabel()
         label_orgao.setFont(self.recursos.FONTES.fonte_texto_card_info)
         layout.addWidget(label_orgao)
-        label_orgao.setContentsMargins(200,0,0,0)
+        label_orgao.setContentsMargins(240,0,0,80)
+
+        print("\n\n|| ->->->  (LISTA PREENCHIDA) <-<-<- ||\n\n")
+        self.list_labels = [label_rosto, label_name, label_setor, label_id, label_vaga, label_orgao] # [v1.0.0.04]: salva as labels pra alterar as informações dinamicamente
 
         layout.addSpacing(150) # [v1.0.0.04]: empurra de baixo pra cima o conjunto (ID + VAGA + ORGAO) e o conjunto (DATA + HORA)
 
         # [v1.0.0.04]: Adiciona o card na interface principal
-        proxy_card = QGraphicsProxyWidget()
-        proxy_card.setWidget(card)
-        proxy_card.setPos(WIDTH/2 - 100, 200)
-        proxy_card.setZValue(1001) # [v1.0.0.04]: força a ficar no topo da pilha de renderização
-        self.scene.addItem(proxy_card)
+        self.proxy_card = QGraphicsProxyWidget()
+        self.proxy_card.setWidget(card)
+        self.proxy_card.setPos(WIDTH/2 - 100, 80)
+        self.proxy_card.setZValue(1001) # [v1.0.0.04]: força a ficar no topo da pilha de renderização
+        self.scene.addItem(self.proxy_card)
+
+        self.proxy_card.hide() # [v1.0.0.04]: inicialmente esconde o card, só será mostrado quando houver um reconhecimento facial bem sucedido
         
-        # [v1.0.0.04]: Exibe o card na tela
-        proxy_card.show()
-        # [v1.0.0.04]: Esconde o card após 20 segundos
-        QTimer.singleShot(20000, proxy_card.hide)
 
+    
 
-
-    def get_circular_pixmap(self, pixmap: QPixmap, size: int) -> QPixmap:
+    def get_circular_pixmap(self, pixmap: QPixmap, size: int) -> QPixmap: # [v1.0.0.04]: RECORTA A IMAGEM EM FORMATO CIRCULAR PRA CABER NO CAMPO DE IMAGENS DO SECURITY CARD ID
         # [1] recorta um quadrado central da imagem (evita ovalizar o círculo)
         lado = min(pixmap.width(), pixmap.height())
         x = (pixmap.width() - lado) // 2
