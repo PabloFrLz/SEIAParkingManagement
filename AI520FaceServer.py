@@ -177,15 +177,3 @@ class AI520FaceServer:
                     self._thread.join(timeout=1)
             except Exception:
                 pass
-
-'''
-if __name__ == '__main__':
-    def minha_aplicacao(employee_id, employee_name, passed, confidence, note_time, image_bytes):
-        # Ponto de integração com o SEIA: aqui você recebe ID e imagem
-        # (bytes crus do JPEG, ou None se o aparelho não mandou foto)
-        # e faz o que precisar — salvar, mandar pro backend, etc.
-        pass
-
-    server = AI520FaceServer(host="10.0.0.111", port=8001, on_recognition=minha_aplicacao)
-    server.start()
-'''

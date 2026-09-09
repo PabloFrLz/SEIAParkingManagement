@@ -35,12 +35,12 @@
 #       O modelo escolhido foi o 'PP-OCRv5' do PaddleOCR - esse recurso é acionado via Button 'CAPTURAR PLACA'.
 #   12. Implementado recurso que ao pesquisar placa no buscador global de placas ou tentar registrar uma 
 #       'ENTRADA' para uma vaga com status 'OCUPADO', a aplicação vai solicitar ao usuario registrar a 'SAIDA'.
-#   13. Implementado tela pra ler IP Server do ESP32 manualmente do usuario
+#   13. Implementado tela pra ler IP Server do ESP32 manualmente do usuario - (DESCONTINUADO)
 #   14. Adicionado suporte a dispositivos móveis (Android) - só que é preciso gerar IP fixo na máquina que está
 #       rodando o banco de dados MySQL.
-#   15. Descontinuado o ESP32 por problemas relacionados a superaquecimento das lentes (Câmera OV5640).
-#       Adotado em seu lugar uma câmera IP WiFi com classificação IP66. Além da referida camêra ser própria para
-#       instalações em área externa (suporta chuva e sol), ela atende bem o propósito de ficar funcionando
+#   15. Descontinuado o uso do ESP32 por problemas relacionados a superaquecimento das lentes (Câmera OV5640).
+#       Adotado em seu lugar uma câmera IP WiFi com classificação IP66, Câmera própria para
+#       instalações em área externa (suporta chuva/sol). Atende bem o propósito de ficar em operação
 #       durante horas sem sobreaquecer já que é uma câmera de monitoramento.
 #   16. Modificado o formulario de visitante para ler NOME, PLACA e CONTATO. Modificado a tabela 'Registro' do 
 #       banco MySQL para que esta tenha uma coluna 'Contato'.
@@ -48,5 +48,5 @@
 #       a lei federal nº 9.504/1997.
 #   18. Inserido checkbox p/ desabilitar o recurso de Identificação Óptica de Caracter (OCR).
 #   19. Adicionado Botão para cadastrar e excluir carros da base de dados.
-#   20. 
+#   20. Inserido botão para habilitar/desabilitar recursos de administrador
 #

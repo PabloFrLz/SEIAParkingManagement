@@ -1,0 +1,14 @@
+#
+#         __________________________________________________________
+#        |          SEIA Parking Management v1.0.0.04               |
+#        |__________________________________________________________|
+#
+#
+#                           *** NOTAS DA VERSÃO ***
+#
+#   1.  Integração com terminal de reconhecimento facial Asia Teco AI520F-EM-B. Agora é feito o reconhecimento facial
+3       e o processo de inserção no banco é feito de forma automática, sem a necessidade de intervenção manual do usuário;
+#   2.  Adicionado um cartão de identificação de segurança que irá constar as informações do servidor identificado, como
+#       NOME, SETOR, No. ID, No. Vaga, ORGÃO;
+#   3.  
+#       

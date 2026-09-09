@@ -1192,6 +1192,7 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def authenticateAdmin(self):
+        """ [v1.0.0.03]: Processo de autenticação para acesso ao modo ADMINISTRADOR. """
         if not self.sidebar.enable_ADMIN_privileges:
             password, ok = QInputDialog.getText(self, "Autenticação de ADMINISTRADOR", "Entre com a senha de ADMINISTRADOR:", QLineEdit.EchoMode.Password)
             if ok and password == ADMIN_PASSWORD:
@@ -1214,13 +1215,14 @@ class SEIAParkingManagement(QGraphicsView):
 
 
     def _emit_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
+        """ [v1.0.0.04]: Encaminha os dados e chama o método 'monitora_reconhecimento' para processar os dados obtidos no reconhecimento facial. """
         # adaptador: recebe os kwargs do AI520FaceServer e emite o Signal de forma posicional
         self.signal_reconhecimento.emit(employee_id, employee_name, passed, confidence, note_time)
 
 
 
     def monitora_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
-        # [v1.0.0.04]: metodo que vai processar os dados identificados do reconhecimento
+        """ [v1.0.0.04]: Processa os dados obtidos no reconhecimento facial, apresenta esses dados e, em seguida, os insere no banco. """
         if passed:
             print(f"Detectado:\n  NAME: {employee_name} \n  ID: {employee_id}\n")
 
@@ -1271,14 +1273,16 @@ class SEIAParkingManagement(QGraphicsView):
                 # SELECIONANDO O CARRO VINCULADO AO SERVIDOR RECONHECIDO AUTOMATICAMENTE
                 carro = self.sidebar.getCarroByID(employee_id) # [v1.0.0.04]: obtém informações do carro no banco vinculado ao terminal ID pra extrair a placa e modelo do carro
                 self.sidebar.form2.opcaoSelecionada(carro[0][0]+" - "+carro[0][3]) # [v1.0.0.04]: envia as informações formatadas no formato que a função opcaoSelecionada() espera: "PLACA - MODELO"
-                self.placa_label_text.setText(carro[0][0]) # [v1.0.0.04]: Altera o numero da placa na imagem da placa ao lado do campo de busca global
+                self.placa_label_text.setText(carro[0][0]) # [v1.0.0.04]: Altera o numero da placa na imagem da placa ao lado do campo de busca global - apenas visual, não interfere no fluxo de inserção de ENTRADA
                 #QTimer.singleShot(10000, self.sidebar.btn_commit.click)  # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados depois de 10 segundos
                 #self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Inserção no banco de dados concluída com sucesso!")
 
 
 
-    def showSecurityIDCard(self, list_infos): # [v1.0.0.04]: mostra o cartão de identificação do sistema de reconhecimento facial
+    def showSecurityIDCard(self, list_infos): 
+        """ [v1.0.0.04]: Mostra e atualiza as informações do cartão de identificação do sistema de reconhecimento facial """
+
         # ATUALIZA A IMAGEM DO ROSTO
         self.list_labels[0].setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE), 320)) 
         # ATUALIZA AS INFORMAÇÕES DO CARD
@@ -1297,7 +1301,8 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
-    def generateSecurityIDCard(self):# [v1.0.0.04]: metodo que vai mostrar o ID Card do servidor identificado
+    def generateSecurityIDCard(self):
+        """ [v1.0.0.04]: Gera os objetos do cartão de identificação e o posiciona na tela """
         print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Gerando informações...")
         # QWIDGET PRINCIPAL E LAYOUT 
         card = QWidget()
@@ -1354,7 +1359,6 @@ class SEIAParkingManagement(QGraphicsView):
         layout.addWidget(label_orgao)
         label_orgao.setContentsMargins(240,0,0,80)
 
-        print("\n\n|| ->->->  (LISTA PREENCHIDA) <-<-<- ||\n\n")
         self.list_labels = [label_rosto, label_name, label_setor, label_id, label_vaga, label_orgao] # [v1.0.0.04]: salva as labels pra alterar as informações dinamicamente
 
         layout.addSpacing(150) # [v1.0.0.04]: empurra de baixo pra cima o conjunto (ID + VAGA + ORGAO) e o conjunto (DATA + HORA)
@@ -1371,7 +1375,8 @@ class SEIAParkingManagement(QGraphicsView):
 
     
 
-    def get_circular_pixmap(self, pixmap: QPixmap, size: int) -> QPixmap: # [v1.0.0.04]: RECORTA A IMAGEM EM FORMATO CIRCULAR PRA CABER NO CAMPO DE IMAGENS DO SECURITY CARD ID
+    def get_circular_pixmap(self, pixmap: QPixmap, size: int) -> QPixmap: 
+        """ [v1.0.0.04]: Recorta a imagem capturada do servidor em formato circular para ser inserida no cartão de identificação """
         # [1] recorta um quadrado central da imagem (evita ovalizar o círculo)
         lado = min(pixmap.width(), pixmap.height())
         x = (pixmap.width() - lado) // 2

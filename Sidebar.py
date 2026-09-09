@@ -792,8 +792,8 @@ class Sidebar(QWidget, QObject):
         #   |                                                          |
         #   |           ATUALIZA SAIDA (visitante e servidor)          |
         #   |__________________________________________________________|
-        if dados is not None:
-            #obtem os dados direto do banco
+        if dados is not None: # quando dados não for None, significa que o fluxo de registro é de SAIDA, e não de ENTRADA
+            # obtem os dados direto do banco
             placa = dados[0][1]
             terminal_id = dados[0][2]
             nome_visitante = dados[0][7] # [v1.0.0.03]: os dados do nome do visitante será a 8ª coluna da tabela Registro
