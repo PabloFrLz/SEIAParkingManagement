@@ -10,5 +10,6 @@
 3       e o processo de inserção no banco é feito de forma automática, sem a necessidade de intervenção manual do usuário;
 #   2.  Adicionado um cartão de identificação de segurança que irá constar as informações do servidor identificado, como
 #       NOME, SETOR, No. ID, No. Vaga, ORGÃO;
-#   3.  
+#   3.  Alterado a dinâmica das janelas de Pop-up da aplicação - agora elas desaparecem depois de um tempo pré-definido;
+#   4.  
 #       

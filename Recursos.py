@@ -435,7 +435,7 @@ class Paths:
         self.togle_switch_off = self.resource_path("imagens/off2.png") # [v1.0.0.03]: imagem do switch off
         self.togle_switch_on = self.resource_path("imagens/on2.png") # [v1.0.0.03]: imagem do switch on
 
-        self.img_logo_sidebar = self.resource_path("imagens/nas_logo_periodo_eleitoral.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
+        self.img_logo_sidebar = self.resource_path("imagens/nas_logo_8.png") # [v1.0.0.03]: imagem da logo do NAS disposto na parte superior da sidebar
 
         self.img_carro_hatch = self.resource_path("imagens/hatch.png") # [v1.0.0.03]: imagem que representa o carro hatch da SEIA
         self.img_carro_sedan = self.resource_path("imagens/sedan.png") # [v1.0.0.03]: imagem que representa o carro sedan da SEIA

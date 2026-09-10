@@ -12,7 +12,7 @@ from reportlab.lib.units import mm
 
 import Formulario # classes próprias da aplicação
 
-TIMER_TO_CLOSE_MESSAGE = 5000  # [v1.0.0.04]: 5 segundos
+TIMER_TO_CLOSE_MESSAGE = 8000  # [v1.0.0.04]: 8 segundos
 
 class Sidebar(QWidget, QObject):
     
@@ -54,6 +54,7 @@ class Sidebar(QWidget, QObject):
         self.coord_last_widget = [None, None]
         self.garbage_collector = []
         self.textos_interface = []
+        self._temp_message_stack = []
 
         self.coord_last_widget[0] = self.POS_X_SIDEBAR + 30
         self.coord_last_widget[1] =  self.CONST_DESLOCAMENTO
@@ -455,7 +456,7 @@ class Sidebar(QWidget, QObject):
         dados = None
         if self.status_vaga.displayText() == "OCUPADA":
             dados = self.getUltimaEntradaRegistroDaVaga(self.num_vaga.displayText()) #obtem a ultima entrada no registro para esse numero de vaga
-            self.insertRegistro(dados=dados)
+            self.insertRegistro(dados_SAIDA=dados)
             print(f"[{self.recursos.CORES.AMARELO}Sidebar.py{self.recursos.CORES.RESET}]:  Iniciando registro de SAIDA para a vaga de nº {dados[0][3]}")
 
         else:
@@ -782,7 +783,7 @@ class Sidebar(QWidget, QObject):
 
 
 
-    def insertRegistro(self, dados=None):
+    def insertRegistro(self, dados_SAIDA=None):
         print(f"\n{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}")
         print(f"  ***************** ({self.recursos.CORES.CIANO} {self.titulo.text()} {self.recursos.CORES.RESET}) *****************")
         print(f"{self.recursos.CORES.CIANO}============================================================={self.recursos.CORES.RESET}\n")
@@ -792,11 +793,11 @@ class Sidebar(QWidget, QObject):
         #   |                                                          |
         #   |           ATUALIZA SAIDA (visitante e servidor)          |
         #   |__________________________________________________________|
-        if dados is not None: # quando dados não for None, significa que o fluxo de registro é de SAIDA, e não de ENTRADA
+        if dados_SAIDA is not None: # quando dados_SAIDA não for None, significa que o fluxo de registro é de SAIDA, e não de ENTRADA
             # obtem os dados direto do banco
-            placa = dados[0][1]
-            terminal_id = dados[0][2]
-            nome_visitante = dados[0][7] # [v1.0.0.03]: os dados do nome do visitante será a 8ª coluna da tabela Registro
+            placa = dados_SAIDA[0][1]
+            terminal_id = dados_SAIDA[0][2]
+            nome_visitante = dados_SAIDA[0][7] # [v1.0.0.03]: os dados do nome do visitante será a 8ª coluna da tabela Registro
             tipo = "SAIDA"
             if placa is None or terminal_id is None: # [v1.0.0.03]: para o caso de ser um visitante, a placa e o terminal_id serão None/null
                 sql = f"UPDATE registro SET data_saida = NOW(), tipo = '{tipo}' WHERE nome_visitante = '{nome_visitante}' AND data_saida IS NULL AND tipo = 'ENTRADA'"
@@ -1443,3 +1444,36 @@ class Sidebar(QWidget, QObject):
         msg.show() # mostra a caixa de dialogo
         QTimer.singleShot(TIMER_TO_CLOSE_MESSAGE, msg.close)  # [v1.0.0.04]: fecha automaticamente depois de TIMER_TO_CLOSE_MESSAGE segundos
         return msg
+    
+        '''msg = QMessageBox(janela)
+        msg.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        msg.setWindowTitle(titulo)
+        msg.setText(texto)
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setOption(QMessageBox.Option.DontUseNativeDialog, True) # Força não usar diálogo nativo (deve ser antes do exec/show)
+        msg.setWindowModality(Qt.NonModal)
+
+        # Empilha visualmente as mensagens para que a primeira fique "em cima" e a seguinte apareça abaixo.
+        offset = len(self._temp_message_stack) * 26
+        if janela is not None:
+            try:
+                msg.move(janela.x() + 25 + offset, janela.y() + 35 + offset)
+            except Exception:
+                msg.move(25 + offset, 35 + offset)
+        else:
+            msg.move(25 + offset, 35 + offset)
+
+        if self._temp_message_stack:
+            msg.lower()
+            msg.stackUnder(self._temp_message_stack[-1])
+
+        self._temp_message_stack.append(msg)
+        msg.show()
+
+        def fechar_mensagem():
+            if msg in self._temp_message_stack:
+                self._temp_message_stack.remove(msg)
+            msg.close()
+
+        QTimer.singleShot(TIMER_TO_CLOSE_MESSAGE, fechar_mensagem)  # [v1.0.0.04]: fecha automaticamente depois de TIMER_TO_CLOSE_MESSAGE segundos
+        return msg'''

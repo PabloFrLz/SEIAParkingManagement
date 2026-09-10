@@ -1275,7 +1275,7 @@ class SEIAParkingManagement(QGraphicsView):
                 self.sidebar.form2.opcaoSelecionada(carro[0][0]+" - "+carro[0][3]) # [v1.0.0.04]: envia as informações formatadas no formato que a função opcaoSelecionada() espera: "PLACA - MODELO"
                 self.placa_label_text.setText(carro[0][0]) # [v1.0.0.04]: Altera o numero da placa na imagem da placa ao lado do campo de busca global - apenas visual, não interfere no fluxo de inserção de ENTRADA
                 #QTimer.singleShot(10000, self.sidebar.btn_commit.click)  # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados depois de 10 segundos
-                #self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados
+                self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados imediatamente
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Inserção no banco de dados concluída com sucesso!")
 
 
