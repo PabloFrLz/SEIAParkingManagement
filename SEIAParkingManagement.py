@@ -39,6 +39,7 @@ from PIL import Image
 
 from shiboken6 import isValid
 from colorama import init
+
 import InspireFace
 import Vaga as vg
 import Sidebar as sb
@@ -53,9 +54,9 @@ ver = "v1.0.0.05" # versão do software
 
 # AUTENTICAÇÃO DO BANCO DE DADOS MYSQL
 USER = 'root'
-PASSWORD_DB = ''        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
+PASSWORD_DB = '5452'        # [v1.0.0.03]: senha do banco de dados (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)  
 # AUTENTICAÇÃO DO SOFTWARE (SENHA DE ADMINISTRADOR)
-ADMIN_PASSWORD = ''    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
+ADMIN_PASSWORD = 'NASCH@2026'    # [v1.0.0.03]: senha de administrador (senha nao corresponde a senha real usada - esta deve ser inserida manualmente ao fazer o .exe com pyinstaller)   
 
 #________________________________________
 #                                        |secin
@@ -783,8 +784,12 @@ class SEIAParkingManagement(QGraphicsView):
         # [InspireFace - MegaTron] App móvel de Reconhecimento Facial (v1.0.0.05) 
         #==============================================================================================
 
-        self.inspire_face = InspireFace()
+        self.inspire_face = InspireFace.InspireFace()
         QMessageBox.warning(self, "IP Server", f"O ip do servidor é '{self.inspire_face.getIP()}'")
+
+        self.inspire_face.rosto_detectado.connect(self.monitora_reconhecimento)
+        self.inspire_face.monitorar()
+        #self.inspire_face.monitorar(lambda id, path_image: self.monitora_reconhecimento(id, path_image))
 
 
         self.list_labels = [] # [v1.0.0.04]: lista de labels para alterar as informações do reconhecimento facial
@@ -1221,15 +1226,15 @@ class SEIAParkingManagement(QGraphicsView):
                 self.btn_admin.setStyleSheet(self.recursos.ESTILOS.button_style_7)
 
 
-
+    '''
     def _emit_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
-        """ [v1.0.0.04]: Encaminha os dados e chama o método 'monitora_reconhecimento' para processar os dados obtidos no reconhecimento facial. """
+        [v1.0.0.04]: Encaminha os dados e chama o método 'monitora_reconhecimento' para processar os dados obtidos no reconhecimento facial.
         # adaptador: recebe os kwargs do AI520FaceServer e emite o Signal de forma posicional
         self.signal_reconhecimento.emit(employee_id, employee_name, passed, confidence, note_time)
 
 
 
-    '''
+    
     def monitora_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
         [v1.0.0.04]: Processa os dados obtidos no reconhecimento facial, apresenta esses dados e, em seguida, os insere no banco.
         if passed:
@@ -1286,13 +1291,72 @@ class SEIAParkingManagement(QGraphicsView):
                 self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados imediatamente
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Inserção no banco de dados concluída com sucesso!")
     '''
+    
+    
+    
+    def monitora_reconhecimento(self, employee_id, path_image_face):
+            '''[v1.0.0.04]: Processa os dados obtidos no reconhecimento facial, apresenta esses dados e, em seguida, os insere no banco.'''
+            if employee_id != None:
+                #    _______________________________________________
+                #   |                                               |
+                #   |            TRATAMENTO DOS DADOS               |
+                #   |_______________________________________________|
+                employee_id = f"{employee_id[:3]}-{employee_id[3:]}" # [v1.0.0.04]: insere o hifen no ID pois inicialmente há nº de placas de veiculos no lugar do ID
+                #employee_id = "ABJ-7J93" # DEBUG: apenas para testes - remover depois
+                servidor = self.sidebar.getServidorByID(employee_id) # [v1.0.0.04]: busca o ID do servidor no banco
+                if len(servidor) == 0:
+                    print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Servidor com ID '{employee_id}' não encontrado no banco de dados.")
+                    QMessageBox.warning(self, "Terminal de Reconhecimento Facial", f"Servidor com ID '{employee_id}' não encontrado no banco de dados.")
+                    return
+                else:
+                    servidor_nome = servidor[0][1] # [v1.0.0.04]: pega o nome do servidor
+                    servidor_orgao = servidor[0][2] # [v1.0.0.04]: pega o orgao do servidor
+                    print(f"Detectado:\n  NOME: {servidor_nome} \n  ID: {employee_id}\n")
+                    servidor_vaga = self.sidebar.getIdVagaByTerminalID(employee_id) # [v1.0.0.04]: pega o nº da vaga
+                    servidor_setor = self.sidebar.getSetorByTerminalID(employee_id) # [v1.0.0.04]: pega o setor do servidor
+                    print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Servidor encontrado no banco de dados: {servidor_nome}")
+    
+                    #    __________________________________________________________________
+                    #   |                                                                  |
+                    #   |         APRESENTA O SECURITY CARD ID COM AS INFORMAÇÕES          |
+                    #   |__________________________________________________________________|
+                    self.showSecurityIDCard([servidor_nome, servidor_setor, employee_id, servidor_vaga, servidor_orgao, path_image_face]) # [v1.0.0.04]: mostra o BANNER com o Terminal ID do servidor identificado
+                    # 'path_image_face' atualmente nao é usada, mas é uma boa prática manter a referência para caso queira mudar a lógica de tratamento dos dados
+    
+                    #    _______________________________________________
+                    #   |                                               |
+                    #   |               INSERE NO BANCO                 |
+                    #   |_______________________________________________|
+    
+                    # VERIFICA SE TEM PENDENCIAS DE SAÍDA DO SERVIDOR
+                    self.selecionarVagaPorID(servidor_vaga) # [v1.0.0.04]: seleciona a vaga na GUI
+                    possui_entrada = self.sidebar.verificaSAIDA(servidor_vaga) # [v1.0.0.04]: verifica se tem SAIDA pendente na vaga do carro - se tiver, então o carro está dentro do estacionamento e precisa ser registrado uma SAIDA
+                    if len(possui_entrada) != 0:
+                        print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Foi identificado que há uma pendência de SAIDA para a vaga {servidor_vaga}. \nIniciando o processo de inserção automático de SAIDA...")
+                        self.sidebar.show_message_temporary(self, "Terminal de Reconhecimento Facial", f"Foi identificado que há uma pendência de SAIDA para a vaga {servidor_vaga}. \nIniciando processo de inserção automático de SAIDA...")
+                        self.sidebar.acaoButtonSaida() # [v1.0.0.04]: registra a saída
+    
+                    # DESENCADEIA O FLUXO DE FORMULARIOS PARA REGISTRAR A ENTRADA DO SERVIDOR
+                    print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Fluxo de inserção de ENTRADA iniciado para o servidor {servidor_nome} (ID: {employee_id}) na vaga {servidor_vaga}.")
+                    # [v1.0.0.04]: Chamando manualmente o fluxo de formularios
+                    self.sidebar.transitToFormulario() # [v1.0.0.04]: animação que empurra pro lado direito as infos
+                    self.sidebar.titulo.setText("REGISTRO DE ENTRADA") # [v1.0.0.04]: Altera o titulo da seção para retratar a nova seção de registro de entrada
+                    self.sidebar.registroEntrada() # [v1.0.0.04]: inicializa os formularios pra registro da ENTRADA de servidores
+                    # SELECIONANDO O CARRO VINCULADO AO SERVIDOR RECONHECIDO AUTOMATICAMENTE
+                    carro = self.sidebar.getCarroByID(employee_id) # [v1.0.0.04]: obtém informações do carro no banco vinculado ao terminal ID pra extrair a placa e modelo do carro
+                    self.sidebar.form2.opcaoSelecionada(carro[0][0]+" - "+carro[0][3]) # [v1.0.0.04]: envia as informações formatadas no formato que a função opcaoSelecionada() espera: "PLACA - MODELO"
+                    self.placa_label_text.setText(carro[0][0]) # [v1.0.0.04]: Altera o numero da placa na imagem da placa ao lado do campo de busca global - apenas visual, não interfere no fluxo de inserção de ENTRADA
+                    #QTimer.singleShot(10000, self.sidebar.btn_commit.click)  # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados depois de 10 segundos
+                    self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados imediatamente
+                    print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Inserção no banco de dados concluída com sucesso!")
+
 
 
     def showSecurityIDCard(self, list_infos): 
         """ [v1.0.0.04]: Mostra e atualiza as informações do cartão de identificação do sistema de reconhecimento facial """
 
         # ATUALIZA A IMAGEM DO ROSTO
-        self.list_labels[0].setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer_deprecated.DIR+"/"+AI520FaceServer_deprecated.NAME_IMAGE), 320)) 
+        self.list_labels[0].setPixmap(self.get_circular_pixmap(QPixmap(InspireFace.PATH_IMAGE), 320)) # [v1.0.0.05]: carrega a imagem direto do banco
         # ATUALIZA AS INFORMAÇÕES DO CARD
         self.list_labels[1].setText(f"{list_infos[0]}") # [v1.0.0.04]: atualiza o NOME DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR
         self.list_labels[2].setText(f"{list_infos[1]}") # [v1.0.0.04]: atualiza o SETOR DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR SÓ QUE MENOR QUE O NOME DO SERVIDOR
@@ -1409,7 +1473,7 @@ class SEIAParkingManagement(QGraphicsView):
 
 app = QApplication(sys.argv)
 app.setStyleSheet(
-    qdarktheme.load_stylesheet("dark") + 
+    qdarktheme.load_stylesheet("dark") +
     """
     QToolTip {
         background-color: #000000;

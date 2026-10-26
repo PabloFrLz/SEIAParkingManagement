@@ -1,5 +1,5 @@
 
- # SEIA Parking Management v1.0.0.03
+ # SEIA Parking Management v1.0.0.05
 **Software de Gestão de Estacionamento**  
 Desenvolvido para o Núcleo Administrativo Setorial (NAS), vinculado à Secretaria da Inovação em Inteligência 
 Artificial (SEIA), do estado do Paraná. O objetivo era o gerenciamento das entradas e saidas de veículos nas
@@ -47,7 +47,7 @@ source C:(caminho_para_projeto)\SEIAParkingManagement\database\vagas.sql
 
  ## CONFIGURAÇÕES COMPLEMENTARES
 ```bash
-pip install --upgrade PySide6 pyqtdarktheme"
+pip install --upgrade PySide6 pyqtdarktheme
 ```
 
  ## PREDIÇÃO DE PLACAS (OCR)
