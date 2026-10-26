@@ -9,7 +9,7 @@
     Author: Pablo Franco Luz (pablo-tr1@hotmail.com - https://github.com/PabloFrLz)
     Supervisor: André Luis Costa Batistela 
     Director: Thiago Rodrigo da Silva (Thiago Marcelino)
-    Version: 1.0.0.04
+    Version: 1.0.0.05
     Start: 31/03/2026 - 08:16PM
     End: 18/07/2026 - 15:42PM
     Notas:
@@ -39,16 +39,16 @@ from PIL import Image
 
 from shiboken6 import isValid
 from colorama import init
+import InspireFace
 import Vaga as vg
 import Sidebar as sb
 import Recursos
 import ModelPaddleOCR
 import qdarktheme
 import pymysql
-import AI520FaceServer
 
 init()
-ver = "v1.0.0.04" # versão do software
+ver = "v1.0.0.05" # versão do software
 
 
 # AUTENTICAÇÃO DO BANCO DE DADOS MYSQL
@@ -772,12 +772,20 @@ class SEIAParkingManagement(QGraphicsView):
 
 
         #==============================================================================================
-        # [AI520F] Terminal de Reconhecimento Facial (v1.0.0.04) 
+        # [AI520F] Terminal de Reconhecimento Facial (v1.0.0.04)  [DEPRECATED] 
         #==============================================================================================
 
-        self.signal_reconhecimento.connect(self.monitora_reconhecimento)
-        self.ai520f_server = AI520FaceServer.AI520FaceServer(host="192.168.0.61", port=8001, recursos=self.recursos, on_recognition=self._emit_reconhecimento)
-        self.ai520f_server.start()
+        '''self.signal_reconhecimento.connect(self.monitora_reconhecimento)
+        self.ai520f_server = AI520FaceServer_deprecated.AI520FaceServer(host="192.168.0.61", port=8001, recursos=self.recursos, on_recognition=self._emit_reconhecimento)
+        self.ai520f_server.start()'''
+
+        #==============================================================================================
+        # [InspireFace - MegaTron] App móvel de Reconhecimento Facial (v1.0.0.05) 
+        #==============================================================================================
+
+        self.inspire_face = InspireFace()
+        QMessageBox.warning(self, "IP Server", f"O ip do servidor é '{self.inspire_face.getIP()}'")
+
 
         self.list_labels = [] # [v1.0.0.04]: lista de labels para alterar as informações do reconhecimento facial
         self.proxy_card = None
@@ -1221,8 +1229,9 @@ class SEIAParkingManagement(QGraphicsView):
 
 
 
+    '''
     def monitora_reconhecimento(self, employee_id, employee_name, passed, confidence, note_time):
-        """ [v1.0.0.04]: Processa os dados obtidos no reconhecimento facial, apresenta esses dados e, em seguida, os insere no banco. """
+        [v1.0.0.04]: Processa os dados obtidos no reconhecimento facial, apresenta esses dados e, em seguida, os insere no banco.
         if passed:
             print(f"Detectado:\n  NAME: {employee_name} \n  ID: {employee_id}\n")
 
@@ -1266,7 +1275,6 @@ class SEIAParkingManagement(QGraphicsView):
                 # DESENCADEIA O FLUXO DE FORMULARIOS PARA REGISTRAR A ENTRADA DO SERVIDOR
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Fluxo de inserção de ENTRADA iniciado para o servidor {servidor_nome} (ID: {employee_id}) na vaga {servidor_vaga}.")
                 # [v1.0.0.04]: Chamando manualmente o fluxo de formularios
-                #state_exec = self.sidebar.acaoButtonEntrada(True) # [v1.0.0.04]: Chama a ação do Button de REGISTRAR ENTRADA que dispara o fluxo de formularios do inicio
                 self.sidebar.transitToFormulario() # [v1.0.0.04]: animação que empurra pro lado direito as infos
                 self.sidebar.titulo.setText("REGISTRO DE ENTRADA") # [v1.0.0.04]: Altera o titulo da seção para retratar a nova seção de registro de entrada
                 self.sidebar.registroEntrada() # [v1.0.0.04]: inicializa os formularios pra registro da ENTRADA de servidores
@@ -1277,14 +1285,14 @@ class SEIAParkingManagement(QGraphicsView):
                 #QTimer.singleShot(10000, self.sidebar.btn_commit.click)  # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados depois de 10 segundos
                 self.sidebar.btn_commit.click() # [v1.0.0.04]: dispara o button de COMMIT que insere no banco de dados imediatamente
                 print(f"[{self.recursos.CORES.AMARELO}SEIAParkingManagement.py{self.recursos.CORES.RESET}]: Inserção no banco de dados concluída com sucesso!")
-
+    '''
 
 
     def showSecurityIDCard(self, list_infos): 
         """ [v1.0.0.04]: Mostra e atualiza as informações do cartão de identificação do sistema de reconhecimento facial """
 
         # ATUALIZA A IMAGEM DO ROSTO
-        self.list_labels[0].setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer.DIR+"/"+AI520FaceServer.NAME_IMAGE), 320)) 
+        self.list_labels[0].setPixmap(self.get_circular_pixmap(QPixmap(AI520FaceServer_deprecated.DIR+"/"+AI520FaceServer_deprecated.NAME_IMAGE), 320)) 
         # ATUALIZA AS INFORMAÇÕES DO CARD
         self.list_labels[1].setText(f"{list_infos[0]}") # [v1.0.0.04]: atualiza o NOME DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR
         self.list_labels[2].setText(f"{list_infos[1]}") # [v1.0.0.04]: atualiza o SETOR DO SERVIDOR QUE TERÁ MAIOR DESTAQUE, CENTRALIZADO E COM FONTE MAIOR SÓ QUE MENOR QUE O NOME DO SERVIDOR
